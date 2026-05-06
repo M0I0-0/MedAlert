@@ -10,9 +10,14 @@ const {
   invalidarRefreshToken,
 } = require("../database/tokenRepository");
 
-const bcrypt = require("bcrypt");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+let bcrypt = null;
+
+try {
+  bcrypt = require("bcrypt");
+} catch {
+  bcrypt = null;
+}
 
 const CONFIG_ROL = {
   administrador: { tabla: "administrador", idCampo: "id_administrador" },
@@ -50,7 +55,11 @@ router.post("/login", async (req, res) => {
         .json({ ok: false, mensaje: "Credenciales incorrectas." });
     }
 
-    const match = await bcrypt.compare(contrasena, usuario.contrasena);
+    const passwordGuardada = usuario.contrasena || "";
+    const pareceHashBcrypt = passwordGuardada.startsWith("$2");
+    const match = pareceHashBcrypt
+      ? Boolean(bcrypt) && (await bcrypt.compare(contrasena, passwordGuardada))
+      : contrasena === passwordGuardada;
     if (!match) {
       return res
         .status(401)
@@ -151,7 +160,7 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-router.post("/forgot-password", async (req, res) => {
+async function handleRecover(req, res) {
   const { correo } = req.body;
 
   if (!correo) {
@@ -162,6 +171,7 @@ router.post("/forgot-password", async (req, res) => {
 
   try {
     let rolEncontrado = null;
+    let usuarioEncontrado = false;
 
     for (const [rol, config] of Object.entries(CONFIG_ROL)) {
       const [rows] = await pool.query(
@@ -170,14 +180,16 @@ router.post("/forgot-password", async (req, res) => {
       );
       if (rows.length > 0) {
         rolEncontrado = rol;
+        usuarioEncontrado = true;
         break;
       }
     }
 
-    if (!rolEncontrado) {
+    if (!usuarioEncontrado) {
       return res.json({
         ok: true,
-        mensaje: "Si el correo existe, se enviarán instrucciones.",
+        existeCuenta: false,
+        mensaje: "Si el correo existe, se enviaran instrucciones de recuperacion.",
       });
     }
 
@@ -192,29 +204,22 @@ router.post("/forgot-password", async (req, res) => {
       [correo, token, expiracion],
     );
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "medalert12345@gmail.com",
-        pass: "gpdy mxxp cwva jopj",
-      },
-    });
-
     const link = `http://localhost:3000/reset.html?token=${token}&correo=${correo}&rol=${rolEncontrado}`;
 
-    await transporter.sendMail({
-      from: "medalert12345@gmail.com",
-      to: correo,
-      subject: "Recuperación de contraseña",
-      html: `<a href="${link}">Restablecer contraseña</a>`,
+    return res.json({
+      ok: true,
+      existeCuenta: true,
+      mensaje: "Correo verificado. En este entorno local puedes usar el enlace de recuperacion generado.",
+      linkRecuperacion: link,
     });
-
-    res.json({ ok: true, mensaje: "Correo enviado." });
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ ok: false, mensaje: "Error interno." });
+    return res.status(500).json({ ok: false, mensaje: "Error interno." });
   }
-});
+}
+
+router.post("/forgot-password", handleRecover);
+router.post("/recover", handleRecover);
 
 router.post("/reset-password", async (req, res) => {
   const { token, correo, rol, nuevaContrasena } = req.body;
@@ -238,6 +243,13 @@ router.post("/reset-password", async (req, res) => {
 
     if (new Date() > new Date(reset.expiracion)) {
       return res.status(400).json({ ok: false, mensaje: "Token expirado." });
+    }
+
+    if (!bcrypt) {
+      return res.status(500).json({
+        ok: false,
+        mensaje: "La recuperacion con hash no esta disponible en este entorno.",
+      });
     }
 
     const hash = await bcrypt.hash(nuevaContrasena, 10);

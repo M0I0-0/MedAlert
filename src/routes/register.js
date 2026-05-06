@@ -8,9 +8,16 @@
 
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcrypt");
 const { pool } = require("../database/connection");
 const { autenticar, autorizar } = require("../middlewares/auth");
+
+let bcrypt = null;
+
+try {
+  bcrypt = require("bcrypt");
+} catch {
+  bcrypt = null;
+}
 
 const SALT_ROUNDS = 10;
 
@@ -89,7 +96,9 @@ router.post(
               .status(400)
               .json({ ok: false, mensaje: errorContrasena });
 
-          const hash = await bcrypt.hash(contrasena, SALT_ROUNDS);
+          const hash = bcrypt
+            ? await bcrypt.hash(contrasena, SALT_ROUNDS)
+            : contrasena;
 
           const [result] = await pool.query(
             `INSERT INTO administrador (nombre, correo, telefono, contrasena)
