@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro - Medilab</title>
-    
+    <title>Acceso - Medilab</title>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
@@ -24,30 +24,30 @@
         </div>
 
         <div class="sidebar-text">
-            <h1>Únete a <span>Medilab</span></h1>
-            <p>Crea tu cuenta y empieza a gestionar tu salud de forma inteligente.</p>
+            <h1>Bienvenido a <span>Medilab</span></h1>
+            <p>Accede a tu panel para gestionar pacientes, especialistas y recordatorios de forma inteligente.</p>
         </div>
 
         <div class="steps">
             <div class="step">
                 <div class="step-number">1</div>
                 <div class="step-info">
-                    <h4>Crea tu cuenta</h4>
-                    <p>Completa el formulario de registro</p>
+                    <h4>Inicia sesión</h4>
+                    <p>Entra con tu correo, contraseña y rol</p>
                 </div>
             </div>
             <div class="step">
                 <div class="step-number">2</div>
                 <div class="step-info">
-                    <h4>Verifica tu correo</h4>
-                    <p>Confirma tu identidad por email</p>
+                    <h4>Recupera acceso</h4>
+                    <p>Verifica tu correo si olvidaste la contraseña</p>
                 </div>
             </div>
             <div class="step">
                 <div class="step-number">3</div>
                 <div class="step-info">
-                    <h4>Configura tu perfil</h4>
-                    <p>Personaliza tu experiencia</p>
+                    <h4>Gestiona tu cuenta</h4>
+                    <p>Usa el panel principal después de iniciar</p>
                 </div>
             </div>
         </div>
@@ -59,78 +59,303 @@
 
     <div class="main-content">
         <div class="top-nav">
-            <a href="#">Iniciar sesión</a
-            <a href="#" class="active">Registro</a>
-            <a href="#">Recuperar contraseña</a>
+            <a href="#" class="nav-link active" data-view="login">Iniciar sesión</a>
+            <a href="#" class="nav-link" data-view="register">Registro</a>
+            <a href="#" class="nav-link" data-view="recover">Recuperar contraseña</a>
         </div>
 
         <div class="header">
-            <h2>Crear cuenta</h2>
-            <p>Completa tus datos para registrarte</p>
+            <h2 id="panel-title">Iniciar sesión</h2>
+            <p id="panel-subtitle">Ingresa tus credenciales para entrar al dashboard</p>
         </div>
 
-        <form>
-            <div class="form-grid">
-                <div class="input-group">
-                    <label>Nombre completo</label>
-                    <div class="input-wrapper">
-                        <i class="fa-regular fa-user"></i>
-                        <input type="text" placeholder="Tu nombre">
-                    </div>
-                </div>
+        <div id="auth-message" class="auth-message" hidden></div>
 
-                <div class="input-group">
-                    <label>Correo electrónico</label>
-                    <div class="input-wrapper">
-                        <i class="fa-regular fa-envelope"></i>
-                        <input type="email" placeholder="ejemplo@correo.com">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>Contraseña</label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-lock"></i>
-                        <input type="password" placeholder="Mínimo 8 caracteres">
-                        <div class="icon-btn border-left">
-                            <i class="fa-regular fa-eye-slash"></i>
+        <section class="auth-panel" data-panel="login">
+            <form id="login-form">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="login-correo">Correo electrónico</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input id="login-correo" name="correo" type="email" placeholder="ejemplo@correo.com" required>
                         </div>
                     </div>
-                    <div class="password-strength">
-                        <div class="strength-bar active"></div>
-                        <div class="strength-bar active"></div>
-                        <div class="strength-bar active"></div>
-                        <div class="strength-bar"></div>
-                    </div>
-                </div>
 
-                <div class="input-group">
-                    <label>Confirmar contraseña</label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-lock"></i>
-                        <input type="password" placeholder="Repite tu contraseña">
-                        <div class="icon-btn border-left">
-                            <i class="fa-regular fa-eye-slash"></i>
+                    <div class="input-group">
+                        <label for="login-rol">Rol</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <select id="login-rol" name="rol" required>
+                                <option value="">Selecciona tu rol</option>
+                                <option value="administrador">Administrador</option>
+                                <option value="medico">Médico</option>
+                                <option value="farmaceutico">Farmacéutico</option>
+                                <option value="paciente">Paciente</option>
+                                <option value="familiar">Familiar</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label for="login-contrasena">Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input id="login-contrasena" name="contrasena" type="password" placeholder="Tu contraseña" required>
+                            <button type="button" class="icon-btn border-left toggle-password" data-target="login-contrasena" aria-label="Mostrar u ocultar contraseña">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
+
+                <button type="submit" class="btn-submit">
+                    Entrar al dashboard <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="login-link">
+                ¿Olvidaste tu contraseña? <a href="#" data-view-trigger="recover">Recupérala aquí</a>
             </div>
+        </section>
 
-            <div class="checkbox-group">
-                <input type="checkbox" id="terms">
-                <label for="terms">Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de Privacidad</a></label>
+        <section class="auth-panel hidden" data-panel="register">
+            <form>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Nombre completo</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" placeholder="Tu nombre">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Correo electrónico</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input type="email" placeholder="ejemplo@correo.com">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input id="register-contrasena" type="password" placeholder="Mínimo 8 caracteres">
+                            <button type="button" class="icon-btn border-left toggle-password" data-target="register-contrasena" aria-label="Mostrar u ocultar contraseña">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-bar active"></div>
+                            <div class="strength-bar active"></div>
+                            <div class="strength-bar active"></div>
+                            <div class="strength-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Confirmar contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input id="register-confirmar" type="password" placeholder="Repite tu contraseña">
+                            <button type="button" class="icon-btn border-left toggle-password" data-target="register-confirmar" aria-label="Mostrar u ocultar contraseña">
+                                <i class="fa-regular fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms">
+                    <label for="terms">Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de Privacidad</a></label>
+                </div>
+
+                <button type="button" class="btn-submit">
+                    Registrarme <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+        </section>
+
+        <section class="auth-panel hidden" data-panel="recover">
+            <form id="recover-form">
+                <div class="form-grid single-column">
+                    <div class="input-group full-width">
+                        <label for="recover-correo">Correo electrónico</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope"></i>
+                            <input id="recover-correo" name="correo" type="email" placeholder="Ingresa el correo de tu cuenta" required>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    Verificar correo <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+
+            <div class="login-link">
+                ¿Ya recordaste tu contraseña? <a href="#" data-view-trigger="login">Volver al inicio de sesión</a>
             </div>
-
-            <button type="button" class="btn-submit">
-                Registrarme <i class="fa-solid fa-arrow-right"></i>
-            </button>
-        </form>
-
-        <div class="login-link">
-            ¿Ya tienes cuenta? <a href="#">Inicia sesión aquí</a>
-        </div>
+        </section>
     </div>
 </div>
+
+<script>
+    const viewMeta = {
+        login: {
+            title: "Iniciar sesión",
+            subtitle: "Ingresa tus credenciales para entrar al dashboard"
+        },
+        register: {
+            title: "Crear cuenta",
+            subtitle: "Completa tus datos para registrarte"
+        },
+        recover: {
+            title: "Recuperar contraseña",
+            subtitle: "Verifica tu correo para recuperar el acceso"
+        }
+    };
+
+    const navLinks = document.querySelectorAll(".nav-link");
+    const panels = document.querySelectorAll(".auth-panel");
+    const panelTitle = document.getElementById("panel-title");
+    const panelSubtitle = document.getElementById("panel-subtitle");
+    const authMessage = document.getElementById("auth-message");
+    const loginForm = document.getElementById("login-form");
+    const recoverForm = document.getElementById("recover-form");
+
+    function showMessage(message, type) {
+        authMessage.textContent = message;
+        authMessage.className = "auth-message " + type;
+        authMessage.hidden = false;
+    }
+
+    function clearMessage() {
+        authMessage.hidden = true;
+        authMessage.textContent = "";
+        authMessage.className = "auth-message";
+    }
+
+    function setView(view) {
+        navLinks.forEach((link) => {
+            link.classList.toggle("active", link.dataset.view === view);
+        });
+
+        panels.forEach((panel) => {
+            panel.classList.toggle("hidden", panel.dataset.panel !== view);
+        });
+
+        panelTitle.textContent = viewMeta[view].title;
+        panelSubtitle.textContent = viewMeta[view].subtitle;
+        clearMessage();
+    }
+
+    navLinks.forEach((link) => {
+        link.addEventListener("click", (event) => {
+            event.preventDefault();
+            setView(link.dataset.view);
+        });
+    });
+
+    document.querySelectorAll("[data-view-trigger]").forEach((trigger) => {
+        trigger.addEventListener("click", (event) => {
+            event.preventDefault();
+            setView(trigger.dataset.viewTrigger);
+        });
+    });
+
+    document.querySelectorAll(".toggle-password").forEach((button) => {
+        button.addEventListener("click", () => {
+            const input = document.getElementById(button.dataset.target);
+            const icon = button.querySelector("i");
+            const isPassword = input.type === "password";
+
+            input.type = isPassword ? "text" : "password";
+            icon.classList.toggle("fa-eye");
+            icon.classList.toggle("fa-eye-slash");
+        });
+    });
+
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearMessage();
+
+        const submitButton = loginForm.querySelector(".btn-submit");
+        const formData = new FormData(loginForm);
+        const payload = Object.fromEntries(formData.entries());
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Entrando... <i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+            const response = await fetch("/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.mensaje || "No se pudo iniciar sesión.");
+            }
+
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+            localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+            showMessage("Sesión iniciada correctamente. Redirigiendo al dashboard...", "success");
+
+            setTimeout(() => {
+                window.location.href = "/pages/VistaTarjetas.html";
+            }, 900);
+        } catch (error) {
+            showMessage(error.message || "Ocurrió un error al iniciar sesión.", "error");
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Entrar al dashboard <i class="fa-solid fa-arrow-right"></i>';
+        }
+    });
+
+    recoverForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearMessage();
+
+        const submitButton = recoverForm.querySelector(".btn-submit");
+        const formData = new FormData(recoverForm);
+        const payload = Object.fromEntries(formData.entries());
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Verificando... <i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+            const response = await fetch("/auth/recover", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.mensaje || "No se pudo verificar el correo.");
+            }
+
+            showMessage(data.mensaje, "success");
+        } catch (error) {
+            showMessage(error.message || "Ocurrió un error al recuperar la cuenta.", "error");
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Verificar correo <i class="fa-solid fa-paper-plane"></i>';
+        }
+    });
+</script>
 
 </body>
 </html>

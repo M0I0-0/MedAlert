@@ -238,10 +238,22 @@ body {
     width: 100%;
     font-size: 14px;
     color: var(--dark-blue);
+    background: transparent;
 }
 
 .input-wrapper input::placeholder {
     color: #94a3b8;
+}
+
+.input-wrapper select {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 14px;
+    color: var(--dark-blue);
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
 }
 
 .icon-btn {
@@ -256,6 +268,14 @@ body {
 
 .icon-btn.border-left {
     border-left: 1px solid #e2e8f0;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.single-column {
+    grid-template-columns: 1fr;
 }
 
 .password-strength {
@@ -316,6 +336,11 @@ body {
     background: #f8fafc;
 }
 
+.btn-submit:disabled {
+    opacity: 0.75;
+    cursor: wait;
+}
+
 .login-link {
     text-align: center;
     margin-top: 25px;
@@ -327,6 +352,30 @@ body {
     color: var(--primary-blue);
     text-decoration: none;
     font-weight: 500;
+}
+
+.auth-panel.hidden {
+    display: none;
+}
+
+.auth-message {
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.auth-message.success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.auth-message.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
 }
 
 /* Responsive Básico */
