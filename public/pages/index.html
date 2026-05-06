@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Medilab</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon"><i class="fa-solid fa-shield-heart"></i></div>
+            Medi<span>lab</span>
+        </div>
+
+        <div class="image-placeholder">
+            <i class="fa-solid fa-user-plus"></i>
+        </div>
+
+        <div class="sidebar-text">
+            <h1>Únete a <span>Medilab</span></h1>
+            <p>Crea tu cuenta y empieza a gestionar tu salud de forma inteligente.</p>
+        </div>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-info">
+                    <h4>Crea tu cuenta</h4>
+                    <p>Completa el formulario de registro</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-info">
+                    <h4>Verifica tu correo</h4>
+                    <p>Confirma tu identidad por email</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-info">
+                    <h4>Configura tu perfil</h4>
+                    <p>Personaliza tu experiencia</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            © 2024 Medilab. Todos los derechos reservados.
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-nav">
+            <a href="#">Iniciar sesión</a
+            <a href="#" class="active">Registro</a>
+            <a href="#">Recuperar contraseña</a>
+        </div>
+
+        <div class="header">
+            <h2>Crear cuenta</h2>
+            <p>Completa tus datos para registrarte</p>
+        </div>
+
+        <form>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Nombre completo</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-user"></i>
+                        <input type="text" placeholder="Tu nombre">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Correo electrónico</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" placeholder="ejemplo@correo.com">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" placeholder="Mínimo 8 caracteres">
+                        <div class="icon-btn border-left">
+                            <i class="fa-regular fa-eye-slash"></i>
+                        </div>
+                    </div>
+                    <div class="password-strength">
+                        <div class="strength-bar active"></div>
+                        <div class="strength-bar active"></div>
+                        <div class="strength-bar active"></div>
+                        <div class="strength-bar"></div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Confirmar contraseña</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" placeholder="Repite tu contraseña">
+                        <div class="icon-btn border-left">
+                            <i class="fa-regular fa-eye-slash"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms">
+                <label for="terms">Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de Privacidad</a></label>
+            </div>
+
+            <button type="button" class="btn-submit">
+                Registrarme <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="login-link">
+            ¿Ya tienes cuenta? <a href="#">Inicia sesión aquí</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

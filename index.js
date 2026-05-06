@@ -2,6 +2,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const path = require("path");
 const { testConnection } = require("./src/database/connection");
 const authRouter = require("./src/routes/auth");
 
@@ -11,17 +12,14 @@ const PORT = process.env.PORT || 3000;
 // ─── Middlewares globales ─────────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
 // ─── Rutas públicas ───────────────────────────────────────────────────────────
 app.use("/auth", authRouter);
 
 // ─── Ruta base ────────────────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
-  res.json({
-    status:  "ok",
-    message: "API de Recordatorios de Medicamentos funcionando 🚀",
-    version: "1.0.0",
-  });
+  res.sendFile(path.join(__dirname, "public", "pages", "index.html"));
 });
 
 // ─── Ejemplo de ruta protegida ────────────────────────────────────────────────
