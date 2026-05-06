@@ -237,5 +237,5 @@ router.post("/register", async (req, res) => {
       .json({ ok: false, mensaje: "Error interno del servidor." });
   }
 });
-
+const bcrypt = require("bcrypt");
 module.exports = router;
