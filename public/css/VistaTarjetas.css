@@ -1,0 +1,340 @@
+/* GENERAL */
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:'Segoe UI', sans-serif;
+    background:linear-gradient(135deg,#eef2f7,#dfe6ee);
+    color:#1e293b;
+}
+
+/* NAVBAR */
+.navbar{
+    background:#031b4e;
+    padding:20px clamp(20px, 4vw, 50px);
+    color:white;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+.navbar h1{
+    margin:0;
+    font-size:clamp(28px, 4vw, 42px);
+}
+
+/* CONTENEDOR */
+.container{
+    width:min(1760px, calc(100% - 48px));
+    margin:0 auto;
+    padding:clamp(24px, 4vw, 50px) 0;
+}
+
+/* TITULO */
+.title-section h2{
+    font-size:clamp(30px, 5vw, 52px);
+    margin:0;
+    color:#08255c;
+    line-height:1.1;
+}
+
+.title-section p{
+    font-size:clamp(16px, 2.2vw, 22px);
+    color:#64748b;
+    margin-top:10px;
+    max-width:760px;
+}
+
+.line{
+    width:90px;
+    height:5px;
+    background:#3b82f6;
+    border-radius:10px;
+    margin-top:20px;
+}
+
+/* CARDS */
+.cards-container{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(420px, 1fr));
+    gap:30px;
+    margin-top:50px;
+    align-items:stretch;
+}
+
+/* CARD */
+.card{
+    background:white;
+    border-radius:24px;
+    padding:clamp(24px, 2.2vw, 32px);
+    box-shadow:0 12px 30px rgba(0,0,0,0.08);
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    min-width:0;
+}
+
+/* TOP */
+.top-card{
+    display:flex;
+    align-items:flex-start;
+    gap:25px;
+}
+
+/* IMAGEN */
+.top-card img{
+    width:clamp(110px, 14vw, 170px);
+    height:clamp(110px, 14vw, 170px);
+    border-radius:50%;
+    object-fit:cover;
+    flex-shrink:0;
+}
+
+/* INFO */
+.doctor-info{
+    flex:1;
+    min-width:0;
+}
+
+.status{
+    background:#dcfce7;
+    color:#15803d;
+    width:max-content;
+    padding:8px 16px;
+    border-radius:30px;
+    font-weight:600;
+    margin-bottom:18px;
+}
+
+.status span{
+    display:inline-block;
+    width:10px;
+    height:10px;
+    background:#16a34a;
+    border-radius:50%;
+    margin-right:8px;
+}
+
+.doctor-info h3{
+    margin:0;
+    font-size:clamp(28px, 3vw, 42px);
+    color:#08255c;
+    line-height:1.1;
+}
+
+.doctor-info h4{
+    margin-top:10px;
+    color:#2563eb;
+    font-size:clamp(20px, 2.2vw, 28px);
+}
+
+.cedula{
+    margin-top:15px;
+    color:#64748b;
+    font-size:clamp(16px, 1.8vw, 20px);
+}
+
+/* DESCRIPCION */
+.description{
+    margin-top:25px;
+    line-height:1.7;
+    font-size:clamp(16px, 1.9vw, 22px);
+    color:#475569;
+}
+
+/* LINEA */
+hr{
+    border:none;
+    border-top:1px solid #e2e8f0;
+    margin:30px 0;
+}
+
+/* PACIENTES */
+.patients-section{
+    flex:1;
+}
+
+.patients-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:25px;
+}
+
+.patients-header h5{
+    margin:0;
+    font-size:clamp(18px, 2vw, 24px);
+    color:#08255c;
+}
+
+.patients-header a{
+    color:#2563eb;
+    text-decoration:none;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+/* PACIENTE */
+.patient{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:22px;
+}
+
+.patient-left{
+    display:flex;
+    align-items:flex-start;
+    gap:15px;
+    min-width:0;
+}
+
+.avatar{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:bold;
+    font-size:18px;
+    flex-shrink:0;
+}
+
+/* COLORES AVATAR */
+.blue{
+    background:#dbeafe;
+    color:#2563eb;
+}
+
+.green{
+    background:#dcfce7;
+    color:#16a34a;
+}
+
+.purple{
+    background:#ede9fe;
+    color:#7c3aed;
+}
+
+.yellow{
+    background:#fef3c7;
+    color:#d97706;
+}
+
+.pink{
+    background:#fce7f3;
+    color:#db2777;
+}
+
+/* TEXTO */
+.patient span{
+    font-size:clamp(17px, 1.7vw, 20px);
+    font-weight:600;
+    color:#1e293b;
+    display:block;
+}
+
+.patient p{
+    margin:5px 0 0;
+    color:#64748b;
+    font-size:clamp(14px, 1.5vw, 17px);
+}
+
+/* BADGE */
+.badge{
+    background:#eff6ff;
+    color:#2563eb;
+    padding:8px 14px;
+    border-radius:12px;
+    font-size:15px;
+    font-weight:600;
+    flex-shrink:0;
+    white-space:nowrap;
+}
+
+/* BOTON */
+button{
+    width:100%;
+    margin-top:auto;
+    padding:16px 18px;
+    border:2px solid #2563eb;
+    background:white;
+    color:#2563eb;
+    border-radius:16px;
+    font-size:clamp(16px, 1.8vw, 20px);
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#2563eb;
+    color:white;
+}
+
+@media (max-width: 1460px){
+    .cards-container{
+        grid-template-columns:repeat(2, minmax(360px, 1fr));
+    }
+}
+
+@media (max-width: 860px){
+    .cards-container{
+        grid-template-columns:1fr;
+    }
+}
+
+@media (max-width: 768px){
+    .navbar{
+        padding:18px 20px;
+    }
+
+    .top-card{
+        flex-direction:column;
+        align-items:center;
+        text-align:center;
+        gap:18px;
+    }
+
+    .status{
+        margin-left:auto;
+        margin-right:auto;
+    }
+
+    .patients-header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .patient{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .badge{
+        width:max-content;
+    }
+}
+
+@media (max-width: 480px){
+    .line{
+        width:72px;
+    }
+
+    .card{
+        border-radius:20px;
+    }
+
+    .patient-left{
+        gap:12px;
+    }
+
+    .avatar{
+        width:48px;
+        height:48px;
+        font-size:16px;
+    }
+}
