@@ -57,6 +57,7 @@ const migrations = [
         especialidad        VARCHAR(100)  NOT NULL,
         telefono            VARCHAR(20)   NULL,
         correo              VARCHAR(150)  NULL,
+        contrasena          VARCHAR(255)  NOT NULL,
         created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
         PRIMARY KEY (id_medico),
@@ -78,6 +79,7 @@ const migrations = [
         telefono            VARCHAR(20)   NULL,
         correo              VARCHAR(150)  NULL,
         permiso_dispensar   TINYINT(1)    NOT NULL DEFAULT 0,
+        contrasena          VARCHAR(255)  NOT NULL,
         created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
         PRIMARY KEY (id_farmaceutico),
@@ -103,6 +105,7 @@ const migrations = [
         correo            VARCHAR(150)     NULL,
         historial_clinico TEXT             NULL,
         alergias          TEXT             NULL,
+        contrasena        VARCHAR(255)     NOT NULL,
         created_at        TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
         PRIMARY KEY (id_paciente),
@@ -126,6 +129,7 @@ const migrations = [
         telefono          VARCHAR(20)   NULL,
         correo            VARCHAR(150)  NULL,
         relacion_paciente VARCHAR(80)   NOT NULL,
+        contrasena        VARCHAR(255)  NOT NULL,
         created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
         PRIMARY KEY (id_familiar),
@@ -214,6 +218,23 @@ const migrations = [
     `,
   },
   {
+    name: "Tabla: password_resets",
+    sql: `
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id          INT           NOT NULL AUTO_INCREMENT,
+        correo      VARCHAR(150)  NOT NULL,
+        token       VARCHAR(255)  NOT NULL,
+        expiracion  DATETIME      NOT NULL,
+        usado       TINYINT(1)    NOT NULL DEFAULT 0,
+        created_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+        PRIMARY KEY (id),
+        UNIQUE KEY uq_password_reset_token (token),
+        INDEX idx_password_reset_correo (correo)
+      ) ENGINE=InnoDB;
+    `,
+  },
+  {
     name: "Trigger: calcular recordatorio_2h_antes",
     sql: `
       DROP TRIGGER IF EXISTS trg_recordatorio_before_insert;
@@ -247,25 +268,18 @@ const migrations = [
 
 async function runMigrations() {
   const conn = await getConnection();
+  const dbName = process.env.DB_NAME || "recordatorios_db";
   console.log("🚀 Iniciando migraciones...\n");
 
   // Usar la base de datos correcta desde la segunda migración en adelante
   await conn.query(
-    `CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || "recordatorios_db"}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+    `CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
   );
-  await conn.query(`USE \`${process.env.DB_NAME || "recordatorios_db"}\`;`);
+  await conn.query(`USE \`${dbName}\`;`);
 
   for (const migration of migrations) {
     try {
-      // Las migraciones de trigger y vista tienen múltiples statements
-      const statements = migration.sql
-        .split(";")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-
-      for (const statement of statements) {
-        await conn.query(statement);
-      }
+      await conn.query(migration.sql);
       console.log(`  ✅ ${migration.name}`);
     } catch (error) {
       console.error(`  ❌ ${migration.name}:`, error.message);
@@ -273,6 +287,30 @@ async function runMigrations() {
       process.exit(1);
     }
   }
+
+  async function ensureColumn(tableName, columnName, definition) {
+    const [rows] = await conn.query(
+      `SELECT 1
+         FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = ?
+          AND TABLE_NAME = ?
+          AND COLUMN_NAME = ?
+        LIMIT 1`,
+      [dbName, tableName, columnName]
+    );
+
+    if (rows.length === 0) {
+      await conn.query(
+        `ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${definition}`
+      );
+      console.log(`  ✅ Columna agregada: ${tableName}.${columnName}`);
+    }
+  }
+
+  await ensureColumn("medico", "contrasena", "VARCHAR(255) NOT NULL DEFAULT 'TempPass@123'");
+  await ensureColumn("farmaceutico", "contrasena", "VARCHAR(255) NOT NULL DEFAULT 'TempPass@123'");
+  await ensureColumn("paciente", "contrasena", "VARCHAR(255) NOT NULL DEFAULT 'TempPass@123'");
+  await ensureColumn("familiar_cuidador", "contrasena", "VARCHAR(255) NOT NULL DEFAULT 'TempPass@123'");
 
   console.log("\n🎉 Todas las migraciones completadas correctamente");
   await conn.end();

@@ -16,6 +16,7 @@ async function seed() {
     await conn.query("SET FOREIGN_KEY_CHECKS = 0");
 
     const tablas = [
+      "password_resets",
       "token_sesion",
       "recordatorio",
       "familiar_paciente",
@@ -46,59 +47,59 @@ async function seed() {
 
     // ─── 2. MÉDICOS ──────────────────────────────────────────────
     await conn.query(`
-      INSERT INTO medico (id_administrador, nombre_completo, cedula_profesional, especialidad, telefono, correo) VALUES
-        (1, 'Dr. Carlos Ramírez López',  '1234567', 'Medicina General',    '5521345678', 'carlos.ramirez@hospital.com'),
-        (1, 'Dra. Sofía Mendoza Torres', '7654321', 'Cardiología',         '5598765432', 'sofia.mendoza@hospital.com'),
-        (1, 'Dr. Ernesto Vega Salinas',  '9876543', 'Geriatría',           '5534567890', 'ernesto.vega@hospital.com')
+      INSERT INTO medico (id_administrador, nombre_completo, cedula_profesional, especialidad, telefono, correo, contrasena) VALUES
+        (1, 'Dr. Carlos Ramírez López',  '1234567', 'Medicina General',    '5521345678', 'carlos.ramirez@hospital.com', 'Medico@123'),
+        (1, 'Dra. Sofía Mendoza Torres', '7654321', 'Cardiología',         '5598765432', 'sofia.mendoza@hospital.com', 'Medico@123'),
+        (1, 'Dr. Ernesto Vega Salinas',  '9876543', 'Geriatría',           '5534567890', 'ernesto.vega@hospital.com', 'Medico@123')
     `);
     console.log("  ✅ Médicos insertados");
 
     // ─── 3. FARMACÉUTICOS ────────────────────────────────────────
     await conn.query(`
-      INSERT INTO farmaceutico (id_administrador, nombre_completo, cedula_profesional, telefono, correo, permiso_dispensar) VALUES
-        (1, 'Lic. María Gutiérrez Cruz',   'F-001234', '5544332211', 'maria.gutierrez@farmacia.com',  1),
-        (1, 'Lic. Jorge Sánchez Pérez',    'F-005678', '5566778899', 'jorge.sanchez@farmacia.com',    1),
-        (1, 'Lic. Ana Flores Ramos',       'F-009012', '5577889900', 'ana.flores@farmacia.com',       0)
+      INSERT INTO farmaceutico (id_administrador, nombre_completo, cedula_profesional, telefono, correo, permiso_dispensar, contrasena) VALUES
+        (1, 'Lic. María Gutiérrez Cruz',   'F-001234', '5544332211', 'maria.gutierrez@farmacia.com',  1, 'Farmacia@123'),
+        (1, 'Lic. Jorge Sánchez Pérez',    'F-005678', '5566778899', 'jorge.sanchez@farmacia.com',    1, 'Farmacia@123'),
+        (1, 'Lic. Ana Flores Ramos',       'F-009012', '5577889900', 'ana.flores@farmacia.com',       0, 'Farmacia@123')
     `);
     console.log("  ✅ Farmacéuticos insertados");
 
     // ─── 4. PACIENTES ────────────────────────────────────────────
     await conn.query(`
       INSERT INTO paciente
-        (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg, telefono, correo, historial_clinico, alergias)
+        (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg, telefono, correo, historial_clinico, alergias, contrasena)
       VALUES
         (1, 1, 'Juan Pérez Hernández',    65, 168.00, 72.50, '5512345678', 'juan.perez@gmail.com',
          'Hipertensión arterial diagnosticada en 2018. Control mensual.',
-         'Penicilina'),
+         'Penicilina', 'Paciente@123'),
 
         (2, 1, 'Rosa Martínez García',    72, 155.00, 61.00, '5523456789', 'rosa.martinez@gmail.com',
          'Diabetes tipo 2. Tratamiento con metformina desde 2020.',
-         'Sulfonamidas, ibuprofeno'),
+         'Sulfonamidas, ibuprofeno', 'Paciente@123'),
 
         (3, 1, 'Pedro Alvarado Ruiz',     80, 172.00, 68.00, '5534567891', 'pedro.alvarado@gmail.com',
          'Insuficiencia cardíaca leve. Control quincenal.',
-         'Ninguna conocida'),
+         'Ninguna conocida', 'Paciente@123'),
 
         (1, 1, 'Lucía Torres Vázquez',    45, 162.00, 58.00, '5545678902', 'lucia.torres@gmail.com',
          'Hipotiroidismo. Tratamiento con levotiroxina.',
-         'Látex'),
+         'Látex', 'Paciente@123'),
 
         (2, 1, 'Miguel Ángel Soto Díaz',  58, 175.00, 85.00, '5556789013', 'miguel.soto@gmail.com',
          'Hipercolesterolemia. Dieta controlada y estatinas.',
-         'Aspirina')
+         'Aspirina', 'Paciente@123')
     `);
     console.log("  ✅ Pacientes insertados");
 
     // ─── 5. FAMILIARES / CUIDADORES ──────────────────────────────
     await conn.query(`
       INSERT INTO familiar_cuidador
-        (id_administrador, nombre_completo, edad, telefono, correo, relacion_paciente)
+        (id_administrador, nombre_completo, edad, telefono, correo, relacion_paciente, contrasena)
       VALUES
-        (1, 'Laura Pérez Hernández',   40, '5511112222', 'laura.perez@gmail.com',   'Hija'),
-        (1, 'Roberto Martínez Gil',    50, '5522223333', 'roberto.mtz@gmail.com',   'Hijo'),
-        (1, 'Carmen Ruiz Alvarado',    55, '5533334444', 'carmen.ruiz@gmail.com',   'Esposa'),
-        (1, 'Diana Torres Luna',       35, '5544445555', 'diana.torres@gmail.com',  'Hija'),
-        (1, 'Ernesto Soto Reyes',      62, '5555556666', 'ernesto.soto@gmail.com',  'Esposo')
+        (1, 'Laura Pérez Hernández',   40, '5511112222', 'laura.perez@gmail.com',   'Hija', 'Familiar@123'),
+        (1, 'Roberto Martínez Gil',    50, '5522223333', 'roberto.mtz@gmail.com',   'Hijo', 'Familiar@123'),
+        (1, 'Carmen Ruiz Alvarado',    55, '5533334444', 'carmen.ruiz@gmail.com',   'Esposa', 'Familiar@123'),
+        (1, 'Diana Torres Luna',       35, '5544445555', 'diana.torres@gmail.com',  'Hija', 'Familiar@123'),
+        (1, 'Ernesto Soto Reyes',      62, '5555556666', 'ernesto.soto@gmail.com',  'Esposo', 'Familiar@123')
     `);
     console.log("  ✅ Familiares/cuidadores insertados");
 
