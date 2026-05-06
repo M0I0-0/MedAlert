@@ -1,0 +1,271 @@
+/* GENERAL */
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#eef2f7,#dfe6ee);
+    color:#1d2b3a;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+/* NAVBAR */
+.navbar{
+    background:#031b4e;
+    color:white;
+    padding:20px 50px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.navbar h1{
+    margin:0;
+    font-size:42px;
+    font-weight:bold;
+}
+
+/* CONTENEDOR */
+.container{
+    display:flex;
+    justify-content:center;
+    padding:32px 20px;
+}
+
+/* TARJETA */
+.profile-card{
+    background:white;
+    width:min(100%, 1100px);
+    border-radius:20px;
+    padding:32px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* TOP */
+.top-section{
+    display:flex;
+    gap:32px;
+    align-items:flex-start;
+}
+
+/* IMAGEN */
+.doctor-image img{
+    width:min(100%, 320px);
+    height:320px;
+    object-fit:cover;
+    border-radius:20px;
+    display:block;
+}
+
+/* INFO */
+.doctor-info{
+    flex:1;
+    min-width:0;
+}
+
+.doctor-info h2{
+    font-size:clamp(2rem, 4vw, 3.2rem);
+    margin:0;
+    color:#08255c;
+}
+
+.doctor-info h3{
+    color:#3b82f6;
+    font-size:clamp(1.25rem, 2.5vw, 2rem);
+    margin-top:10px;
+}
+
+.line{
+    width:90px;
+    height:4px;
+    background:#3b82f6;
+    border-radius:10px;
+    margin:25px 0;
+}
+
+.doctor-info p{
+    font-size:1.05rem;
+    line-height:1.7;
+    color:#3d4b5c;
+}
+
+/* MINI INFO */
+.mini-info{
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-top:30px;
+}
+
+.mini-box{
+    background:#f5f8fd;
+    padding:20px;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    gap:15px;
+    flex:1 1 240px;
+    min-width:0;
+}
+
+.mini-box i{
+    font-size:35px;
+    color:#08255c;
+}
+
+.mini-box span{
+    font-weight:bold;
+    font-size:18px;
+}
+
+.mini-box p{
+    margin:5px 0 0;
+    font-size:17px;
+}
+
+/* LINEA */
+hr{
+    border:none;
+    border-top:1px solid #e2e8f0;
+    margin:40px 0;
+}
+
+/* BOTTOM */
+.bottom-section{
+    display:flex;
+    gap:32px;
+}
+
+/* IZQUIERDA */
+.left-info{
+    flex:1;
+    min-width:0;
+}
+
+.left-info h4,
+.right-info h4{
+    font-size:1.5rem;
+    color:#08255c;
+    margin-bottom:25px;
+}
+
+.info-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    padding:18px 0;
+    border-bottom:1px solid #e5e7eb;
+}
+
+.info-item span{
+    font-weight:600;
+    color:#374151;
+    font-size:18px;
+}
+
+.info-item p{
+    margin:0;
+    color:#4b5563;
+    font-size:18px;
+    text-align:right;
+}
+
+/* DERECHA */
+.right-info{
+    width:min(100%, 420px);
+}
+
+.about-box{
+    background:#f5f8fd;
+    padding:25px;
+    border-radius:15px;
+    line-height:1.8;
+    color:#4b5563;
+    font-size:18px;
+}
+
+.areas-title{
+    margin-top:40px;
+}
+
+/* TAGS */
+.tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:15px;
+    margin-top:20px;
+}
+
+.tags span{
+    background:#eef4ff;
+    color:#2563eb;
+    padding:12px 18px;
+    border-radius:12px;
+    font-weight:600;
+    font-size:16px;
+}
+
+@media (max-width: 900px){
+    .profile-card{
+        padding:24px;
+    }
+
+    .top-section,
+    .bottom-section{
+        flex-direction:column;
+    }
+
+    .doctor-image img{
+        width:100%;
+        max-width:320px;
+        height:auto;
+        aspect-ratio:1 / 1;
+    }
+
+    .right-info{
+        width:100%;
+    }
+}
+
+@media (max-width: 600px){
+    .navbar{
+        padding:18px 20px;
+    }
+
+    .navbar h1{
+        font-size:2rem;
+    }
+
+    .container{
+        padding:20px 12px;
+    }
+
+    .profile-card{
+        padding:18px;
+        border-radius:16px;
+    }
+
+    .top-section{
+        gap:20px;
+    }
+
+    .doctor-info p,
+    .about-box,
+    .info-item span,
+    .info-item p{
+        font-size:0.95rem;
+    }
+
+    .info-item{
+        flex-direction:column;
+        gap:6px;
+    }
+
+    .info-item p{
+        text-align:left;
+    }
+
+    .mini-box{
+        padding:16px;
+    }
+}
