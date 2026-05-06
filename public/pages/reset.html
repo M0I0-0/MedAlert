@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Restablecer Contraseña - Medilab</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../css/login.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <div class="logo">
+          <div class="logo-icon"><i class="fa-solid fa-shield-heart"></i></div>
+          Medi<span>lab</span>
+        </div>
+        <div class="sidebar-text">
+          <h1>Restablece tu <span>Contraseña</span></h1>
+          <p>
+            Ingresa tu nueva contraseña para recuperar el acceso a tu cuenta.
+          </p>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="header">
+          <h2>Nueva contraseña</h2>
+          <p>Ingresa y confirma tu nueva contraseña</p>
+        </div>
+
+        <div id="auth-message" class="auth-message" hidden></div>
+
+        <section class="auth-panel">
+          <form id="reset-form">
+            <div class="form-grid single-column">
+              <div class="input-group full-width">
+                <label for="nuevaContrasena">Nueva contraseña</label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-lock"></i>
+                  <input
+                    id="nuevaContrasena"
+                    type="password"
+                    placeholder="Mínimo 8 caracteres"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn-submit">
+              Actualizar contraseña <i class="fa-solid fa-check"></i>
+            </button>
+          </form>
+          <div class="login-link">
+            <a href="index.html">Volver al inicio de sesión</a>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const resetForm = document.getElementById("reset-form");
+      const authMessage = document.getElementById("auth-message");
+
+      function showMessage(message, type) {
+        authMessage.textContent = message;
+        authMessage.className = "auth-message " + type;
+        authMessage.hidden = false;
+      }
+
+      resetForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const nuevaContrasena =
+          document.getElementById("nuevaContrasena").value;
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+        const correo = urlParams.get("correo");
+        const rol = urlParams.get("rol");
+
+        if (!token || !correo || !rol) {
+          showMessage("Enlace inválido o incompleto.", "error");
+          return;
+        }
+
+        const submitButton = resetForm.querySelector(".btn-submit");
+        submitButton.disabled = true;
+        submitButton.innerHTML =
+          'Actualizando... <i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+          const response = await fetch("/auth/reset-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, correo, rol, nuevaContrasena }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            throw new Error(data.mensaje);
+          }
+
+          showMessage(data.mensaje, "success");
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 2000);
+        } catch (error) {
+          showMessage(error.message, "error");
+          submitButton.disabled = false;
+          submitButton.innerHTML =
+            'Actualizar contraseña <i class="fa-solid fa-check"></i>';
+        }
+      });
+    </script>
+  </body>
+</html>
