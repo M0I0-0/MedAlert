@@ -12,11 +12,18 @@ const {
 
 const crypto = require("crypto");
 let bcrypt = null;
+let nodemailer = null;
 
 try {
   bcrypt = require("bcrypt");
 } catch {
   bcrypt = null;
+}
+
+try {
+  nodemailer = require("nodemailer");
+} catch {
+  nodemailer = null;
 }
 
 const CONFIG_ROL = {
@@ -80,6 +87,60 @@ async function obtenerAdministradorBase() {
   );
 
   return rows[0]?.id_administrador || null;
+}
+
+function obtenerBaseUrl() {
+  return process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+}
+
+function obtenerConfiguracionCorreo() {
+  return {
+    host: process.env.SMTP_HOST || "",
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: String(process.env.SMTP_SECURE || "false") === "true",
+    user: process.env.SMTP_USER || "",
+    pass: process.env.SMTP_PASS || "",
+    from: process.env.MAIL_FROM || process.env.SMTP_USER || "",
+  };
+}
+
+function correoEstaConfigurado() {
+  const mailConfig = obtenerConfiguracionCorreo();
+  return Boolean(mailConfig.host && mailConfig.user && mailConfig.pass && mailConfig.from);
+}
+
+async function enviarCorreoRecuperacion({ to, rol, link }) {
+  if (!nodemailer) {
+    throw new Error("nodemailer_no_disponible");
+  }
+
+  const mailConfig = obtenerConfiguracionCorreo();
+  const transporter = nodemailer.createTransport({
+    host: mailConfig.host,
+    port: mailConfig.port,
+    secure: mailConfig.secure,
+    auth: {
+      user: mailConfig.user,
+      pass: mailConfig.pass,
+    },
+  });
+
+  await transporter.sendMail({
+    from: mailConfig.from,
+    to,
+    subject: "Recuperacion de contraseña - Medilab",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #1e293b;">
+        <h2>Recuperacion de contraseña</h2>
+        <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
+        <p><strong>Rol:</strong> ${rol}</p>
+        <p>Haz clic en el siguiente enlace para continuar:</p>
+        <p><a href="${link}">${link}</a></p>
+        <p>Este enlace expirara en 15 minutos.</p>
+        <p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
+      </div>
+    `,
+  });
 }
 
 router.post("/signup", async (req, res) => {
@@ -472,12 +533,28 @@ async function handleRecover(req, res) {
       [correo, token, expiracion],
     );
 
-    const link = `http://localhost:3000/pages/reset.html?token=${token}&correo=${correo}&rol=${rolEncontrado}`;
+    const link = `${obtenerBaseUrl()}/pages/reset.html?token=${encodeURIComponent(token)}&correo=${encodeURIComponent(correo)}&rol=${encodeURIComponent(rolEncontrado)}`;
+
+    if (correoEstaConfigurado()) {
+      try {
+        await enviarCorreoRecuperacion({ to: correo, rol: rolEncontrado, link });
+
+        return res.json({
+          ok: true,
+          existeCuenta: true,
+          mensaje: "Te enviamos un correo con el enlace de recuperacion.",
+        });
+      } catch (error) {
+        console.error("Error enviando correo de recuperacion:", error.message);
+      }
+    }
 
     return res.json({
       ok: true,
       existeCuenta: true,
-      mensaje: "Correo verificado. En este entorno local puedes usar el enlace de recuperacion generado.",
+      mensaje: nodemailer
+        ? "No se pudo enviar el correo. Revisa la configuracion SMTP y usa temporalmente este enlace."
+        : "El servicio de correo no esta disponible en este entorno. Usa temporalmente este enlace.",
       linkRecuperacion: link,
     });
   } catch (err) {
