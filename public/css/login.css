@@ -358,6 +358,10 @@ body {
     display: none;
 }
 
+.hidden {
+    display: none !important;
+}
+
 .auth-message {
     margin-bottom: 20px;
     padding: 12px 14px;

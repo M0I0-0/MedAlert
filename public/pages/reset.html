@@ -52,6 +52,19 @@
                   />
                 </div>
               </div>
+
+              <div class="input-group full-width">
+                <label for="confirmarContrasena">Confirmar contraseña</label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-lock"></i>
+                  <input
+                    id="confirmarContrasena"
+                    type="password"
+                    placeholder="Repite tu nueva contraseña"
+                    required
+                  />
+                </div>
+              </div>
             </div>
             <button type="submit" class="btn-submit">
               Actualizar contraseña <i class="fa-solid fa-check"></i>
@@ -79,6 +92,8 @@
 
         const nuevaContrasena =
           document.getElementById("nuevaContrasena").value;
+        const confirmarContrasena =
+          document.getElementById("confirmarContrasena").value;
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get("token");
         const correo = urlParams.get("correo");
@@ -86,6 +101,16 @@
 
         if (!token || !correo || !rol) {
           showMessage("Enlace inválido o incompleto.", "error");
+          return;
+        }
+
+        if (!nuevaContrasena.trim()) {
+          showMessage("La nueva contraseña es requerida.", "error");
+          return;
+        }
+
+        if (nuevaContrasena !== confirmarContrasena) {
+          showMessage("Las contraseñas no coinciden.", "error");
           return;
         }
 

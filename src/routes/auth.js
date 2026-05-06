@@ -56,63 +56,237 @@ function validarContrasenaAdmin(contrasena) {
   return null;
 }
 
-router.post("/signup", async (req, res) => {
-  const { nombre, correo, telefono, contrasena } = req.body;
-
-  if (!nombre) {
-    return res.status(400).json({ ok: false, mensaje: "El nombre es requerido." });
+function validarContrasenaUsuario(contrasena) {
+  if (!contrasena) return "La contraseña es requerida.";
+  if (contrasena.length < 8) {
+    return "La contraseña debe tener al menos 8 caracteres.";
   }
 
-  if (!correo && !telefono) {
-    return res.status(400).json({
+  return null;
+}
+
+function validarContrasenaPorRol(rol, contrasena) {
+  return rol === "administrador"
+    ? validarContrasenaAdmin(contrasena)
+    : validarContrasenaUsuario(contrasena);
+}
+
+async function obtenerAdministradorBase() {
+  const [rows] = await pool.query(
+    `SELECT id_administrador
+       FROM administrador
+      ORDER BY id_administrador ASC
+      LIMIT 1`
+  );
+
+  return rows[0]?.id_administrador || null;
+}
+
+router.post("/signup", async (req, res) => {
+  const {
+    rol,
+    nombre,
+    correo,
+    telefono,
+    contrasena,
+    cedula_profesional,
+    especialidad,
+    permiso_dispensar,
+    edad,
+    estatura_cm,
+    peso_kg,
+    historial_clinico,
+    alergias,
+    id_medico,
+    relacion_paciente,
+  } = req.body;
+
+  if (!rol) {
+    return res.status(400).json({ ok: false, mensaje: "El rol es requerido." });
+  }
+
+  if (rol === "administrador") {
+    return res.status(403).json({
       ok: false,
-      mensaje: "Debes proporcionar correo o telefono.",
+      mensaje: "El rol administrador no se puede registrar desde esta pantalla.",
     });
   }
 
-  const errorContrasena = validarContrasenaAdmin(contrasena);
+  const config = CONFIG_ROL[rol];
+  if (!config) {
+    return res.status(400).json({ ok: false, mensaje: "Rol no válido." });
+  }
+
+  if (!nombre?.trim()) {
+    return res.status(400).json({ ok: false, mensaje: "El nombre es requerido." });
+  }
+
+  if (!correo?.trim()) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "El correo es requerido para el registro.",
+    });
+  }
+
+  const errorContrasena = validarContrasenaUsuario(contrasena);
   if (errorContrasena) {
     return res.status(400).json({ ok: false, mensaje: errorContrasena });
   }
 
   try {
-    if (correo) {
-      const [correoExistente] = await pool.query(
-        "SELECT id_administrador FROM administrador WHERE correo = ? LIMIT 1",
-        [correo],
-      );
+    const administradorBase = await obtenerAdministradorBase();
+    if (!administradorBase) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: "Primero debe existir al menos un administrador en el sistema.",
+      });
+    }
 
-      if (correoExistente.length > 0) {
-        return res.status(409).json({
-          ok: false,
-          mensaje: "Ya existe una cuenta de administrador con ese correo.",
-        });
-      }
+    const [correoExistente] = await pool.query(
+      `SELECT ${config.idCampo}
+         FROM \`${config.tabla}\`
+        WHERE correo = ?
+        LIMIT 1`,
+      [correo]
+    );
+
+    if (correoExistente.length > 0) {
+      return res.status(409).json({
+        ok: false,
+        mensaje: "Ya existe una cuenta con ese correo.",
+      });
     }
 
     const hash = await hashContrasenaSiEsPosible(contrasena);
+    let result;
 
-    const [result] = await pool.query(
-      `INSERT INTO administrador (nombre, correo, telefono, contrasena)
-       VALUES (?, ?, ?, ?)`,
-      [nombre, correo || null, telefono || null, hash],
-    );
+    switch (rol) {
+      case "medico":
+        if (!cedula_profesional?.trim() || !especialidad?.trim()) {
+          return res.status(400).json({
+            ok: false,
+            mensaje: "La cédula profesional y la especialidad son requeridas.",
+          });
+        }
+
+        [result] = await pool.query(
+          `INSERT INTO medico
+             (id_administrador, nombre_completo, cedula_profesional, especialidad, telefono, correo, contrasena)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            administradorBase,
+            nombre.trim(),
+            cedula_profesional.trim(),
+            especialidad.trim(),
+            telefono || null,
+            correo.trim(),
+            hash,
+          ]
+        );
+        break;
+
+      case "farmaceutico":
+        if (!cedula_profesional?.trim()) {
+          return res.status(400).json({
+            ok: false,
+            mensaje: "La cédula profesional es requerida.",
+          });
+        }
+
+        [result] = await pool.query(
+          `INSERT INTO farmaceutico
+             (id_administrador, nombre_completo, cedula_profesional, telefono, correo, permiso_dispensar, contrasena)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            administradorBase,
+            nombre.trim(),
+            cedula_profesional.trim(),
+            telefono || null,
+            correo.trim(),
+            permiso_dispensar ? 1 : 0,
+            hash,
+          ]
+        );
+        break;
+
+      case "paciente":
+        if (!edad || !id_medico) {
+          return res.status(400).json({
+            ok: false,
+            mensaje: "La edad y el médico tratante son requeridos.",
+          });
+        }
+
+        [result] = await pool.query(
+          `INSERT INTO paciente
+             (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg, telefono, correo, historial_clinico, alergias, contrasena)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            Number(id_medico),
+            administradorBase,
+            nombre.trim(),
+            Number(edad),
+            estatura_cm || null,
+            peso_kg || null,
+            telefono || null,
+            correo.trim(),
+            historial_clinico || null,
+            alergias || null,
+            hash,
+          ]
+        );
+        break;
+
+      case "familiar":
+        if (!relacion_paciente?.trim()) {
+          return res.status(400).json({
+            ok: false,
+            mensaje: "La relación con el paciente es requerida.",
+          });
+        }
+
+        [result] = await pool.query(
+          `INSERT INTO familiar_cuidador
+             (id_administrador, nombre_completo, edad, telefono, correo, relacion_paciente, contrasena)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            administradorBase,
+            nombre.trim(),
+            edad || null,
+            telefono || null,
+            correo.trim(),
+            relacion_paciente.trim(),
+            hash,
+          ]
+        );
+        break;
+
+      default:
+        return res.status(400).json({ ok: false, mensaje: "Rol no válido." });
+    }
 
     return res.status(201).json({
       ok: true,
-      mensaje: "Cuenta de administrador creada correctamente.",
+      mensaje: "Cuenta creada correctamente.",
       usuario: {
         id: result.insertId,
-        nombre,
-        correo: correo || null,
-        rol: "administrador",
+        nombre_completo: nombre.trim(),
+        correo: correo.trim(),
+        rol,
       },
     });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY") {
       return res.status(409).json({
         ok: false,
-        mensaje: "Ya existe una cuenta con ese correo o telefono.",
+        mensaje: "Ya existe un registro con ese correo o cédula.",
+      });
+    }
+
+    if (err.code === "ER_NO_REFERENCED_ROW_2") {
+      return res.status(400).json({
+        ok: false,
+        mensaje: "El médico indicado no existe o no está disponible.",
       });
     }
 
@@ -339,14 +513,12 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ ok: false, mensaje: "Token expirado." });
     }
 
-    if (!bcrypt) {
-      return res.status(500).json({
-        ok: false,
-        mensaje: "La recuperacion con hash no esta disponible en este entorno.",
-      });
+    const errorContrasena = validarContrasenaPorRol(rol, nuevaContrasena);
+    if (errorContrasena) {
+      return res.status(400).json({ ok: false, mensaje: errorContrasena });
     }
 
-    const hash = await bcrypt.hash(nuevaContrasena, 10);
+    const hash = await hashContrasenaSiEsPosible(nuevaContrasena);
 
     await pool.query(
       `UPDATE \`${config.tabla}\` SET contrasena = ? WHERE correo = ?`,
