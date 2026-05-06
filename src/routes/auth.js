@@ -190,51 +190,50 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-router.post("/register", async (req, res) => {
-  const { nombre, correo, contrasena, rol } = req.body;
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /auth/recover
+// Body: { correo }
+//
+// Flujo básico de recuperación para ambiente local:
+//   1. Verifica si el correo existe en alguna tabla de usuarios
+//   2. Devuelve un mensaje genérico para no filtrar información sensible
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/recover", async (req, res) => {
+  const { correo } = req.body;
 
-  if (!nombre || !correo || !contrasena || !rol) {
+  if (!correo) {
     return res.status(400).json({
       ok: false,
-      mensaje: "Todos los campos son requeridos.",
+      mensaje: "El correo es requerido.",
     });
-  }
-
-  const config = CONFIG_ROL[rol];
-  if (!config) {
-    return res.status(400).json({ ok: false, mensaje: "Rol no válido." });
   }
 
   try {
-    // Verificar si ya existe
-    const [existe] = await pool.query(
-      `SELECT * FROM \`${config.tabla}\` WHERE correo = ? LIMIT 1`,
-      [correo],
-    );
+    const roles = Object.entries(CONFIG_ROL);
+    let cuentaEncontrada = null;
 
-    if (existe.length > 0) {
-      return res.status(400).json({
-        ok: false,
-        mensaje: "El correo ya está registrado.",
-      });
+    for (const [rol, config] of roles) {
+      const [rows] = await pool.query(
+        `SELECT ${config.idCampo} AS id FROM \`${config.tabla}\` WHERE correo = ? LIMIT 1`,
+        [correo]
+      );
+
+      if (rows.length > 0) {
+        cuentaEncontrada = { rol, id: rows[0].id };
+        break;
+      }
     }
 
-    // Insertar usuario
-    await pool.query(
-      `INSERT INTO \`${config.tabla}\` (nombre, correo, contrasena)
-       VALUES (?, ?, ?)`,
-      [nombre, correo, contrasena],
-    );
-
-    return res.status(201).json({
+    return res.status(200).json({
       ok: true,
-      mensaje: "Usuario registrado correctamente.",
+      existeCuenta: Boolean(cuentaEncontrada),
+      mensaje: cuentaEncontrada
+        ? "Correo verificado. En este entorno local puedes iniciar sesion con tus credenciales existentes."
+        : "Si el correo existe, se enviaran instrucciones de recuperacion.",
     });
   } catch (err) {
-    console.error("Error en /auth/register:", err.message);
-    return res
-      .status(500)
-      .json({ ok: false, mensaje: "Error interno del servidor." });
+    console.error("Error en /auth/recover:", err.message);
+    return res.status(500).json({ ok: false, mensaje: "Error interno del servidor." });
   }
 });
 const bcrypt = require("bcrypt");
