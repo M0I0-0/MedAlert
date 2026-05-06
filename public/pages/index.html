@@ -9,6 +9,39 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="css/login.css">
+
+    <style>
+        /* Campos dinámicos según rol */
+        .campo-rol { display: none; }
+        .campo-rol.visible { display: flex; }
+
+        /* Indicador de fuerza de contraseña */
+        .strength-bar { transition: background 0.3s; }
+        .strength-weak   { background: #ef4444 !important; }
+        .strength-fair   { background: #f97316 !important; }
+        .strength-good   { background: #eab308 !important; }
+        .strength-strong { background: #22c55e !important; }
+
+        /* Texto de fuerza */
+        .strength-label {
+            font-size: 11px;
+            margin-top: 4px;
+            color: var(--text-gray);
+            min-height: 16px;
+        }
+
+        /* Mensaje de error debajo de campo */
+        .field-error {
+            font-size: 11px;
+            color: #ef4444;
+            margin-top: 3px;
+            display: none;
+        }
+        .field-error.visible { display: block; }
+
+        /* Input inválido */
+        .input-wrapper.invalid { border-color: #ef4444; }
+    </style>
 </head>
 <body>
 
@@ -71,6 +104,9 @@
 
         <div id="auth-message" class="auth-message" hidden></div>
 
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!-- PANEL: LOGIN                                              -->
+        <!-- ══════════════════════════════════════════════════════════ -->
         <section class="auth-panel" data-panel="login">
             <form id="login-form">
                 <div class="form-grid">
@@ -119,65 +155,223 @@
             </div>
         </section>
 
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!-- PANEL: REGISTRO                                           -->
+        <!-- Solo administradores pueden registrar — deben iniciar    -->
+        <!-- sesión primero para obtener el accessToken               -->
+        <!-- ══════════════════════════════════════════════════════════ -->
         <section class="auth-panel hidden" data-panel="register">
-            <form>
+            <form id="register-form" novalidate>
                 <div class="form-grid">
-                    <div class="input-group">
-                        <label>Nombre completo</label>
-                        <div class="input-wrapper">
-                            <i class="fa-regular fa-user"></i>
-                            <input type="text" placeholder="Tu nombre">
+
+                    <!-- ROL ─────────────────────────────────────────── -->
+                    <div class="input-group full-width">
+                        <label for="reg-rol">Rol a registrar</label>
+                        <div class="input-wrapper" id="wrap-reg-rol">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <select id="reg-rol" name="rol" required>
+                                <option value="">Selecciona el rol</option>
+                                <option value="administrador">Administrador</option>
+                                <option value="medico">Médico</option>
+                                <option value="farmaceutico">Farmacéutico</option>
+                                <option value="paciente">Paciente</option>
+                                <option value="familiar">Familiar / Cuidador</option>
+                            </select>
                         </div>
+                        <span class="field-error" id="err-reg-rol">Selecciona un rol.</span>
                     </div>
 
-                    <div class="input-group">
-                        <label>Correo electrónico</label>
+                    <!-- NOMBRE COMPLETO ──────────────────────────────── -->
+                    <div class="input-group full-width campo-rol campo-todos" id="grp-nombre">
+                        <label for="reg-nombre">Nombre completo</label>
+                        <div class="input-wrapper" id="wrap-reg-nombre">
+                            <i class="fa-regular fa-user"></i>
+                            <input id="reg-nombre" name="nombre_completo" type="text" placeholder="Nombre completo">
+                        </div>
+                        <span class="field-error" id="err-reg-nombre">El nombre es requerido.</span>
+                    </div>
+
+                    <!-- CORREO ───────────────────────────────────────── -->
+                    <div class="input-group campo-rol campo-todos" id="grp-correo">
+                        <label for="reg-correo">Correo electrónico</label>
                         <div class="input-wrapper">
                             <i class="fa-regular fa-envelope"></i>
-                            <input type="email" placeholder="ejemplo@correo.com">
+                            <input id="reg-correo" name="correo" type="email" placeholder="ejemplo@correo.com">
+                        </div>
+                        <span class="field-error" id="err-reg-correo">Ingresa un correo válido.</span>
+                    </div>
+
+                    <!-- TELÉFONO ─────────────────────────────────────── -->
+                    <div class="input-group campo-rol campo-todos" id="grp-telefono">
+                        <label for="reg-telefono">Teléfono</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-phone"></i>
+                            <input id="reg-telefono" name="telefono" type="tel" placeholder="10 dígitos">
+                        </div>
+                        <span class="field-error" id="err-reg-telefono">Ingresa un teléfono válido.</span>
+                    </div>
+
+                    <!-- CÉDULA PROFESIONAL (médico / farmacéutico) ────── -->
+                    <div class="input-group campo-rol campo-medico campo-farmaceutico" id="grp-cedula" style="display:none">
+                        <label for="reg-cedula">Cédula profesional</label>
+                        <div class="input-wrapper" id="wrap-reg-cedula">
+                            <i class="fa-regular fa-id-card"></i>
+                            <input id="reg-cedula" name="cedula_profesional" type="text" placeholder="Cédula profesional">
+                        </div>
+                        <span class="field-error" id="err-reg-cedula">La cédula es requerida.</span>
+                    </div>
+
+                    <!-- ESPECIALIDAD (médico) ────────────────────────── -->
+                    <div class="input-group campo-rol campo-medico" id="grp-especialidad" style="display:none">
+                        <label for="reg-especialidad">Especialidad</label>
+                        <div class="input-wrapper" id="wrap-reg-especialidad">
+                            <i class="fa-solid fa-stethoscope"></i>
+                            <input id="reg-especialidad" name="especialidad" type="text" placeholder="Ej. Cardiología">
+                        </div>
+                        <span class="field-error" id="err-reg-especialidad">La especialidad es requerida.</span>
+                    </div>
+
+                    <!-- PERMISO DISPENSAR (farmacéutico) ─────────────── -->
+                    <div class="input-group campo-rol campo-farmaceutico full-width" id="grp-permiso" style="display:none">
+                        <label for="reg-permiso">Permiso para dispensar medicamentos</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-pills"></i>
+                            <select id="reg-permiso" name="permiso_dispensar">
+                                <option value="0">No</option>
+                                <option value="1">Sí</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="input-group">
-                        <label>Contraseña</label>
+                    <!-- EDAD (paciente / familiar) ───────────────────── -->
+                    <div class="input-group campo-rol campo-paciente campo-familiar" id="grp-edad" style="display:none">
+                        <label for="reg-edad">Edad</label>
+                        <div class="input-wrapper" id="wrap-reg-edad">
+                            <i class="fa-solid fa-cake-candles"></i>
+                            <input id="reg-edad" name="edad" type="number" min="0" max="130" placeholder="Años">
+                        </div>
+                        <span class="field-error" id="err-reg-edad">La edad es requerida.</span>
+                    </div>
+
+                    <!-- ESTATURA (paciente) ──────────────────────────── -->
+                    <div class="input-group campo-rol campo-paciente" id="grp-estatura" style="display:none">
+                        <label for="reg-estatura">Estatura (cm)</label>
                         <div class="input-wrapper">
+                            <i class="fa-solid fa-ruler-vertical"></i>
+                            <input id="reg-estatura" name="estatura_cm" type="number" min="30" max="250" step="0.01" placeholder="Ej. 168.5">
+                        </div>
+                    </div>
+
+                    <!-- PESO (paciente) ──────────────────────────────── -->
+                    <div class="input-group campo-rol campo-paciente" id="grp-peso" style="display:none">
+                        <label for="reg-peso">Peso estimado (kg)</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-weight-scale"></i>
+                            <input id="reg-peso" name="peso_kg" type="number" min="1" max="300" step="0.01" placeholder="Ej. 72.5">
+                        </div>
+                    </div>
+
+                    <!-- HISTORIAL CLÍNICO (paciente) ─────────────────── -->
+                    <div class="input-group full-width campo-rol campo-paciente" id="grp-historial" style="display:none">
+                        <label for="reg-historial">Historial clínico</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-notes-medical"></i>
+                            <input id="reg-historial" name="historial_clinico" type="text" placeholder="Antecedentes, diagnósticos previos...">
+                        </div>
+                    </div>
+
+                    <!-- ALERGIAS (paciente) ──────────────────────────── -->
+                    <div class="input-group full-width campo-rol campo-paciente" id="grp-alergias" style="display:none">
+                        <label for="reg-alergias">Alergias conocidas</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <input id="reg-alergias" name="alergias" type="text" placeholder="Ej. Penicilina, Ibuprofeno">
+                        </div>
+                    </div>
+
+                    <!-- ID MÉDICO TRATANTE (paciente) ────────────────── -->
+                    <div class="input-group campo-rol campo-paciente full-width" id="grp-idmedico" style="display:none">
+                        <label for="reg-idmedico">ID del médico tratante</label>
+                        <div class="input-wrapper" id="wrap-reg-idmedico">
+                            <i class="fa-solid fa-user-doctor"></i>
+                            <input id="reg-idmedico" name="id_medico" type="number" min="1" placeholder="ID del médico">
+                        </div>
+                        <span class="field-error" id="err-reg-idmedico">El ID del médico es requerido.</span>
+                    </div>
+
+                    <!-- RELACIÓN CON PACIENTE (familiar) ────────────── -->
+                    <div class="input-group campo-rol campo-familiar full-width" id="grp-relacion" style="display:none">
+                        <label for="reg-relacion">Relación con el paciente</label>
+                        <div class="input-wrapper" id="wrap-reg-relacion">
+                            <i class="fa-solid fa-people-group"></i>
+                            <select id="reg-relacion" name="relacion_paciente">
+                                <option value="">Selecciona la relación</option>
+                                <option value="Hijo/a">Hijo/a</option>
+                                <option value="Esposo/a">Esposo/a</option>
+                                <option value="Padre/Madre">Padre / Madre</option>
+                                <option value="Hermano/a">Hermano/a</option>
+                                <option value="Nieto/a">Nieto/a</option>
+                                <option value="Cuidador profesional">Cuidador profesional</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <span class="field-error" id="err-reg-relacion">Selecciona la relación.</span>
+                    </div>
+
+                    <!-- CONTRASEÑA (solo administrador) ─────────────── -->
+                    <div class="input-group campo-rol campo-administrador" id="grp-contrasena" style="display:none">
+                        <label for="reg-contrasena">Contraseña</label>
+                        <div class="input-wrapper" id="wrap-reg-contrasena">
                             <i class="fa-solid fa-lock"></i>
-                            <input id="register-contrasena" type="password" placeholder="Mínimo 8 caracteres">
-                            <button type="button" class="icon-btn border-left toggle-password" data-target="register-contrasena" aria-label="Mostrar u ocultar contraseña">
+                            <input id="reg-contrasena" name="contrasena" type="password" placeholder="10-15 caracteres">
+                            <button type="button" class="icon-btn border-left toggle-password" data-target="reg-contrasena" aria-label="Mostrar u ocultar contraseña">
                                 <i class="fa-regular fa-eye-slash"></i>
                             </button>
                         </div>
-                        <div class="password-strength">
-                            <div class="strength-bar active"></div>
-                            <div class="strength-bar active"></div>
-                            <div class="strength-bar active"></div>
+                        <div class="password-strength" id="strength-bars">
+                            <div class="strength-bar"></div>
+                            <div class="strength-bar"></div>
+                            <div class="strength-bar"></div>
                             <div class="strength-bar"></div>
                         </div>
+                        <div class="strength-label" id="strength-label"></div>
+                        <span class="field-error" id="err-reg-contrasena"></span>
                     </div>
 
-                    <div class="input-group">
-                        <label>Confirmar contraseña</label>
-                        <div class="input-wrapper">
+                    <!-- CONFIRMAR CONTRASEÑA (administrador) ─────────── -->
+                    <div class="input-group campo-rol campo-administrador" id="grp-confirmar" style="display:none">
+                        <label for="reg-confirmar">Confirmar contraseña</label>
+                        <div class="input-wrapper" id="wrap-reg-confirmar">
                             <i class="fa-solid fa-lock"></i>
-                            <input id="register-confirmar" type="password" placeholder="Repite tu contraseña">
-                            <button type="button" class="icon-btn border-left toggle-password" data-target="register-confirmar" aria-label="Mostrar u ocultar contraseña">
+                            <input id="reg-confirmar" name="confirmar" type="password" placeholder="Repite la contraseña">
+                            <button type="button" class="icon-btn border-left toggle-password" data-target="reg-confirmar" aria-label="Mostrar u ocultar contraseña">
                                 <i class="fa-regular fa-eye-slash"></i>
                             </button>
                         </div>
+                        <span class="field-error" id="err-reg-confirmar">Las contraseñas no coinciden.</span>
                     </div>
-                </div>
 
-                <div class="checkbox-group">
-                    <input type="checkbox" id="terms">
-                    <label for="terms">Acepto los <a href="#">Términos y Condiciones</a> y la <a href="#">Política de Privacidad</a></label>
-                </div>
+                </div><!-- /form-grid -->
 
-                <button type="button" class="btn-submit">
-                    Registrarme <i class="fa-solid fa-arrow-right"></i>
+                <!-- Aviso: solo admins pueden registrar -->
+                <p style="font-size:12px;color:var(--text-gray);margin-bottom:12px;text-align:center;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Solo los <strong>administradores</strong> autenticados pueden registrar nuevos usuarios.
+                </p>
+
+                <button type="submit" class="btn-submit" id="btn-register">
+                    Registrar usuario <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </form>
+
+            <div class="login-link">
+                ¿Ya tienes cuenta? <a href="#" data-view-trigger="login">Inicia sesión</a>
+            </div>
         </section>
 
+        <!-- ══════════════════════════════════════════════════════════ -->
+        <!-- PANEL: RECUPERAR CONTRASEÑA                               -->
+        <!-- ══════════════════════════════════════════════════════════ -->
         <section class="auth-panel hidden" data-panel="recover">
             <form id="recover-form">
                 <div class="form-grid single-column">
@@ -203,158 +397,430 @@
 </div>
 
 <script>
-    const viewMeta = {
-        login: {
-            title: "Iniciar sesión",
-            subtitle: "Ingresa tus credenciales para entrar al dashboard"
-        },
-        register: {
-            title: "Crear cuenta",
-            subtitle: "Completa tus datos para registrarte"
-        },
-        recover: {
-            title: "Recuperar contraseña",
-            subtitle: "Verifica tu correo para recuperar el acceso"
+// ─────────────────────────────────────────────────────────────────────────────
+// Navegación entre paneles
+// ─────────────────────────────────────────────────────────────────────────────
+const viewMeta = {
+    login:    { title: "Iniciar sesión",        subtitle: "Ingresa tus credenciales para entrar al dashboard" },
+    register: { title: "Registrar usuario",     subtitle: "Solo administradores autenticados pueden crear cuentas" },
+    recover:  { title: "Recuperar contraseña",  subtitle: "Verifica tu correo para recuperar el acceso" }
+};
+
+const navLinks     = document.querySelectorAll(".nav-link");
+const panels       = document.querySelectorAll(".auth-panel");
+const panelTitle   = document.getElementById("panel-title");
+const panelSubtitle = document.getElementById("panel-subtitle");
+const authMessage  = document.getElementById("auth-message");
+
+function showMessage(message, type) {
+    authMessage.textContent = message;
+    authMessage.className   = "auth-message " + type;
+    authMessage.hidden      = false;
+    authMessage.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function clearMessage() {
+    authMessage.hidden    = true;
+    authMessage.textContent = "";
+    authMessage.className = "auth-message";
+}
+
+function setView(view) {
+    navLinks.forEach(l => l.classList.toggle("active", l.dataset.view === view));
+    panels.forEach(p   => p.classList.toggle("hidden",  p.dataset.panel !== view));
+    panelTitle.textContent    = viewMeta[view].title;
+    panelSubtitle.textContent = viewMeta[view].subtitle;
+    clearMessage();
+}
+
+navLinks.forEach(link => {
+    link.addEventListener("click", e => { e.preventDefault(); setView(link.dataset.view); });
+});
+document.querySelectorAll("[data-view-trigger]").forEach(t => {
+    t.addEventListener("click", e => { e.preventDefault(); setView(t.dataset.viewTrigger); });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Toggle contraseña visible / oculta
+// ─────────────────────────────────────────────────────────────────────────────
+document.querySelectorAll(".toggle-password").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const input = document.getElementById(btn.dataset.target);
+        const icon  = btn.querySelector("i");
+        input.type  = input.type === "password" ? "text" : "password";
+        icon.classList.toggle("fa-eye");
+        icon.classList.toggle("fa-eye-slash");
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Campos dinámicos del formulario de registro según rol seleccionado
+// ─────────────────────────────────────────────────────────────────────────────
+const camposPorRol = {
+    administrador: ["grp-nombre", "grp-correo", "grp-telefono", "grp-contrasena", "grp-confirmar"],
+    medico:        ["grp-nombre", "grp-correo", "grp-telefono", "grp-cedula", "grp-especialidad"],
+    farmaceutico:  ["grp-nombre", "grp-correo", "grp-telefono", "grp-cedula", "grp-permiso"],
+    paciente:      ["grp-nombre", "grp-correo", "grp-telefono", "grp-edad", "grp-estatura",
+                    "grp-peso", "grp-historial", "grp-alergias", "grp-idmedico"],
+    familiar:      ["grp-nombre", "grp-correo", "grp-telefono", "grp-edad", "grp-relacion"],
+};
+
+// Todos los grupos de campos opcionales
+const todosLosGrupos = [
+    "grp-nombre", "grp-correo", "grp-telefono", "grp-cedula",
+    "grp-especialidad", "grp-permiso", "grp-edad", "grp-estatura",
+    "grp-peso", "grp-historial", "grp-alergias", "grp-idmedico",
+    "grp-relacion", "grp-contrasena", "grp-confirmar"
+];
+
+document.getElementById("reg-rol").addEventListener("change", function () {
+    const rol = this.value;
+
+    // Ocultar todos los campos primero
+    todosLosGrupos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+    });
+
+    // Mostrar solo los del rol elegido
+    if (rol && camposPorRol[rol]) {
+        camposPorRol[rol].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "flex";
+        });
+    }
+
+    // Limpiar errores y valores
+    limpiarErrores();
+});
+
+function limpiarErrores() {
+    document.querySelectorAll(".field-error").forEach(el => el.classList.remove("visible"));
+    document.querySelectorAll(".input-wrapper.invalid").forEach(el => el.classList.remove("invalid"));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Indicador de fuerza de contraseña (solo para administrador)
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById("reg-contrasena").addEventListener("input", function () {
+    const val   = this.value;
+    const bars  = document.querySelectorAll("#strength-bars .strength-bar");
+    const label = document.getElementById("strength-label");
+
+    // Evaluar criterios
+    const tieneMin    = val.length >= 10;
+    const tieneMax    = val.length <= 15;
+    const tieneMay    = /[A-Z]/.test(val);
+    const tieneMin2   = /[a-z]/.test(val);
+    const tieneNum    = /[0-9]/.test(val);
+    const tieneSimbolo = /[^A-Za-z0-9]/.test(val);
+
+    const criterios = [tieneMin && tieneMax, tieneMay, tieneMin2, tieneNum && tieneSimbolo];
+    const nivel = criterios.filter(Boolean).length;
+
+    const clases  = ["strength-weak", "strength-fair", "strength-good", "strength-strong"];
+    const labels  = ["Muy débil", "Débil", "Aceptable", "Fuerte"];
+
+    bars.forEach((bar, i) => {
+        bar.className = "strength-bar";
+        if (i < nivel) bar.classList.add(clases[nivel - 1]);
+    });
+
+    label.textContent = val.length > 0 ? labels[nivel - 1] || "" : "";
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers de validación UI
+// ─────────────────────────────────────────────────────────────────────────────
+function marcarError(wrapId, errId, mensaje) {
+    const wrap = document.getElementById(wrapId);
+    const err  = document.getElementById(errId);
+    if (wrap) wrap.classList.add("invalid");
+    if (err)  { if (mensaje) err.textContent = mensaje; err.classList.add("visible"); }
+    return false;
+}
+function limpiarCampo(wrapId, errId) {
+    const wrap = document.getElementById(wrapId);
+    const err  = document.getElementById(errId);
+    if (wrap) wrap.classList.remove("invalid");
+    if (err)  err.classList.remove("visible");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Validar formulario de registro antes de enviar
+// ─────────────────────────────────────────────────────────────────────────────
+function validarRegistro(rol, datos, confirmar) {
+    limpiarErrores();
+    let valido = true;
+
+    if (!rol) {
+        marcarError("wrap-reg-rol", "err-reg-rol", null);
+        return false;
+    }
+
+    // Nombre siempre requerido
+    if (!datos.nombre_completo?.trim()) {
+        marcarError("wrap-reg-nombre", "err-reg-nombre", null);
+        valido = false;
+    }
+
+    // Correo — formato si se ingresó
+    if (datos.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo)) {
+        marcarError(null, "err-reg-correo", "Ingresa un correo válido.");
+        valido = false;
+    }
+
+    // Validaciones por rol
+    if (rol === "administrador") {
+        const pass = datos.contrasena || "";
+        if (pass.length < 10 || pass.length > 15) {
+            marcarError("wrap-reg-contrasena", "err-reg-contrasena", "Debe tener entre 10 y 15 caracteres.");
+            valido = false;
+        } else if (!/[A-Z]/.test(pass)) {
+            marcarError("wrap-reg-contrasena", "err-reg-contrasena", "Debe incluir al menos una mayúscula.");
+            valido = false;
+        } else if (!/[a-z]/.test(pass)) {
+            marcarError("wrap-reg-contrasena", "err-reg-contrasena", "Debe incluir al menos una minúscula.");
+            valido = false;
+        } else if (!/[0-9]/.test(pass)) {
+            marcarError("wrap-reg-contrasena", "err-reg-contrasena", "Debe incluir al menos un número.");
+            valido = false;
+        } else if (!/[^A-Za-z0-9]/.test(pass)) {
+            marcarError("wrap-reg-contrasena", "err-reg-contrasena", "Debe incluir al menos un símbolo especial.");
+            valido = false;
+        } else {
+            limpiarCampo("wrap-reg-contrasena", "err-reg-contrasena");
         }
-    };
 
-    const navLinks = document.querySelectorAll(".nav-link");
-    const panels = document.querySelectorAll(".auth-panel");
-    const panelTitle = document.getElementById("panel-title");
-    const panelSubtitle = document.getElementById("panel-subtitle");
-    const authMessage = document.getElementById("auth-message");
-    const loginForm = document.getElementById("login-form");
-    const recoverForm = document.getElementById("recover-form");
+        if (datos.contrasena !== confirmar) {
+            marcarError("wrap-reg-confirmar", "err-reg-confirmar", null);
+            valido = false;
+        }
 
-    function showMessage(message, type) {
-        authMessage.textContent = message;
-        authMessage.className = "auth-message " + type;
-        authMessage.hidden = false;
+        if (!datos.correo && !datos.telefono) {
+            marcarError(null, "err-reg-correo", "Se requiere correo o teléfono.");
+            valido = false;
+        }
     }
 
-    function clearMessage() {
-        authMessage.hidden = true;
-        authMessage.textContent = "";
-        authMessage.className = "auth-message";
+    if (rol === "medico" || rol === "farmaceutico") {
+        if (!datos.cedula_profesional?.trim()) {
+            marcarError("wrap-reg-cedula", "err-reg-cedula", null);
+            valido = false;
+        }
     }
 
-    function setView(view) {
-        navLinks.forEach((link) => {
-            link.classList.toggle("active", link.dataset.view === view);
-        });
-
-        panels.forEach((panel) => {
-            panel.classList.toggle("hidden", panel.dataset.panel !== view);
-        });
-
-        panelTitle.textContent = viewMeta[view].title;
-        panelSubtitle.textContent = viewMeta[view].subtitle;
-        clearMessage();
+    if (rol === "medico") {
+        if (!datos.especialidad?.trim()) {
+            marcarError("wrap-reg-especialidad", "err-reg-especialidad", null);
+            valido = false;
+        }
     }
 
-    navLinks.forEach((link) => {
-        link.addEventListener("click", (event) => {
-            event.preventDefault();
-            setView(link.dataset.view);
-        });
+    if (rol === "paciente") {
+        if (!datos.edad) {
+            marcarError("wrap-reg-edad", "err-reg-edad", null);
+            valido = false;
+        }
+        if (!datos.id_medico) {
+            marcarError("wrap-reg-idmedico", "err-reg-idmedico", null);
+            valido = false;
+        }
+    }
+
+    if (rol === "familiar") {
+        if (!datos.relacion_paciente) {
+            marcarError("wrap-reg-relacion", "err-reg-relacion", null);
+            valido = false;
+        }
+    }
+
+    return valido;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Envío del formulario de registro
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById("register-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearMessage();
+
+    // Verificar que hay un accessToken guardado (admin logueado)
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+        showMessage(
+            "Debes iniciar sesión como administrador antes de registrar usuarios.",
+            "error"
+        );
+        return;
+    }
+
+    const form   = e.target;
+    const fd     = new FormData(form);
+    const datos  = Object.fromEntries(fd.entries());
+    const rol    = datos.rol;
+
+    // Guardar confirmar ANTES de borrarlo del payload para usarlo en validación
+    const confirmar = datos.confirmar;
+    delete datos.confirmar;
+
+    // Validar en el cliente (pasamos confirmar por separado)
+    if (!validarRegistro(rol, datos, confirmar)) return;
+
+    // Convertir tipos numéricos
+    if (datos.edad)        datos.edad        = parseInt(datos.edad, 10);
+    if (datos.estatura_cm) datos.estatura_cm = parseFloat(datos.estatura_cm);
+    if (datos.peso_kg)     datos.peso_kg     = parseFloat(datos.peso_kg);
+    if (datos.id_medico)   datos.id_medico   = parseInt(datos.id_medico, 10);
+    if ("permiso_dispensar" in datos) datos.permiso_dispensar = parseInt(datos.permiso_dispensar, 10);
+
+    // Limpiar strings vacíos → undefined para no enviarlos
+    Object.keys(datos).forEach(k => {
+        if (datos[k] === "") delete datos[k];
     });
 
-    document.querySelectorAll("[data-view-trigger]").forEach((trigger) => {
-        trigger.addEventListener("click", (event) => {
-            event.preventDefault();
-            setView(trigger.dataset.viewTrigger);
+    const btn = document.getElementById("btn-register");
+    btn.disabled = true;
+    btn.innerHTML = 'Registrando... <i class="fa-solid fa-spinner fa-spin"></i>';
+
+    try {
+        const res = await fetch("/auth/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`
+            },
+            body: JSON.stringify(datos)
         });
-    });
 
-    document.querySelectorAll(".toggle-password").forEach((button) => {
-        button.addEventListener("click", () => {
-            const input = document.getElementById(button.dataset.target);
-            const icon = button.querySelector("i");
-            const isPassword = input.type === "password";
+        const data = await res.json();
 
-            input.type = isPassword ? "text" : "password";
-            icon.classList.toggle("fa-eye");
-            icon.classList.toggle("fa-eye-slash");
-        });
-    });
-
-    loginForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        clearMessage();
-
-        const submitButton = loginForm.querySelector(".btn-submit");
-        const formData = new FormData(loginForm);
-        const payload = Object.fromEntries(formData.entries());
-
-        submitButton.disabled = true;
-        submitButton.innerHTML = 'Entrando... <i class="fa-solid fa-spinner fa-spin"></i>';
-
-        try {
-            const response = await fetch("/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.ok) {
-                throw new Error(data.mensaje || "No se pudo iniciar sesión.");
+        if (!res.ok || !data.ok) {
+            // Si el token expiró intentar renovarlo automáticamente
+            if (res.status === 401 && data.codigo === "TOKEN_EXPIRADO") {
+                const renovado = await intentarRenovarToken();
+                if (renovado) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Registrar usuario <i class="fa-solid fa-arrow-right"></i>';
+                    showMessage("Token renovado automáticamente. Por favor intenta de nuevo.", "success");
+                    return;
+                }
+                showMessage("Tu sesión expiró. Vuelve a iniciar sesión como administrador.", "error");
+                return;
             }
+            throw new Error(data.mensaje || "No se pudo completar el registro.");
+        }
 
+        showMessage(
+            `✅ ${data.mensaje} (ID asignado: ${data.usuario.id})`,
+            "success"
+        );
+        form.reset();
+        // Ocultar todos los campos dinámicos
+        todosLosGrupos.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "none";
+        });
+
+    } catch (err) {
+        showMessage(err.message || "Ocurrió un error al registrar el usuario.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Registrar usuario <i class="fa-solid fa-arrow-right"></i>';
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Intentar renovar el accessToken usando el refreshToken guardado
+// ─────────────────────────────────────────────────────────────────────────────
+async function intentarRenovarToken() {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) return false;
+
+    try {
+        const res = await fetch("/auth/refresh", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refreshToken })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
-            localStorage.setItem("usuario", JSON.stringify(data.usuario));
-
-            showMessage("Sesión iniciada correctamente. Redirigiendo al dashboard...", "success");
-
-            setTimeout(() => {
-                window.location.href = "/pages/VistaTarjetas.html";
-            }, 900);
-        } catch (error) {
-            showMessage(error.message || "Ocurrió un error al iniciar sesión.", "error");
-        } finally {
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'Entrar al dashboard <i class="fa-solid fa-arrow-right"></i>';
+            return true;
         }
-    });
+    } catch (_) { /* sin conexión */ }
+    return false;
+}
 
-    recoverForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        clearMessage();
+// ─────────────────────────────────────────────────────────────────────────────
+// Login
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearMessage();
 
-        const submitButton = recoverForm.querySelector(".btn-submit");
-        const formData = new FormData(recoverForm);
-        const payload = Object.fromEntries(formData.entries());
+    const btn     = e.target.querySelector(".btn-submit");
+    const payload = Object.fromEntries(new FormData(e.target).entries());
 
-        submitButton.disabled = true;
-        submitButton.innerHTML = 'Verificando... <i class="fa-solid fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    btn.innerHTML = 'Entrando... <i class="fa-solid fa-spinner fa-spin"></i>';
 
-        try {
-            const response = await fetch("/auth/recover", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
+    try {
+        const res  = await fetch("/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
 
-            const data = await response.json();
+        if (!res.ok || !data.ok) throw new Error(data.mensaje || "No se pudo iniciar sesión.");
 
-            if (!response.ok || !data.ok) {
-                throw new Error(data.mensaje || "No se pudo verificar el correo.");
-            }
+        localStorage.setItem("accessToken",  data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        localStorage.setItem("usuario",      JSON.stringify(data.usuario));
 
-            showMessage(data.mensaje, "success");
-        } catch (error) {
-            showMessage(error.message || "Ocurrió un error al recuperar la cuenta.", "error");
-        } finally {
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'Verificar correo <i class="fa-solid fa-paper-plane"></i>';
-        }
-    });
+        showMessage("Sesión iniciada correctamente. Redirigiendo al dashboard...", "success");
+        setTimeout(() => { window.location.href = "/pages/VistaTarjetas.html"; }, 900);
+
+    } catch (err) {
+        showMessage(err.message || "Ocurrió un error al iniciar sesión.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Entrar al dashboard <i class="fa-solid fa-arrow-right"></i>';
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recuperar contraseña
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById("recover-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearMessage();
+
+    const btn     = e.target.querySelector(".btn-submit");
+    const payload = Object.fromEntries(new FormData(e.target).entries());
+
+    btn.disabled = true;
+    btn.innerHTML = 'Verificando... <i class="fa-solid fa-spinner fa-spin"></i>';
+
+    try {
+        const res  = await fetch("/auth/recover", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) throw new Error(data.mensaje || "No se pudo verificar el correo.");
+        showMessage(data.mensaje, "success");
+
+    } catch (err) {
+        showMessage(err.message || "Ocurrió un error al recuperar la cuenta.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Verificar correo <i class="fa-solid fa-paper-plane"></i>';
+    }
+});
 </script>
 
 </body>
