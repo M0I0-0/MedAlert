@@ -5,7 +5,7 @@
 //   POST /auth/logout   → invalida el refresh token (cierra sesión)
 
 const express = require("express");
-const router  = express.Router();
+const router = express.Router();
 const { pool } = require("../database/connection");
 const { generarTokens, verificarRefreshToken } = require("../utils/jwt");
 const {
@@ -20,10 +20,10 @@ const {
 // ─────────────────────────────────────────────────────────────────────────────
 const CONFIG_ROL = {
   administrador: { tabla: "administrador", idCampo: "id_administrador" },
-  medico:        { tabla: "medico",        idCampo: "id_medico"        },
-  farmaceutico:  { tabla: "farmaceutico",  idCampo: "id_farmaceutico"  },
-  paciente:      { tabla: "paciente",      idCampo: "id_paciente"      },
-  familiar:      { tabla: "familiar_cuidador", idCampo: "id_familiar"  },
+  medico: { tabla: "medico", idCampo: "id_medico" },
+  farmaceutico: { tabla: "farmaceutico", idCampo: "id_farmaceutico" },
+  paciente: { tabla: "paciente", idCampo: "id_paciente" },
+  familiar: { tabla: "familiar_cuidador", idCampo: "id_familiar" },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,7 +52,7 @@ router.post("/login", async (req, res) => {
     // 1. Buscar usuario por correo en la tabla correspondiente
     const [rows] = await pool.query(
       `SELECT * FROM \`${config.tabla}\` WHERE correo = ? LIMIT 1`,
-      [correo]
+      [correo],
     );
 
     const usuario = rows[0];
@@ -78,17 +78,19 @@ router.post("/login", async (req, res) => {
     return res.status(200).json({
       ok: true,
       mensaje: "Sesión iniciada correctamente.",
-      accessToken,   // caduca en 5 minutos
-      refreshToken,  // usar para renovar el accessToken
+      accessToken, // caduca en 5 minutos
+      refreshToken, // usar para renovar el accessToken
       usuario: {
-        id:             idUsuario,
+        id: idUsuario,
         nombre_completo: usuario.nombre_completo || usuario.nombre,
         rol,
       },
     });
   } catch (err) {
     console.error("Error en /auth/login:", err.message);
-    return res.status(500).json({ ok: false, mensaje: "Error interno del servidor." });
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
   }
 });
 
@@ -106,7 +108,9 @@ router.post("/refresh", async (req, res) => {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
-    return res.status(400).json({ ok: false, mensaje: "refreshToken requerido." });
+    return res
+      .status(400)
+      .json({ ok: false, mensaje: "refreshToken requerido." });
   }
 
   try {
@@ -140,18 +144,20 @@ router.post("/refresh", async (req, res) => {
 
     await guardarRefreshToken({
       refreshToken: nuevoRefresh,
-      rol:          payload.rol,
-      idUsuario:    payload.id,
+      rol: payload.rol,
+      idUsuario: payload.id,
     });
 
     return res.status(200).json({
       ok: true,
-      accessToken:  nuevoAccess,
+      accessToken: nuevoAccess,
       refreshToken: nuevoRefresh,
     });
   } catch (err) {
     console.error("Error en /auth/refresh:", err.message);
-    return res.status(500).json({ ok: false, mensaje: "Error interno del servidor." });
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
   }
 });
 
@@ -166,15 +172,69 @@ router.post("/logout", async (req, res) => {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
-    return res.status(400).json({ ok: false, mensaje: "refreshToken requerido." });
+    return res
+      .status(400)
+      .json({ ok: false, mensaje: "refreshToken requerido." });
   }
 
   try {
     await invalidarRefreshToken(refreshToken);
-    return res.status(200).json({ ok: true, mensaje: "Sesión cerrada correctamente." });
+    return res
+      .status(200)
+      .json({ ok: true, mensaje: "Sesión cerrada correctamente." });
   } catch (err) {
     console.error("Error en /auth/logout:", err.message);
-    return res.status(500).json({ ok: false, mensaje: "Error interno del servidor." });
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  }
+});
+
+router.post("/register", async (req, res) => {
+  const { nombre, correo, contrasena, rol } = req.body;
+
+  if (!nombre || !correo || !contrasena || !rol) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Todos los campos son requeridos.",
+    });
+  }
+
+  const config = CONFIG_ROL[rol];
+  if (!config) {
+    return res.status(400).json({ ok: false, mensaje: "Rol no válido." });
+  }
+
+  try {
+    // Verificar si ya existe
+    const [existe] = await pool.query(
+      `SELECT * FROM \`${config.tabla}\` WHERE correo = ? LIMIT 1`,
+      [correo],
+    );
+
+    if (existe.length > 0) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: "El correo ya está registrado.",
+      });
+    }
+
+    // Insertar usuario
+    await pool.query(
+      `INSERT INTO \`${config.tabla}\` (nombre, correo, contrasena)
+       VALUES (?, ?, ?)`,
+      [nombre, correo, contrasena],
+    );
+
+    return res.status(201).json({
+      ok: true,
+      mensaje: "Usuario registrado correctamente.",
+    });
+  } catch (err) {
+    console.error("Error en /auth/register:", err.message);
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
   }
 });
 
