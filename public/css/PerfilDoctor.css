@@ -4,6 +4,7 @@ body{
     font-family: 'Segoe UI', sans-serif;
     background: linear-gradient(135deg,#eef2f7,#dfe6ee);
     color:#1d2b3a;
+    overflow-x:hidden;
 }
 
 *{
@@ -52,6 +53,7 @@ body{
     width:min(100%, 320px);
     height:320px;
     object-fit:cover;
+    object-position:center top;
     border-radius:20px;
     display:block;
 }
@@ -101,7 +103,7 @@ body{
     padding:20px;
     border-radius:15px;
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     gap:15px;
     flex:1 1 240px;
     min-width:0;
@@ -114,12 +116,12 @@ body{
 
 .mini-box span{
     font-weight:bold;
-    font-size:18px;
+    font-size:clamp(1rem, 1.8vw, 1.125rem);
 }
 
 .mini-box p{
     margin:5px 0 0;
-    font-size:17px;
+    font-size:clamp(0.95rem, 1.7vw, 1.0625rem);
 }
 
 /* LINEA */
@@ -160,14 +162,15 @@ hr{
 .info-item span{
     font-weight:600;
     color:#374151;
-    font-size:18px;
+    font-size:clamp(1rem, 1.8vw, 1.125rem);
 }
 
 .info-item p{
     margin:0;
     color:#4b5563;
-    font-size:18px;
+    font-size:clamp(1rem, 1.8vw, 1.125rem);
     text-align:right;
+    overflow-wrap:anywhere;
 }
 
 /* DERECHA */
@@ -181,7 +184,7 @@ hr{
     border-radius:15px;
     line-height:1.8;
     color:#4b5563;
-    font-size:18px;
+    font-size:clamp(1rem, 1.8vw, 1.125rem);
 }
 
 .areas-title{
@@ -202,7 +205,8 @@ hr{
     padding:12px 18px;
     border-radius:12px;
     font-weight:600;
-    font-size:16px;
+    font-size:clamp(0.9rem, 1.6vw, 1rem);
+    overflow-wrap:anywhere;
 }
 
 @media (max-width: 900px){
@@ -215,11 +219,27 @@ hr{
         flex-direction:column;
     }
 
+    .top-section{
+        align-items:center;
+    }
+
+    .doctor-image{
+        width:100%;
+        display:flex;
+        justify-content:center;
+    }
+
     .doctor-image img{
         width:100%;
-        max-width:320px;
+        max-width:360px;
         height:auto;
         aspect-ratio:1 / 1;
+    }
+
+    .doctor-info,
+    .left-info,
+    .right-info{
+        width:100%;
     }
 
     .right-info{
@@ -247,6 +267,12 @@ hr{
 
     .top-section{
         gap:20px;
+        align-items:stretch;
+    }
+
+    .doctor-image img{
+        max-width:none;
+        border-radius:18px;
     }
 
     .doctor-info p,
@@ -267,5 +293,39 @@ hr{
 
     .mini-box{
         padding:16px;
+    }
+
+    .mini-box i{
+        font-size:30px;
+    }
+
+    .tags{
+        gap:10px;
+    }
+
+    .tags span{
+        width:100%;
+        text-align:center;
+        padding:10px 14px;
+    }
+}
+
+@media (max-width: 420px){
+    .navbar h1{
+        font-size:1.7rem;
+    }
+
+    .profile-card{
+        padding:16px;
+    }
+
+    .doctor-info h2{
+        font-size:1.8rem;
+    }
+
+    .doctor-info h3,
+    .left-info h4,
+    .right-info h4{
+        font-size:1.15rem;
     }
 }
