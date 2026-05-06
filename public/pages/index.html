@@ -66,14 +66,20 @@
 
       <main class="main-content">
         <div class="top-nav">
-          <a href="#" class="nav-link active" data-view="login">Iniciar sesión</a>
+          <a href="#" class="nav-link active" data-view="login"
+            >Iniciar sesión</a
+          >
           <a href="#" class="nav-link" data-view="register">Registro</a>
-          <a href="#" class="nav-link" data-view="recover">Recuperar contraseña</a>
+          <a href="#" class="nav-link" data-view="recover"
+            >Recuperar contraseña</a
+          >
         </div>
 
         <div class="header">
           <h2 id="panel-title">Iniciar sesión</h2>
-          <p id="panel-subtitle">Ingresa tus credenciales para entrar al dashboard</p>
+          <p id="panel-subtitle">
+            Ingresa tus credenciales para entrar al dashboard
+          </p>
         </div>
 
         <div id="auth-message" class="auth-message" hidden></div>
@@ -409,7 +415,7 @@
           'Verificando... <i class="fa-solid fa-spinner fa-spin"></i>';
 
         try {
-          const response = await fetch("/auth/recover", {
+          const response = await fetch("/auth/forgot-password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
