@@ -1,0 +1,124 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #eef2f7, #dfe6ee);
+}
+
+/* NAVBAR */
+.navbar {
+  background: #0b2a4a;
+  color: white;
+  padding: 15px 30px;
+  font-size: 20px;
+}
+
+/* CONTENEDOR */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 40px;
+}
+
+/* TARJETA */
+.form-card {
+  background: white;
+  width: 600px;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* ICONO */
+.icono {
+  width: 60px;
+  height: 60px;
+  margin: auto;
+  background: #e6eef7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+/* TITULO */
+h2 {
+  text-align: center;
+  margin: 15px 0 25px;
+  color: #1c2b3a;
+}
+
+/* INPUTS */
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  transition: 0.3s;
+}
+
+input:focus, select:focus {
+  border-color: #0b2a4a;
+  outline: none;
+}
+
+/* DOS COLUMNAS */
+.row {
+  display: flex;
+  gap: 15px;
+}
+
+.row .form-group {
+  flex: 1;
+}
+
+/* CHECKBOX */
+.checkbox-group {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.checkbox-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: normal;
+}
+
+/* BOTON */
+.btn {
+  width: 100%;
+  padding: 12px;
+  background: #0b2a4a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.btn:hover {
+  background: #123d6b;
+}
+
+/* ERROR */
+.error {
+  color: red;
+  font-size: 12px;
+  display: none;
+}
