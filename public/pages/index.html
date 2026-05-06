@@ -180,13 +180,27 @@
               </div>
 
               <div class="input-group">
+                <label for="register-telefono">Teléfono</label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-phone"></i>
+                  <input
+                    id="register-telefono"
+                    name="telefono"
+                    type="tel"
+                    placeholder="10 dígitos"
+                  />
+                </div>
+              </div>
+
+              <div class="input-group">
                 <label for="register-contrasena">Contraseña</label>
                 <div class="input-wrapper">
                   <i class="fa-solid fa-lock"></i>
                   <input
                     id="register-contrasena"
+                    name="contrasena"
                     type="password"
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder="10-15 caracteres con mayúsculas, números y símbolo"
                   />
                   <button
                     type="button"
@@ -199,7 +213,7 @@
                 </div>
               </div>
 
-              <div class="input-group">
+              <div class="input-group full-width">
                 <label for="register-confirmar">Confirmar contraseña</label>
                 <div class="input-wrapper">
                   <i class="fa-solid fa-lock"></i>
@@ -234,7 +248,11 @@
           </form>
 
           <div class="login-link">
-            ¿Ya tienes cuenta?
+            Solo el administrador puede dar de alta a otros usuarios del sistema.
+          </div>
+
+          <div class="login-link">
+            ¿Ya tienes cuenta de administrador?
             <a href="#" data-view-trigger="login">Inicia sesión aquí</a>
           </div>
         </section>
@@ -278,7 +296,7 @@
         },
         register: {
           title: "Crear cuenta",
-          subtitle: "Formulario visual de registro",
+          subtitle: "Crea una cuenta inicial de administrador",
         },
         recover: {
           title: "Recuperar contraseña",
@@ -395,12 +413,76 @@
         }
       });
 
-      registerForm.addEventListener("submit", (event) => {
+      registerForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        showMessage(
-          "El registro visual está disponible, pero el alta real requiere que un administrador inicie sesión primero.",
-          "error",
-        );
+        clearMessage();
+
+        const submitButton = registerForm.querySelector(".btn-submit");
+        const payload = Object.fromEntries(new FormData(registerForm).entries());
+        const confirmar = document.getElementById("register-confirmar").value;
+        const acceptedTerms = document.getElementById("terms").checked;
+
+        if (!payload.nombre?.trim()) {
+          showMessage("El nombre es requerido.", "error");
+          return;
+        }
+
+        if (!payload.correo?.trim() && !payload.telefono?.trim()) {
+          showMessage("Debes proporcionar correo o teléfono.", "error");
+          return;
+        }
+
+        if (!payload.contrasena?.trim()) {
+          showMessage("La contraseña es requerida.", "error");
+          return;
+        }
+
+        if (payload.contrasena !== confirmar) {
+          showMessage("Las contraseñas no coinciden.", "error");
+          return;
+        }
+
+        if (!acceptedTerms) {
+          showMessage("Debes aceptar los términos y condiciones.", "error");
+          return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.innerHTML =
+          'Registrando... <i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+          const response = await fetch("/auth/signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            throw new Error(data.mensaje || "No se pudo registrar la cuenta.");
+          }
+
+          showMessage(
+            "Cuenta creada correctamente. Ahora ya puedes iniciar sesión.",
+            "success",
+          );
+          registerForm.reset();
+
+          setTimeout(() => {
+            setView("login");
+          }, 1200);
+        } catch (error) {
+          showMessage(
+            error.message || "Ocurrió un error al registrar la cuenta.",
+            "error",
+          );
+        } finally {
+          submitButton.disabled = false;
+          submitButton.innerHTML =
+            'Registrarme <i class="fa-solid fa-arrow-right"></i>';
+        }
       });
 
       recoverForm.addEventListener("submit", async (event) => {

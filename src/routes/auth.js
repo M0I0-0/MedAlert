@@ -27,6 +27,100 @@ const CONFIG_ROL = {
   familiar: { tabla: "familiar_cuidador", idCampo: "id_familiar" },
 };
 
+function hashContrasenaSiEsPosible(contrasena) {
+  if (!bcrypt) {
+    return Promise.resolve(contrasena);
+  }
+
+  return bcrypt.hash(contrasena, 10);
+}
+
+function validarContrasenaAdmin(contrasena) {
+  if (!contrasena) return "La contraseña es requerida.";
+  if (contrasena.length < 10 || contrasena.length > 15) {
+    return "La contraseña debe tener entre 10 y 15 caracteres.";
+  }
+  if (!/[A-Z]/.test(contrasena)) {
+    return "La contraseña debe incluir al menos una mayúscula.";
+  }
+  if (!/[a-z]/.test(contrasena)) {
+    return "La contraseña debe incluir al menos una minúscula.";
+  }
+  if (!/[0-9]/.test(contrasena)) {
+    return "La contraseña debe incluir al menos un número.";
+  }
+  if (!/[^A-Za-z0-9]/.test(contrasena)) {
+    return "La contraseña debe incluir al menos un símbolo especial.";
+  }
+
+  return null;
+}
+
+router.post("/signup", async (req, res) => {
+  const { nombre, correo, telefono, contrasena } = req.body;
+
+  if (!nombre) {
+    return res.status(400).json({ ok: false, mensaje: "El nombre es requerido." });
+  }
+
+  if (!correo && !telefono) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Debes proporcionar correo o telefono.",
+    });
+  }
+
+  const errorContrasena = validarContrasenaAdmin(contrasena);
+  if (errorContrasena) {
+    return res.status(400).json({ ok: false, mensaje: errorContrasena });
+  }
+
+  try {
+    if (correo) {
+      const [correoExistente] = await pool.query(
+        "SELECT id_administrador FROM administrador WHERE correo = ? LIMIT 1",
+        [correo],
+      );
+
+      if (correoExistente.length > 0) {
+        return res.status(409).json({
+          ok: false,
+          mensaje: "Ya existe una cuenta de administrador con ese correo.",
+        });
+      }
+    }
+
+    const hash = await hashContrasenaSiEsPosible(contrasena);
+
+    const [result] = await pool.query(
+      `INSERT INTO administrador (nombre, correo, telefono, contrasena)
+       VALUES (?, ?, ?, ?)`,
+      [nombre, correo || null, telefono || null, hash],
+    );
+
+    return res.status(201).json({
+      ok: true,
+      mensaje: "Cuenta de administrador creada correctamente.",
+      usuario: {
+        id: result.insertId,
+        nombre,
+        correo: correo || null,
+        rol: "administrador",
+      },
+    });
+  } catch (err) {
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({
+        ok: false,
+        mensaje: "Ya existe una cuenta con ese correo o telefono.",
+      });
+    }
+
+    console.error("Error en /auth/signup:", err.message);
+    return res.status(500).json({ ok: false, mensaje: "Error interno del servidor." });
+  }
+});
+
 router.post("/login", async (req, res) => {
   const { correo, contrasena, rol } = req.body;
 
@@ -204,7 +298,7 @@ async function handleRecover(req, res) {
       [correo, token, expiracion],
     );
 
-    const link = `http://localhost:3000/reset.html?token=${token}&correo=${correo}&rol=${rolEncontrado}`;
+    const link = `http://localhost:3000/pages/reset.html?token=${token}&correo=${correo}&rol=${rolEncontrado}`;
 
     return res.json({
       ok: true,

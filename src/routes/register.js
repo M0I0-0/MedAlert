@@ -44,6 +44,23 @@ function validarContrasenaAdmin(contrasena) {
   return null;
 }
 
+function validarContrasenaUsuario(contrasena) {
+  if (!contrasena) return "La contraseña es requerida.";
+  if (contrasena.length < 8) {
+    return "La contraseña debe tener al menos 8 caracteres.";
+  }
+
+  return null;
+}
+
+async function hashContrasenaSiEsPosible(contrasena) {
+  if (!bcrypt) {
+    return contrasena;
+  }
+
+  return bcrypt.hash(contrasena, SALT_ROUNDS);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /auth/register
 // Headers: Authorization: Bearer <accessToken de administrador>
@@ -52,11 +69,11 @@ function validarContrasenaAdmin(contrasena) {
 // Roles soportados y sus campos:
 //
 //   administrador: { nombre, correo?, telefono?, contrasena }
-//   medico:        { nombre_completo, cedula_profesional, especialidad, telefono?, correo? }
-//   farmaceutico:  { nombre_completo, cedula_profesional, telefono?, correo?, permiso_dispensar? }
+//   medico:        { nombre_completo, cedula_profesional, especialidad, telefono?, correo?, contrasena }
+//   farmaceutico:  { nombre_completo, cedula_profesional, telefono?, correo?, permiso_dispensar?, contrasena }
 //   paciente:      { nombre_completo, edad, estatura_cm?, peso_kg?, telefono?, correo?,
-//                    historial_clinico?, alergias?, id_medico }
-//   familiar:      { nombre_completo, edad?, telefono?, correo?, relacion_paciente }
+//                    historial_clinico?, alergias?, id_medico, contrasena }
+//   familiar:      { nombre_completo, edad?, telefono?, correo?, relacion_paciente, contrasena }
 // ─────────────────────────────────────────────────────────────────────────────
 router.post(
   "/register",
@@ -117,7 +134,14 @@ router.post(
 
         // ── MÉDICO ────────────────────────────────────────────────────────
         case "medico": {
-          const { nombre_completo, cedula_profesional, especialidad, telefono, correo } = campos;
+          const {
+            nombre_completo,
+            cedula_profesional,
+            especialidad,
+            telefono,
+            correo,
+            contrasena,
+          } = campos;
 
           if (!nombre_completo || !cedula_profesional || !especialidad)
             return res.status(400).json({
@@ -125,10 +149,17 @@ router.post(
               mensaje: "nombre_completo, cedula_profesional y especialidad son requeridos.",
             });
 
+          const errorContrasena = validarContrasenaUsuario(contrasena);
+          if (errorContrasena) {
+            return res.status(400).json({ ok: false, mensaje: errorContrasena });
+          }
+
+          const hash = await hashContrasenaSiEsPosible(contrasena);
+
           const [result] = await pool.query(
-            `INSERT INTO medico (id_administrador, nombre_completo, cedula_profesional, especialidad, telefono, correo)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [idAdmin, nombre_completo, cedula_profesional, especialidad, telefono || null, correo || null]
+            `INSERT INTO medico (id_administrador, nombre_completo, cedula_profesional, especialidad, telefono, correo, contrasena)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [idAdmin, nombre_completo, cedula_profesional, especialidad, telefono || null, correo || null, hash]
           );
 
           resultado = {
@@ -142,7 +173,14 @@ router.post(
 
         // ── FARMACÉUTICO ──────────────────────────────────────────────────
         case "farmaceutico": {
-          const { nombre_completo, cedula_profesional, telefono, correo, permiso_dispensar } = campos;
+          const {
+            nombre_completo,
+            cedula_profesional,
+            telefono,
+            correo,
+            permiso_dispensar,
+            contrasena,
+          } = campos;
 
           if (!nombre_completo || !cedula_profesional)
             return res.status(400).json({
@@ -150,9 +188,16 @@ router.post(
               mensaje: "nombre_completo y cedula_profesional son requeridos.",
             });
 
+          const errorContrasena = validarContrasenaUsuario(contrasena);
+          if (errorContrasena) {
+            return res.status(400).json({ ok: false, mensaje: errorContrasena });
+          }
+
+          const hash = await hashContrasenaSiEsPosible(contrasena);
+
           const [result] = await pool.query(
-            `INSERT INTO farmaceutico (id_administrador, nombre_completo, cedula_profesional, telefono, correo, permiso_dispensar)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO farmaceutico (id_administrador, nombre_completo, cedula_profesional, telefono, correo, permiso_dispensar, contrasena)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
               idAdmin,
               nombre_completo,
@@ -160,6 +205,7 @@ router.post(
               telefono || null,
               correo || null,
               permiso_dispensar ? 1 : 0,
+              hash,
             ]
           );
 
@@ -176,7 +222,7 @@ router.post(
         case "paciente": {
           const {
             nombre_completo, edad, estatura_cm, peso_kg,
-            telefono, correo, historial_clinico, alergias, id_medico,
+            telefono, correo, historial_clinico, alergias, id_medico, contrasena,
           } = campos;
 
           if (!nombre_completo || !edad || !id_medico)
@@ -185,16 +231,23 @@ router.post(
               mensaje: "nombre_completo, edad e id_medico son requeridos.",
             });
 
+          const errorContrasena = validarContrasenaUsuario(contrasena);
+          if (errorContrasena) {
+            return res.status(400).json({ ok: false, mensaje: errorContrasena });
+          }
+
+          const hash = await hashContrasenaSiEsPosible(contrasena);
+
           const [result] = await pool.query(
             `INSERT INTO paciente
                (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg,
-                telefono, correo, historial_clinico, alergias)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                telefono, correo, historial_clinico, alergias, contrasena)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               id_medico, idAdmin, nombre_completo, edad,
               estatura_cm || null, peso_kg || null,
               telefono || null, correo || null,
-              historial_clinico || null, alergias || null,
+              historial_clinico || null, alergias || null, hash,
             ]
           );
 
@@ -208,7 +261,14 @@ router.post(
 
         // ── FAMILIAR / CUIDADOR ───────────────────────────────────────────
         case "familiar": {
-          const { nombre_completo, edad, telefono, correo, relacion_paciente } = campos;
+          const {
+            nombre_completo,
+            edad,
+            telefono,
+            correo,
+            relacion_paciente,
+            contrasena,
+          } = campos;
 
           if (!nombre_completo || !relacion_paciente)
             return res.status(400).json({
@@ -216,13 +276,20 @@ router.post(
               mensaje: "nombre_completo y relacion_paciente son requeridos.",
             });
 
+          const errorContrasena = validarContrasenaUsuario(contrasena);
+          if (errorContrasena) {
+            return res.status(400).json({ ok: false, mensaje: errorContrasena });
+          }
+
+          const hash = await hashContrasenaSiEsPosible(contrasena);
+
           const [result] = await pool.query(
             `INSERT INTO familiar_cuidador
-               (id_administrador, nombre_completo, edad, telefono, correo, relacion_paciente)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+               (id_administrador, nombre_completo, edad, telefono, correo, relacion_paciente, contrasena)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
               idAdmin, nombre_completo, edad || null,
-              telefono || null, correo || null, relacion_paciente,
+              telefono || null, correo || null, relacion_paciente, hash,
             ]
           );
 
