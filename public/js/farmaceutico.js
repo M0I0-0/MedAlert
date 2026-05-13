@@ -31,68 +31,81 @@ document.addEventListener("DOMContentLoaded", () => {
 
   navItems.forEach((item) => {
     item.addEventListener("click", () => {
-      // Quitar clase active de todos
       navItems.forEach((n) => n.classList.remove("active"));
       panels.forEach((p) => p.classList.remove("active"));
 
-      // Activar el seleccionado
       item.classList.add("active");
       document.getElementById(item.dataset.target).classList.add("active");
     });
   });
 });
 
-// Función para cerrar sesión
 function logout() {
   localStorage.clear();
   window.location.href = "/pages/index.html";
 }
 
 // --------------------------------------------------------
-// FUNCIONES DE NEGOCIO (Conectadas a la API)
+// FUNCIONES DE NEGOCIO (Conectadas a la API Real)
 // --------------------------------------------------------
 
-// Buscar receta de un paciente
+// 1. Buscar receta de un paciente en la base de datos
 async function buscarReceta() {
   const idPaciente = document.getElementById("input-receta").value;
-  if (!idPaciente) return alert("Ingresa un ID de paciente.");
+  if (!idPaciente)
+    return alert("Ingresa un ID de paciente (Prueba con el ID 1 o 3).");
 
   const token = localStorage.getItem("accessToken");
+  const btn = document.querySelector("#dispensar .btn-primary");
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
 
   try {
-    // Hacemos fetch al endpoint que creamos en medicamentoController.js
     const response = await fetch(`/api/medicamentos/paciente/${idPaciente}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
 
     const data = await response.json();
 
-    if (data.ok) {
-      mostrarRecetas(data.medicamentos);
+    if (response.ok && data.ok) {
+      mostrarRecetas(data.prescripciones);
     } else {
-      alert("No se encontró el paciente o no tienes permiso.");
+      alert(data.mensaje || "No se encontró el paciente o no tienes permiso.");
+      document.getElementById("resultado-receta").style.display = "none";
     }
   } catch (error) {
     console.error("Error fetching recetas:", error);
+    alert("Error de conexión con el servidor.");
+  } finally {
+    btn.innerHTML = '<i class="fa-solid fa-search"></i> Buscar Receta';
   }
 }
 
-function mostrarRecetas(medicamentos) {
+function mostrarRecetas(prescripciones) {
   const tbody = document.getElementById("tabla-recetas");
-  tbody.innerHTML = ""; // Limpiar tabla
+  tbody.innerHTML = "";
 
-  if (medicamentos.length === 0) {
+  if (!prescripciones || prescripciones.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No hay recetas activas para este paciente.</td></tr>`;
   } else {
-    medicamentos.forEach((med) => {
+    prescripciones.forEach((presc) => {
       tbody.innerHTML += `
                 <tr>
-                    <td><strong>${med.nombre}</strong><br><small>${med.principio_activo}</small></td>
-                    <td>${med.dosis}</td>
-                    <td>Dr. Asignado</td>
                     <td>
-                        <button class="btn-primary" onclick="dispensar(${med.id_medicamento})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                            Entregar
+                        <strong>${presc.nombre_comercial}</strong><br>
+                        <small style="color: #64748b;">${presc.principio_activo} - ${presc.presentacion}</small>
+                    </td>
+                    <td>
+                        <strong>Dosis:</strong> ${presc.dosis_instruccion}<br>
+                        <small><strong>Horario:</strong> ${presc.patron_horario.replace(/_/g, " ")}</small>
+                    </td>
+                    <td><span class="badge stock-ok">Stock: ${presc.stock_estimado}</span></td>
+                    <td>
+                        <button class="btn-primary" onclick="dispensar(${presc.id_prescripcion})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            <i class="fa-solid fa-check"></i> Entregar
                         </button>
                     </td>
                 </tr>
@@ -102,41 +115,71 @@ function mostrarRecetas(medicamentos) {
   document.getElementById("resultado-receta").style.display = "block";
 }
 
-// Función simulada para marcar como entregado y actualizar stock
-function dispensar(idMedicamento) {
-  if (
-    confirm(
-      "¿Confirmas la entrega de este medicamento? Se descontará del stock.",
-    )
-  ) {
-    // Aquí harías un fetch con método PUT para actualizar la BD
-    alert(`Medicamento ID: ${idMedicamento} dispensado con éxito.`);
-    buscarReceta(); // Recargar la lista
+function dispensar(idPrescripcion) {
+  if (confirm("¿Confirmas la entrega de este medicamento al paciente?")) {
+    // Aquí a futuro se puede hacer un UPDATE para restar el stock_estimado
+    alert(
+      `¡Medicamento entregado exitosamente! (Prescripción #${idPrescripcion})`,
+    );
+    buscarReceta();
   }
 }
 
-// Buscar genéricos por principio activo
+// 2. Buscador de Equivalencias (Consulta el Catálogo Global)
 async function buscarGenericos() {
-  const principio = document.getElementById("input-principio").value;
-  if (!principio) return alert("Ingresa un principio activo.");
+  const principioBusqueda = document
+    .getElementById("input-principio")
+    .value.toLowerCase();
+  if (!principioBusqueda)
+    return alert("Ingresa un principio activo (Ej. Metformina o Aspirina).");
 
-  // NOTA: Para que esto funcione real, necesitas crear una ruta en tu backend:
-  // GET /api/medicamentos/genericos?principio=Metformina
-  // Por ahora, simulamos la respuesta visualmente:
+  const token = localStorage.getItem("accessToken");
+  const btn = document.querySelector("#genericos .btn-primary");
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
 
+  try {
+    const response = await fetch(`/api/medicamentos/catalogo`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.ok) {
+      // Filtramos el catálogo por el principio activo que escribió el farmacéutico
+      const resultados = data.medicamentos.filter(
+        (m) =>
+          m.principio_activo.toLowerCase().includes(principioBusqueda) ||
+          m.nombre_comercial.toLowerCase().includes(principioBusqueda),
+      );
+      mostrarGenericos(resultados, principioBusqueda);
+    } else {
+      alert("No se pudo cargar el catálogo de medicamentos.");
+    }
+  } catch (error) {
+    console.error("Error fetching catálogo:", error);
+  } finally {
+    btn.innerHTML = '<i class="fa-solid fa-vial"></i> Buscar Equivalencias';
+  }
+}
+
+function mostrarGenericos(medicamentos, busqueda) {
   const tbody = document.getElementById("tabla-genericos");
-  tbody.innerHTML = `
-        <tr>
-            <td><strong>Glafornil (Marca)</strong></td>
-            <td>${principio}</td>
-            <td>Tabletas 850mg</td>
-            <td><span class="badge stock-ok">60 cajas</span></td>
-        </tr>
-        <tr>
-            <td><strong>Genérico Interfaz</strong></td>
-            <td>${principio}</td>
-            <td>Tabletas 850mg</td>
-            <td><span class="badge stock-low">5 cajas</span></td>
-        </tr>
-    `;
+  tbody.innerHTML = "";
+
+  if (medicamentos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444;">No se encontraron equivalencias para "${busqueda}".</td></tr>`;
+    return;
+  }
+
+  medicamentos.forEach((med) => {
+    tbody.innerHTML += `
+            <tr>
+                <td><strong>${med.nombre_comercial}</strong></td>
+                <td>${med.principio_activo}</td>
+                <td>${med.presentacion}</td>
+                <td><span class="badge stock-ok">Disponible</span></td>
+            </tr>
+        `;
+  });
 }
