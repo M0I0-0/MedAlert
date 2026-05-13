@@ -53,6 +53,11 @@
           </a>
         </nav>
 
+        <button class="logout-button" id="logout-button" type="button">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          Cerrar sesión
+        </button>
+
         <div class="sidebar-footer">
           <p class="footer-note">
             Ten una vista clara de pacientes, pendientes y evolución clínica
@@ -306,14 +311,40 @@
       const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
       const doctorName = document.getElementById("doctor-name");
       const doctorSpecialty = document.getElementById("doctor-specialty");
+      const logoutButton = document.getElementById("logout-button");
 
       if (usuario.nombre) {
         doctorName.textContent = usuario.nombre;
       }
 
+      if (usuario.nombre_completo) {
+        doctorName.textContent = usuario.nombre_completo;
+      }
+
       if (usuario.especialidad) {
         doctorSpecialty.textContent = usuario.especialidad;
       }
+
+      logoutButton?.addEventListener("click", async () => {
+        const refreshToken = localStorage.getItem("refreshToken");
+
+        try {
+          if (refreshToken) {
+            await fetch("/auth/logout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ refreshToken }),
+            });
+          }
+        } catch (_error) {
+          // Aunque falle el request, cerramos la sesión localmente.
+        } finally {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("usuario");
+          window.location.href = "/";
+        }
+      });
     </script>
   </body>
 </html>
