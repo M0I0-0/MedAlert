@@ -68,6 +68,41 @@
 
         <div class="bottom-section">
           <div class="left-info">
+            <h4><i class="fa-solid fa-boxes-stacked"></i> Catálogo de Medicamentos</h4>
+            <div class="work-box">
+              <form id="catalog-form" class="catalog-form">
+                <input type="hidden" id="catalog-id" />
+                <div class="search-row">
+                  <input id="catalog-nombre" type="text" placeholder="Nombre comercial" required />
+                  <input id="catalog-principio" type="text" placeholder="Principio activo" required />
+                </div>
+                <div class="search-row">
+                  <input id="catalog-presentacion" type="text" placeholder="Presentación, ej. Tableta 500mg" />
+                  <button class="action-btn" type="submit" id="btn-save-catalog">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="right-info">
+            <h4><i class="fa-solid fa-list-check"></i> Inventario Actual</h4>
+            <div class="work-box">
+              <div id="catalog-list" class="results-container">
+                <div class="empty-msg">
+                  <i class="fa-solid fa-spinner fa-spin"></i><br />
+                  Cargando catálogo...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="bottom-section">
+          <div class="left-info">
             <h4>
               <i class="fa-solid fa-prescription-bottle-medical"></i> Dispensar
               Receta

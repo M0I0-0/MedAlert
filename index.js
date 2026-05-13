@@ -4,6 +4,9 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const { testConnection } = require("./src/database/connection");
+const {
+  iniciarSchedulerNotificaciones,
+} = require("./src/services/notificationScheduler");
 
 // ─── Importación de Rutas ─────────────────────────────────────────────────────
 const authRouter = require("./src/routes/auth");
@@ -44,6 +47,7 @@ app.get("/paciente", (_req, res) => {
 // ─── Arranque ─────────────────────────────────────────────────────────────────
 async function main() {
   await testConnection();
+  iniciarSchedulerNotificaciones();
 
   app.listen(PORT, () => {
     console.log(`🌐 Servidor corriendo en http://localhost:${PORT}`);
@@ -62,6 +66,9 @@ async function main() {
     );
     console.log(
       `  GET  /api/medicamentos/paciente/:id  → Ver historial activo`,
+    );
+    console.log(
+      `  POST /api/medicamentos/notificaciones/procesar → Ejecutar SMS simulado`,
     );
 
     console.log(`\n🛠️ Comandos disponibles:`);

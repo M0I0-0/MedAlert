@@ -11,6 +11,8 @@ async function seed() {
     await conn.query("SET FOREIGN_KEY_CHECKS = 0");
 
     const tablas = [
+      "sms_log",
+      "notificacion_recordatorio",
       "password_resets",
       "token_sesion",
       "nota_medica",

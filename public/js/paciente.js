@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyState = document.getElementById("estado-vacio");
   const tomasContainer = document.getElementById("contenedor-tomas");
   const tomasEmpty = document.getElementById("estado-tomas");
+  const notificacionesContainer = document.getElementById("contenedor-notificaciones");
+  const notificacionesEmpty = document.getElementById("estado-notificaciones");
   const patientMessage = document.getElementById("patient-message");
 
   function showMessage(message, type = "info") {
@@ -230,16 +232,88 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function confirmarLectura(idNotificacion) {
+    try {
+      await MedAlertApi.apiJson(
+        `/api/medicamentos/notificaciones/${idNotificacion}/leer`,
+        { method: "POST" },
+      );
+      showMessage("Lectura confirmada correctamente.", "success");
+      await loadData();
+    } catch (error) {
+      showMessage(error.message, "error");
+    }
+  }
+
+  function renderNotificaciones(notificaciones) {
+    const tarjetas = notificaciones.map(
+      (notificacion) => `
+        <div class="medicine-card">
+          <div class="card-header">
+            <div class="medicine-left">
+              <div class="icon-box">
+                <i class="fa-solid fa-message"></i>
+              </div>
+              <div>
+                <h3>${notificacion.nombre_comercial}</h3>
+                <span class="status">${notificacion.estado} • ${notificacion.etapa.replaceAll("_", " ")}</span>
+              </div>
+            </div>
+          </div>
+          <div class="info-grid">
+            <div class="info-box">
+              <span>Programada</span>
+              <p>${formatDate(notificacion.programada_para)}</p>
+            </div>
+            <div class="info-box">
+              <span>Enviada</span>
+              <p>${notificacion.enviada_en ? formatDate(notificacion.enviada_en) : "Pendiente"}</p>
+            </div>
+            <div class="info-box">
+              <span>Lectura</span>
+              <p>${notificacion.leida_en ? formatDate(notificacion.leida_en) : "Sin confirmar"}</p>
+            </div>
+            <div class="info-box">
+              <span>Canal</span>
+              <p>${notificacion.tipo.toUpperCase()}</p>
+            </div>
+          </div>
+          <div class="info-box" style="margin-top: 16px;">
+            <span>Mensaje</span>
+            <p>${notificacion.mensaje}</p>
+          </div>
+          <div class="action-buttons">
+            <button
+              class="mark-btn notification-read"
+              type="button"
+              data-id="${notificacion.id_notificacion}"
+              ${notificacion.estado === "leida" ? "disabled" : ""}
+            >
+              <i class="fa-solid fa-check-double"></i> Confirmar lectura
+            </button>
+          </div>
+        </div>
+      `,
+    );
+
+    notificacionesContainer.innerHTML = tarjetas.join("");
+    notificacionesEmpty.style.display = tarjetas.length ? "none" : "block";
+    notificacionesContainer.querySelectorAll(".notification-read").forEach((button) => {
+      button.addEventListener("click", () => confirmarLectura(button.dataset.id));
+    });
+  }
+
   async function loadData() {
     document.getElementById("nombre-paciente").textContent = usuario.nombre_completo;
     document.getElementById("id-farmacia").textContent = `ID #${usuario.id}`;
     document.getElementById("img-paciente").src =
       `https://ui-avatars.com/api/?name=${encodeURIComponent(usuario.nombre_completo)}&size=300&background=dbeafe&color=2563eb`;
 
-    const [resumenData, prescripcionesData, tomasData] = await Promise.all([
+    const [resumenData, prescripcionesData, tomasData, notificacionesData] = await Promise.all([
       MedAlertApi.apiJson(`/api/medicamentos/paciente/${usuario.id}/resumen`),
       MedAlertApi.apiJson(`/api/medicamentos/paciente/${usuario.id}`),
       MedAlertApi.apiJson(`/api/medicamentos/paciente/${usuario.id}/tomas`),
+      MedAlertApi.apiJson(`/api/medicamentos/paciente/${usuario.id}/notificaciones`),
     ]);
 
     document.getElementById("alergias-paciente").textContent =
@@ -255,6 +329,12 @@ document.addEventListener("DOMContentLoaded", () => {
       renderTomas(tomasData.tomas);
     } else {
       tomasEmpty.style.display = "block";
+    }
+
+    if (notificacionesData.notificaciones.length) {
+      renderNotificaciones(notificacionesData.notificaciones);
+    } else {
+      notificacionesEmpty.style.display = "block";
     }
   }
 

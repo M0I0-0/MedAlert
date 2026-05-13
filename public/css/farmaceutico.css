@@ -218,6 +218,11 @@ hr {
   background: #3b82f6;
 }
 
+.catalog-form {
+  display: grid;
+  gap: 14px;
+}
+
 /* TARJETAS DE RESULTADO */
 .results-container {
   display: flex;
@@ -284,6 +289,16 @@ hr {
 
 .dispensar-btn:hover {
   background: #059669;
+}
+
+.dispensar-btn.danger {
+  background: #fee2e2;
+  color: #991b1b;
+  margin-top: 8px;
+}
+
+.dispensar-btn.danger:hover {
+  background: #fecaca;
 }
 
 /* ESTADOS VACÍOS */

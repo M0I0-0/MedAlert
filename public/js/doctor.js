@@ -31,6 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const notesList = document.getElementById("doctor-notes-list");
   const noteForm = document.getElementById("note-form");
   const noteContent = document.getElementById("note-content");
+  const historyList = document.getElementById("prescription-history-list");
+  const hospitalForm = document.getElementById("hospital-form");
+  const hospitalTomasList = document.getElementById("hospital-tomas-list");
+  const stockAlertsList = document.getElementById("stock-alerts-list");
 
   doctorName.textContent = usuario.nombre_completo || "Médico";
   doctorSpecialty.textContent = usuario.especialidad || "Seguimiento clínico";
@@ -249,6 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }">${item.porcentaje_adherencia}%</span>
             <div style="display:flex; gap:10px; margin-left:auto;">
               <button class="btn btn-secondary doctor-edit" data-id="${item.id_prescripcion}" type="button">Editar</button>
+              <button class="btn btn-secondary doctor-history" data-id="${item.id_prescripcion}" type="button">Historial</button>
               <button class="btn btn-primary doctor-disable" data-id="${item.id_prescripcion}" type="button">Desactivar</button>
             </div>
           </article>
@@ -259,9 +264,111 @@ document.addEventListener("DOMContentLoaded", () => {
     activePrescriptionsList.querySelectorAll(".doctor-edit").forEach((button) => {
       button.addEventListener("click", () => loadPrescriptionIntoForm(button.dataset.id));
     });
+    activePrescriptionsList.querySelectorAll(".doctor-history").forEach((button) => {
+      button.addEventListener("click", () => loadPrescriptionHistory(button.dataset.id));
+    });
     activePrescriptionsList.querySelectorAll(".doctor-disable").forEach((button) => {
       button.addEventListener("click", () => disablePrescription(button.dataset.id));
     });
+  }
+
+  function renderHospitalTomas(tomas) {
+    const pendientes = tomas.filter((item) => item.estatus === "pendiente");
+    if (!pendientes.length) {
+      hospitalTomasList.innerHTML = `
+        <div class="task-item">
+          <span class="task-marker marker-primary"></span>
+          <div>
+            <strong>Sin tomas pendientes</strong>
+            <small>No hay registros para procesar en lote.</small>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    hospitalTomasList.innerHTML = pendientes
+      .map(
+        (toma) => `
+          <label class="task-item">
+            <input type="checkbox" class="hospital-toma-check" value="${toma.id_toma}" />
+            <div>
+              <strong>${toma.nombre_comercial}</strong>
+              <small>${formatDate(toma.fecha_hora_programada)}</small>
+            </div>
+          </label>
+        `,
+      )
+      .join("");
+  }
+
+  async function loadPrescriptionHistory(idPrescripcion) {
+    try {
+      const data = await MedAlertApi.apiJson(
+        `/api/medicamentos/prescripcion/${idPrescripcion}/historial`,
+      );
+      if (!data.historial.length) {
+        historyList.innerHTML = `
+          <div class="timeline-item">
+            <span class="timeline-marker marker-primary"></span>
+            <div>
+              <strong>Sin historial</strong>
+              <small>Esta prescripción aún no tiene cambios registrados.</small>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      historyList.innerHTML = data.historial
+        .map(
+          (item) => `
+            <div class="timeline-item">
+              <span class="timeline-marker marker-accent"></span>
+              <div>
+                <strong>${item.accion} • ${formatDate(item.fecha_modificacion)}</strong>
+                <small>
+                  ${item.medico_editor}: dosis anterior ${item.dosis_anterior || "N/D"},
+                  horario anterior ${item.patron_anterior || "N/D"},
+                  stock anterior ${item.stock_anterior ?? "N/D"}
+                </small>
+              </div>
+            </div>
+          `,
+        )
+        .join("");
+    } catch (error) {
+      showMessage(error.message, "error");
+    }
+  }
+
+  function renderStockAlerts(alertas) {
+    if (!alertas.length) {
+      stockAlertsList.innerHTML = `
+        <div class="task-item">
+          <span class="task-marker marker-primary"></span>
+          <div>
+            <strong>Sin recargas urgentes</strong>
+            <small>No hay tratamientos con stock bajo.</small>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    stockAlertsList.innerHTML = alertas
+      .map(
+        (alerta) => `
+          <div class="task-item">
+            <span class="task-marker marker-danger"></span>
+            <div>
+              <strong>${alerta.paciente}</strong>
+              <small>${alerta.nombre_comercial} • stock ${alerta.stock_estimado} • próxima ${alerta.proxima_toma ? formatDate(alerta.proxima_toma) : "sin pendiente"}</small>
+            </div>
+          </div>
+        `,
+      )
+      .join("");
   }
 
   function findPrescriptionById(id) {
@@ -312,20 +419,24 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHero(patient);
     calculateDose();
 
-    const [prescripcionesData, notasData] = await Promise.all([
+    const [prescripcionesData, notasData, tomasData] = await Promise.all([
       MedAlertApi.apiJson(`/api/medicamentos/paciente/${idPaciente}`),
       MedAlertApi.apiJson(`/api/medicamentos/paciente/${idPaciente}/notas`),
+      MedAlertApi.apiJson(`/api/medicamentos/paciente/${idPaciente}/tomas`),
     ]);
 
     state.pacienteActual.prescripciones = prescripcionesData.prescripciones;
+    state.pacienteActual.tomas = tomasData.tomas;
     renderActivePrescriptions(prescripcionesData.prescripciones);
     renderNotes(notasData.notas);
+    renderHospitalTomas(tomasData.tomas);
   }
 
   async function loadData() {
-    const [pacientesData, medicamentosData] = await Promise.all([
+    const [pacientesData, medicamentosData, stockData] = await Promise.all([
       MedAlertApi.apiJson("/api/medicamentos/pacientes"),
       MedAlertApi.apiJson("/api/medicamentos/catalogo"),
+      MedAlertApi.apiJson("/api/medicamentos/stock/alertas"),
     ]);
 
     state.pacientes = pacientesData.pacientes;
@@ -334,6 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPatientList();
     fillPatientSelect();
     fillMedicationSelect();
+    renderStockAlerts(stockData.alertas);
   }
 
   prescriptionForm.addEventListener("submit", async (event) => {
@@ -405,6 +517,43 @@ document.addEventListener("DOMContentLoaded", () => {
       noteContent.value = "";
       showMessage("Nota remota guardada correctamente.", "success");
       await loadSelectedPatientData();
+    } catch (error) {
+      showMessage(error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  hospitalForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const checked = Array.from(
+      hospitalTomasList.querySelectorAll(".hospital-toma-check:checked"),
+    );
+    if (!checked.length) {
+      showMessage("Selecciona al menos una toma pendiente para registrar.", "error");
+      return;
+    }
+
+    const payload = {
+      registrado_por: document.getElementById("hospital-responsible").value.trim(),
+      tomas: checked.map((input) => ({
+        id_toma: Number(input.value),
+        estatus: "cumplido",
+        observaciones: "Registro hospitalario en lote",
+      })),
+    };
+
+    const button = document.getElementById("hospital-save-button");
+    button.disabled = true;
+    try {
+      await MedAlertApi.apiJson("/api/medicamentos/tomas/lote-hospitalario", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      showMessage("Tomas hospitalarias registradas correctamente.", "success");
+      await loadSelectedPatientData();
+      const stockData = await MedAlertApi.apiJson("/api/medicamentos/stock/alertas");
+      renderStockAlerts(stockData.alertas);
     } catch (error) {
       showMessage(error.message, "error");
     } finally {

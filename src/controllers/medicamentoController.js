@@ -1,4 +1,7 @@
 const { pool } = require("../database/connection");
+const {
+  procesarNotificaciones,
+} = require("../services/notificationScheduler");
 
 function normalizarPatron(patron = "") {
   return String(patron).trim().toLowerCase().replace(/\s+/g, "_");
@@ -179,6 +182,111 @@ async function obtenerCatalogo(_req, res) {
       `,
     );
     return res.json({ ok: true, medicamentos });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  }
+}
+
+async function crearMedicamentoCatalogo(req, res) {
+  const { nombre_comercial, principio_activo, presentacion } = req.body;
+
+  if (!nombre_comercial?.trim() || !principio_activo?.trim()) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Nombre comercial y principio activo son requeridos.",
+    });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `
+        INSERT INTO medicamento_catalogo
+        (id_farmaceutico, nombre_comercial, principio_activo, presentacion)
+        VALUES (?, ?, ?, ?)
+      `,
+      [
+        req.usuario.id,
+        nombre_comercial.trim(),
+        principio_activo.trim(),
+        presentacion?.trim() || null,
+      ],
+    );
+
+    return res.status(201).json({
+      ok: true,
+      mensaje: "Medicamento agregado al catálogo.",
+      id_medicamento: result.insertId,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  }
+}
+
+async function actualizarMedicamentoCatalogo(req, res) {
+  const { id_medicamento } = req.params;
+  const { nombre_comercial, principio_activo, presentacion } = req.body;
+
+  if (!nombre_comercial?.trim() || !principio_activo?.trim()) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Nombre comercial y principio activo son requeridos.",
+    });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `
+        UPDATE medicamento_catalogo
+        SET nombre_comercial = ?, principio_activo = ?, presentacion = ?
+        WHERE id_medicamento = ?
+      `,
+      [
+        nombre_comercial.trim(),
+        principio_activo.trim(),
+        presentacion?.trim() || null,
+        id_medicamento,
+      ],
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ ok: false, mensaje: "Medicamento no encontrado." });
+    }
+
+    return res.json({ ok: true, mensaje: "Medicamento actualizado." });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  }
+}
+
+async function eliminarMedicamentoCatalogo(req, res) {
+  const { id_medicamento } = req.params;
+
+  try {
+    const [uso] = await pool.query(
+      `SELECT 1 FROM prescripcion WHERE id_medicamento = ? LIMIT 1`,
+      [id_medicamento],
+    );
+    if (uso.length > 0) {
+      return res.status(409).json({
+        ok: false,
+        mensaje: "No se puede eliminar porque ya tiene prescripciones asociadas.",
+      });
+    }
+
+    const [result] = await pool.query(
+      `DELETE FROM medicamento_catalogo WHERE id_medicamento = ?`,
+      [id_medicamento],
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ ok: false, mensaje: "Medicamento no encontrado." });
+    }
+    return res.json({ ok: true, mensaje: "Medicamento eliminado." });
   } catch (error) {
     return res
       .status(500)
@@ -599,6 +707,95 @@ async function obtenerTomasPaciente(req, res) {
   }
 }
 
+async function obtenerNotificacionesPaciente(req, res) {
+  const { id_paciente } = req.params;
+  const conn = await asegurarAccesoPaciente(req, res, id_paciente);
+  if (!conn) return;
+
+  try {
+    const [notificaciones] = await conn.query(
+      `
+        SELECT
+          n.id_notificacion,
+          n.id_toma,
+          n.tipo,
+          n.etapa,
+          n.mensaje,
+          n.programada_para,
+          n.enviada_en,
+          n.leida_en,
+          n.estado,
+          mc.nombre_comercial
+        FROM notificacion_recordatorio n
+        JOIN toma_recordatorio t ON t.id_toma = n.id_toma
+        JOIN prescripcion p ON p.id_prescripcion = t.id_prescripcion
+        JOIN medicamento_catalogo mc ON mc.id_medicamento = p.id_medicamento
+        WHERE p.id_paciente = ?
+        ORDER BY n.programada_para DESC
+        LIMIT 30
+      `,
+      [id_paciente],
+    );
+
+    return res.json({ ok: true, notificaciones });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  } finally {
+    conn.release();
+  }
+}
+
+async function confirmarLecturaNotificacion(req, res) {
+  const { id_notificacion } = req.params;
+  const conn = await pool.getConnection();
+
+  try {
+    const [rows] = await conn.query(
+      `
+        SELECT p.id_paciente
+        FROM notificacion_recordatorio n
+        JOIN toma_recordatorio t ON t.id_toma = n.id_toma
+        JOIN prescripcion pr ON pr.id_prescripcion = t.id_prescripcion
+        JOIN paciente p ON p.id_paciente = pr.id_paciente
+        WHERE n.id_notificacion = ?
+        LIMIT 1
+      `,
+      [id_notificacion],
+    );
+    const item = rows[0];
+    if (!item) {
+      return res.status(404).json({ ok: false, mensaje: "Notificación no encontrada." });
+    }
+
+    const permitido = await puedeVerPaciente({
+      conn,
+      usuario: req.usuario,
+      idPaciente: item.id_paciente,
+    });
+    if (!permitido) {
+      return res.status(403).json({ ok: false, mensaje: "Sin permiso." });
+    }
+
+    await conn.query(
+      `
+        UPDATE notificacion_recordatorio
+        SET estado = 'leida', leida_en = NOW()
+        WHERE id_notificacion = ?
+      `,
+      [id_notificacion],
+    );
+    return res.json({ ok: true, mensaje: "Lectura confirmada." });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  } finally {
+    conn.release();
+  }
+}
+
 async function obtenerResumenPaciente(req, res) {
   const { id_paciente } = req.params;
   const conn = await asegurarAccesoPaciente(req, res, id_paciente);
@@ -742,7 +939,8 @@ async function marcarToma(req, res) {
     await conn.query(
       `
         UPDATE toma_recordatorio
-        SET fecha_hora_real = ?, estatus = ?, motivo_omision = ?, omision_justificada = ?, observaciones = ?
+        SET fecha_hora_real = ?, estatus = ?, motivo_omision = ?, omision_justificada = ?,
+            observaciones = ?, registrado_por_rol = ?, registrado_por_id = ?, modo_registro = 'normal'
         WHERE id_toma = ?
       `,
       [
@@ -751,6 +949,8 @@ async function marcarToma(req, res) {
         estatus === "no_cumplido" ? motivo_omision || "otro" : null,
         estatus === "no_cumplido" ? Number(Boolean(omision_justificada)) : 0,
         observaciones || null,
+        req.usuario.rol,
+        req.usuario.id,
         id_toma,
       ],
     );
@@ -762,6 +962,192 @@ async function marcarToma(req, res) {
       .json({ ok: false, mensaje: "Error interno del servidor." });
   } finally {
     conn.release();
+  }
+}
+
+async function marcarTomasLoteHospitalario(req, res) {
+  const { tomas, registrado_por } = req.body;
+  if (!Array.isArray(tomas) || tomas.length === 0) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Debes enviar una lista de tomas.",
+    });
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    let actualizadas = 0;
+
+    for (const item of tomas) {
+      if (!item.id_toma || !["cumplido", "no_cumplido"].includes(item.estatus)) {
+        continue;
+      }
+
+      const [rows] = await conn.query(
+        `
+          SELECT t.*, p.id_paciente
+          FROM toma_recordatorio t
+          JOIN prescripcion p ON p.id_prescripcion = t.id_prescripcion
+          JOIN paciente pa ON pa.id_paciente = p.id_paciente
+          WHERE t.id_toma = ? AND pa.id_medico = ?
+          LIMIT 1
+        `,
+        [item.id_toma, req.usuario.id],
+      );
+      if (rows.length === 0) continue;
+
+      const fechaReal =
+        item.estatus === "cumplido"
+          ? item.fecha_hora_real || formatearDateTimeLocal(new Date())
+          : null;
+
+      await conn.query(
+        `
+          UPDATE toma_recordatorio
+          SET fecha_hora_real = ?, estatus = ?, motivo_omision = ?, omision_justificada = ?,
+              observaciones = ?, registrado_por_rol = 'enfermero',
+              registrado_por_id = ?, modo_registro = 'hospitalario'
+          WHERE id_toma = ?
+        `,
+        [
+          fechaReal,
+          item.estatus,
+          item.estatus === "no_cumplido" ? item.motivo_omision || "otro" : null,
+          item.estatus === "no_cumplido" ? Number(Boolean(item.omision_justificada)) : 0,
+          item.observaciones || registrado_por || "Registro hospitalario en lote",
+          req.usuario.id,
+          item.id_toma,
+        ],
+      );
+      actualizadas += 1;
+    }
+
+    await conn.commit();
+    return res.json({
+      ok: true,
+      mensaje: `${actualizadas} tomas registradas en modo hospitalario.`,
+      actualizadas,
+    });
+  } catch (error) {
+    await conn.rollback();
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  } finally {
+    conn.release();
+  }
+}
+
+async function obtenerHistorialPrescripcion(req, res) {
+  const { id_prescripcion } = req.params;
+  const conn = await pool.getConnection();
+
+  try {
+    const [rows] = await conn.query(
+      `
+        SELECT p.id_paciente
+        FROM prescripcion p
+        WHERE p.id_prescripcion = ?
+        LIMIT 1
+      `,
+      [id_prescripcion],
+    );
+    const prescripcion = rows[0];
+    if (!prescripcion) {
+      return res.status(404).json({ ok: false, mensaje: "Prescripción no encontrada." });
+    }
+
+    const permitido = await puedeVerPaciente({
+      conn,
+      usuario: req.usuario,
+      idPaciente: prescripcion.id_paciente,
+    });
+    if (!permitido) {
+      return res.status(403).json({ ok: false, mensaje: "Sin permiso." });
+    }
+
+    const [historial] = await conn.query(
+      `
+        SELECT
+          h.*,
+          m.nombre_completo AS medico_editor
+        FROM historial_prescripcion h
+        JOIN medico m ON m.id_medico = h.id_medico_editor
+        WHERE h.id_prescripcion = ?
+        ORDER BY h.fecha_modificacion DESC
+      `,
+      [id_prescripcion],
+    );
+
+    return res.json({ ok: true, historial });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  } finally {
+    conn.release();
+  }
+}
+
+async function obtenerAlertasStock(req, res) {
+  try {
+    let filtro = "";
+    const params = [];
+
+    if (req.usuario.rol === "medico") {
+      filtro = "AND pa.id_medico = ?";
+      params.push(req.usuario.id);
+    } else if (req.usuario.rol === "paciente") {
+      filtro = "AND pa.id_paciente = ?";
+      params.push(req.usuario.id);
+    } else if (req.usuario.rol === "familiar") {
+      filtro = "AND EXISTS (SELECT 1 FROM familiar_paciente fp WHERE fp.id_paciente = pa.id_paciente AND fp.id_familiar = ?)";
+      params.push(req.usuario.id);
+    }
+
+    const [alertas] = await pool.query(
+      `
+        SELECT
+          pr.id_prescripcion,
+          pa.id_paciente,
+          pa.nombre_completo AS paciente,
+          mc.nombre_comercial,
+          pr.stock_estimado,
+          MIN(CASE WHEN t.estatus = 'pendiente' THEN t.fecha_hora_programada END) AS proxima_toma
+        FROM prescripcion pr
+        JOIN paciente pa ON pa.id_paciente = pr.id_paciente
+        JOIN medicamento_catalogo mc ON mc.id_medicamento = pr.id_medicamento
+        LEFT JOIN toma_recordatorio t ON t.id_prescripcion = pr.id_prescripcion
+        WHERE pr.activa = 1
+          AND pr.stock_estimado <= 5
+          ${filtro}
+        GROUP BY pr.id_prescripcion, pa.id_paciente, pa.nombre_completo, mc.nombre_comercial, pr.stock_estimado
+        ORDER BY pr.stock_estimado ASC, proxima_toma ASC
+      `,
+      params,
+    );
+
+    return res.json({ ok: true, alertas });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  }
+}
+
+async function procesarNotificacionesManual(_req, res) {
+  try {
+    const enviadas = await procesarNotificaciones();
+    return res.json({
+      ok: true,
+      mensaje: `${enviadas} notificaciones SMS simuladas procesadas.`,
+      enviadas,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error procesando notificaciones." });
   }
 }
 
@@ -884,15 +1270,24 @@ async function obtenerNotasPaciente(req, res) {
 
 module.exports = {
   actualizarPrescripcion,
+  actualizarMedicamentoCatalogo,
+  confirmarLecturaNotificacion,
+  crearMedicamentoCatalogo,
   desactivarPrescripcion,
   dispensarPrescripcion,
+  eliminarMedicamentoCatalogo,
   guardarNotaMedica,
   marcarToma,
+  marcarTomasLoteHospitalario,
+  obtenerAlertasStock,
   obtenerCatalogo,
+  obtenerHistorialPrescripcion,
+  obtenerNotificacionesPaciente,
   obtenerNotasPaciente,
   obtenerPacientes,
   obtenerPrescripcionesPaciente,
   obtenerResumenPaciente,
   obtenerTomasPaciente,
+  procesarNotificacionesManual,
   prescribirMedicamento,
 };

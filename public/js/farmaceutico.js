@@ -21,10 +21,114 @@ document.addEventListener("DOMContentLoaded", () => {
   // 2. CARGAR DATOS DEL USUARIO EN EL PERFIL
   document.getElementById("nombre-farmaceutico").textContent =
     usuario.nombre_completo;
+
+  const catalogForm = document.getElementById("catalog-form");
+  catalogForm.addEventListener("submit", guardarMedicamentoCatalogo);
+  cargarCatalogo();
 });
 
 function logout() {
   MedAlertApi.logout();
+}
+
+let catalogoActual = [];
+
+async function cargarCatalogo() {
+  try {
+    const data = await MedAlertApi.apiJson("/api/medicamentos/catalogo");
+    catalogoActual = data.medicamentos;
+    renderCatalogo(catalogoActual);
+  } catch (error) {
+    document.getElementById("catalog-list").innerHTML =
+      `<div class="empty-msg"><i class="fa-solid fa-triangle-exclamation"></i><br>${error.message}</div>`;
+  }
+}
+
+function renderCatalogo(medicamentos) {
+  const contenedor = document.getElementById("catalog-list");
+  if (!medicamentos.length) {
+    contenedor.innerHTML =
+      `<div class="empty-msg"><i class="fa-solid fa-box-open"></i><br>No hay medicamentos en catálogo.</div>`;
+    return;
+  }
+
+  contenedor.innerHTML = medicamentos
+    .map(
+      (med) => `
+        <div class="result-card">
+          <h5>${med.nombre_comercial}</h5>
+          <p><strong>Principio activo:</strong> ${med.principio_activo}<br>
+             <strong>Presentación:</strong> ${med.presentacion || "Sin presentación"}</p>
+          <div class="tags">
+            <span>ID ${med.id_medicamento}</span>
+            <span>${med.farmaceutico || "Farmacia"}</span>
+          </div>
+          <button class="dispensar-btn" type="button" onclick="editarCatalogo(${med.id_medicamento})">
+            <i class="fa-solid fa-pen"></i> Editar
+          </button>
+          <button class="dispensar-btn danger" type="button" onclick="eliminarCatalogo(${med.id_medicamento})">
+            <i class="fa-solid fa-trash"></i> Eliminar
+          </button>
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function limpiarCatalogForm() {
+  document.getElementById("catalog-id").value = "";
+  document.getElementById("catalog-nombre").value = "";
+  document.getElementById("catalog-principio").value = "";
+  document.getElementById("catalog-presentacion").value = "";
+}
+
+function editarCatalogo(idMedicamento) {
+  const med = catalogoActual.find(
+    (item) => Number(item.id_medicamento) === Number(idMedicamento),
+  );
+  if (!med) return;
+  document.getElementById("catalog-id").value = med.id_medicamento;
+  document.getElementById("catalog-nombre").value = med.nombre_comercial;
+  document.getElementById("catalog-principio").value = med.principio_activo;
+  document.getElementById("catalog-presentacion").value = med.presentacion || "";
+}
+
+async function guardarMedicamentoCatalogo(event) {
+  event.preventDefault();
+  const id = document.getElementById("catalog-id").value;
+  const payload = {
+    nombre_comercial: document.getElementById("catalog-nombre").value.trim(),
+    principio_activo: document.getElementById("catalog-principio").value.trim(),
+    presentacion: document.getElementById("catalog-presentacion").value.trim(),
+  };
+
+  try {
+    await MedAlertApi.apiJson(
+      id ? `/api/medicamentos/catalogo/${id}` : "/api/medicamentos/catalogo",
+      {
+        method: id ? "PUT" : "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+    limpiarCatalogForm();
+    await cargarCatalogo();
+    alert("Catálogo actualizado correctamente.");
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function eliminarCatalogo(idMedicamento) {
+  if (!confirm("¿Deseas eliminar este medicamento del catálogo?")) return;
+  try {
+    await MedAlertApi.apiJson(`/api/medicamentos/catalogo/${idMedicamento}`, {
+      method: "DELETE",
+    });
+    await cargarCatalogo();
+    alert("Medicamento eliminado.");
+  } catch (error) {
+    alert(error.message);
+  }
 }
 
 // ==========================================
@@ -108,7 +212,9 @@ async function buscarGenericos() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
   try {
-    const data = await MedAlertApi.apiJson(`/api/medicamentos/catalogo`);
+    const data = catalogoActual.length
+      ? { medicamentos: catalogoActual }
+      : await MedAlertApi.apiJson(`/api/medicamentos/catalogo`);
     const contenedor = document.getElementById("resultado-genericos");
     const resultados = data.medicamentos.filter(
       (m) =>

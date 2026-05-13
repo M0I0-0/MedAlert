@@ -249,6 +249,45 @@ const migrations = [
     `,
   },
   {
+    name: "Tabla: notificacion_recordatorio",
+    sql: `
+      CREATE TABLE IF NOT EXISTS notificacion_recordatorio (
+        id_notificacion       INT NOT NULL AUTO_INCREMENT,
+        id_toma               INT NOT NULL,
+        tipo                  ENUM('sms','push','correo') NOT NULL DEFAULT 'sms',
+        etapa                 ENUM('15_min_antes','5_min_antes','10_min_despues') NOT NULL,
+        canal_destino         VARCHAR(150) NULL,
+        mensaje               VARCHAR(500) NOT NULL,
+        programada_para       DATETIME NOT NULL,
+        enviada_en            DATETIME NULL,
+        leida_en              DATETIME NULL,
+        estado                ENUM('pendiente','enviada','leida','fallida') NOT NULL DEFAULT 'pendiente',
+        created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id_notificacion),
+        UNIQUE KEY uq_notificacion_etapa (id_toma, etapa, tipo),
+        CONSTRAINT fk_notificacion_toma FOREIGN KEY (id_toma)
+          REFERENCES toma_recordatorio (id_toma) ON DELETE CASCADE
+      ) ENGINE=InnoDB COMMENT='Scheduler de avisos y confirmación de lectura';
+    `,
+  },
+  {
+    name: "Tabla: sms_log",
+    sql: `
+      CREATE TABLE IF NOT EXISTS sms_log (
+        id_sms          INT NOT NULL AUTO_INCREMENT,
+        id_notificacion INT NULL,
+        telefono        VARCHAR(20) NULL,
+        mensaje         VARCHAR(500) NOT NULL,
+        proveedor       VARCHAR(50) NOT NULL DEFAULT 'twilio_simulado',
+        estado          ENUM('simulado','fallido') NOT NULL DEFAULT 'simulado',
+        enviado_en      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id_sms),
+        CONSTRAINT fk_sms_notificacion FOREIGN KEY (id_notificacion)
+          REFERENCES notificacion_recordatorio (id_notificacion) ON DELETE SET NULL
+      ) ENGINE=InnoDB COMMENT='Log de SMS simulado para Twilio o proveedor similar';
+    `,
+  },
+  {
     name: "Tabla: token_sesion",
     sql: `
       CREATE TABLE IF NOT EXISTS token_sesion (
@@ -294,6 +333,10 @@ const migrations = [
       ALTER TABLE historial_prescripcion
         ADD COLUMN IF NOT EXISTS stock_anterior INT NULL AFTER patron_anterior,
         ADD COLUMN IF NOT EXISTS accion ENUM('creacion','actualizacion','desactivacion','dispensacion') NOT NULL DEFAULT 'actualizacion' AFTER stock_anterior;
+      ALTER TABLE toma_recordatorio
+        ADD COLUMN IF NOT EXISTS registrado_por_rol ENUM('medico','paciente','familiar','enfermero','farmaceutico') NULL AFTER observaciones,
+        ADD COLUMN IF NOT EXISTS registrado_por_id INT NULL AFTER registrado_por_rol,
+        ADD COLUMN IF NOT EXISTS modo_registro ENUM('normal','hospitalario') NOT NULL DEFAULT 'normal' AFTER registrado_por_id;
     `,
   },
   {

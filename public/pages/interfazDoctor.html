@@ -292,10 +292,68 @@
                   </article>
                 </div>
               </div>
+
+              <div class="section-head" style="margin-top: 24px;">
+                <div class="section-title">
+                  <h3>Historial de versiones</h3>
+                  <p>Cambios registrados en la prescripción seleccionada.</p>
+                </div>
+              </div>
+              <div class="timeline-items" id="prescription-history-list">
+                <div class="timeline-item">
+                  <span class="timeline-marker marker-primary"></span>
+                  <div>
+                    <strong>Sin historial seleccionado</strong>
+                    <small>Usa el botón Historial en una receta activa.</small>
+                  </div>
+                </div>
+              </div>
             </section>
           </div>
 
           <div class="stack">
+            <aside class="task-list">
+              <div class="section-title">
+                <h3>Modo hospitalario</h3>
+                <p>Registro en lote de tomas pendientes por enfermería.</p>
+              </div>
+              <form class="prescription-form" id="hospital-form">
+                <label class="field">
+                  <span>Responsable</span>
+                  <input id="hospital-responsible" type="text" placeholder="Nombre del enfermero/a" />
+                </label>
+                <div class="task-items" id="hospital-tomas-list">
+                  <div class="task-item">
+                    <span class="task-marker marker-primary"></span>
+                    <div>
+                      <strong>Selecciona un paciente</strong>
+                      <small>Sus tomas pendientes aparecerán aquí.</small>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-primary" type="submit" id="hospital-save-button">
+                  <i class="fa-solid fa-clipboard-check"></i>
+                  Registrar lote
+                </button>
+              </form>
+            </aside>
+
+            <aside class="task-list">
+              <div class="section-title">
+                <h3>Alertas de recarga</h3>
+                <p>Prescripciones con stock estimado bajo.</p>
+              </div>
+              <div class="task-items" id="stock-alerts-list">
+                <div class="task-item">
+                  <span class="task-marker marker-primary"></span>
+                  <div>
+                    <strong>Cargando alertas</strong>
+                    <small>Espera un momento...</small>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
             <aside class="task-list" id="alertas">
               <div class="section-title">
                 <h3>Pacientes cargados</h3>

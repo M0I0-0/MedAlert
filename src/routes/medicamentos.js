@@ -12,6 +12,27 @@ router.get(
   medicamentoController.obtenerCatalogo,
 );
 
+router.post(
+  "/catalogo",
+  autenticar,
+  autorizar("farmaceutico"),
+  medicamentoController.crearMedicamentoCatalogo,
+);
+
+router.put(
+  "/catalogo/:id_medicamento",
+  autenticar,
+  autorizar("farmaceutico"),
+  medicamentoController.actualizarMedicamentoCatalogo,
+);
+
+router.delete(
+  "/catalogo/:id_medicamento",
+  autenticar,
+  autorizar("farmaceutico"),
+  medicamentoController.eliminarMedicamentoCatalogo,
+);
+
 router.get(
   "/pacientes",
   autenticar,
@@ -71,10 +92,31 @@ router.get(
 );
 
 router.get(
+  "/paciente/:id_paciente/notificaciones",
+  autenticar,
+  autorizar("medico", "farmaceutico", "paciente", "familiar"),
+  medicamentoController.obtenerNotificacionesPaciente,
+);
+
+router.get(
   "/paciente/:id_paciente/notas",
   autenticar,
   autorizar("medico", "paciente", "familiar"),
   medicamentoController.obtenerNotasPaciente,
+);
+
+router.get(
+  "/prescripcion/:id_prescripcion/historial",
+  autenticar,
+  autorizar("medico", "farmaceutico", "paciente", "familiar"),
+  medicamentoController.obtenerHistorialPrescripcion,
+);
+
+router.get(
+  "/stock/alertas",
+  autenticar,
+  autorizar("medico", "farmaceutico", "paciente", "familiar"),
+  medicamentoController.obtenerAlertasStock,
 );
 
 router.post(
@@ -85,10 +127,31 @@ router.post(
 );
 
 router.post(
+  "/notificaciones/procesar",
+  autenticar,
+  autorizar("medico", "administrador"),
+  medicamentoController.procesarNotificacionesManual,
+);
+
+router.post(
+  "/notificaciones/:id_notificacion/leer",
+  autenticar,
+  autorizar("medico", "paciente", "familiar"),
+  medicamentoController.confirmarLecturaNotificacion,
+);
+
+router.post(
   "/tomas/:id_toma/marcar",
   autenticar,
   autorizar("medico", "paciente", "familiar"),
   medicamentoController.marcarToma,
+);
+
+router.post(
+  "/tomas/lote-hospitalario",
+  autenticar,
+  autorizar("medico"),
+  medicamentoController.marcarTomasLoteHospitalario,
 );
 
 module.exports = router;
