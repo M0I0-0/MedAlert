@@ -595,7 +595,11 @@
           );
 
           setTimeout(() => {
-            window.location.href = "/pages/VistaTarjetas.html";
+            const destino =
+              data.usuario?.rol === "paciente"
+                ? "/pages/interfazpaciente.html"
+                : "/pages/VistaTarjetas.html";
+            window.location.href = destino;
           }, 900);
         } catch (error) {
           showMessage(
