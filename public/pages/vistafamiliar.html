@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedAlert - Vista Familiar</title>
+  <link rel="stylesheet" href="/css/vistafamiliar.css">
+</head>
+<body>
+
+  <header class="encabezado">
+    <div>
+      <h1>MedAlert</h1>
+      <p>Vista Familiar / Cuidador</p>
+    </div>
+
+    <div class="usuario">
+      <span>Laura Méndez</span>
+      <div class="avatar">LM</div>
+    </div>
+  </header>
+
+  <div class="contenedor">
+
+    <nav class="menu">
+      <h2>Menú</h2>
+      <a href="#dashboard">Dashboard Familiar</a>
+      <a href="#resumen">Resumen del Paciente</a>
+      <a href="#medicamentos">Medicamentos</a>
+      <a href="#historial">Historial de Tomas</a>
+      <a href="#alertas">Alertas</a>
+    </nav>
+
+    <main class="contenido">
+
+      <!-- DASHBOARD -->
+      <section class="pantalla" id="dashboard">
+        <div class="titulo-pantalla">
+          <div>
+            <h2>Dashboard Familiar</h2>
+            <p>Vista general del estado del paciente vinculado y su adherencia al tratamiento.</p>
+          </div>
+
+          <span class="badge riesgo">Atención requerida</span>
+        </div>
+
+        <div class="tarjetas">
+          <div class="tarjeta">
+            <p>Paciente vinculado</p>
+            <h3>Carlos Méndez</h3>
+          </div>
+
+          <div class="tarjeta">
+            <p>Adherencia semanal</p>
+            <h3 class="texto-alerta">62%</h3>
+          </div>
+
+          <div class="tarjeta">
+            <p>Tomas omitidas</p>
+            <h3 class="texto-advertencia">4</h3>
+          </div>
+
+          <div class="tarjeta">
+            <p>Próxima toma</p>
+            <h3>8:00 PM</h3>
+          </div>
+        </div>
+
+        <div class="mensaje-alerta">
+          La adherencia del paciente está por debajo del 70%. Se recomienda dar seguimiento.
+        </div>
+
+        <div class="grid-dos">
+          <div class="panel">
+            <h3>Resumen rápido</h3>
+            <p><strong>Paciente:</strong> Carlos Méndez</p>
+            <p><strong>Edad:</strong> 58 años</p>
+            <p><strong>Diagnóstico:</strong> Hipertensión</p>
+            <p><strong>Médico asignado:</strong> Dr. Juan Pérez</p>
+            <p><strong>Última toma registrada:</strong> Hoy, 8:25 AM</p>
+          </div>
+
+          <div class="panel">
+            <h3>Adherencia semanal</h3>
+
+            <div class="grafica">
+              <div class="barra barra-alta">
+                <span>78%</span>
+              </div>
+
+              <div class="barra barra-baja">
+                <span>62%</span>
+              </div>
+            </div>
+
+            <div class="leyenda">
+              <span>Semana anterior</span>
+              <span>Semana actual</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESUMEN -->
+      <section class="pantalla" id="resumen">
+        <a href="#dashboard" class="volver">← Volver al Dashboard</a>
+
+        <div class="titulo-pantalla">
+          <div>
+            <h2>Resumen del Paciente</h2>
+            <p>Información general del paciente vinculado al familiar o cuidador.</p>
+          </div>
+        </div>
+
+        <div class="grid-dos">
+          <div class="panel">
+            <h3>Datos personales</h3>
+            <p><strong>Nombre:</strong> Carlos Méndez</p>
+            <p><strong>Edad:</strong> 58 años</p>
+            <p><strong>Peso:</strong> 72 kg</p>
+            <p><strong>Estatura:</strong> 1.70 m</p>
+            <p><strong>Alergias:</strong> Penicilina</p>
+          </div>
+
+          <div class="panel">
+            <h3>Estado del tratamiento</h3>
+            <p><strong>Adherencia semanal:</strong> 62%</p>
+            <p><strong>Estado:</strong> <span class="badge riesgo">Riesgo</span></p>
+            <p><strong>Medicamentos activos:</strong> 2</p>
+            <p><strong>Tomas cumplidas:</strong> 6</p>
+            <p><strong>Tomas no cumplidas:</strong> 4</p>
+          </div>
+        </div>
+
+        <div class="panel panel-completo">
+          <h3>Notas importantes</h3>
+          <p>
+            El paciente ha presentado olvidos frecuentes en las tomas nocturnas.
+            Se recomienda supervisar las próximas tomas y contactar al médico si continúa la baja adherencia.
+          </p>
+        </div>
+      </section>
+
+      <!-- MEDICAMENTOS -->
+      <section class="pantalla" id="medicamentos">
+        <a href="#dashboard" class="volver">← Volver al Dashboard</a>
+
+        <div class="titulo-pantalla">
+          <div>
+            <h2>Medicamentos del Paciente</h2>
+            <p>Consulta de medicamentos activos, dosis, frecuencia y próxima toma.</p>
+          </div>
+        </div>
+
+        <div class="tabla-contenedor">
+          <table>
+            <thead>
+              <tr>
+                <th>Medicamento</th>
+                <th>Dosis</th>
+                <th>Frecuencia</th>
+                <th>Horario</th>
+                <th>Próxima toma</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>Losartán</td>
+                <td>50 mg</td>
+                <td>Cada 24 h</td>
+                <td>8:00 AM</td>
+                <td>Mañana 8:00 AM</td>
+                <td><span class="badge activo">Activo</span></td>
+              </tr>
+
+              <tr>
+                <td>Metformina</td>
+                <td>850 mg</td>
+                <td>Cada 12 h</td>
+                <td>8:00 AM / 8:00 PM</td>
+                <td>Hoy 8:00 PM</td>
+                <td><span class="badge proximo">Próximo</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mensaje-info">
+          El familiar puede consultar la información, pero no puede modificar medicamentos.
+          Solo el médico asignado puede realizar cambios.
+        </div>
+      </section>
+
+      <!-- HISTORIAL -->
+      <section class="pantalla" id="historial">
+        <a href="#dashboard" class="volver">← Volver al Dashboard</a>
+
+        <div class="titulo-pantalla">
+          <div>
+            <h2>Historial de Tomas</h2>
+            <p>Registro de tomas cumplidas, omitidas, retrasadas o adelantadas.</p>
+          </div>
+        </div>
+
+        <div class="tabla-contenedor">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Medicamento</th>
+                <th>Hora programada</th>
+                <th>Hora real</th>
+                <th>Resultado</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>13/05/2026</td>
+                <td>Losartán</td>
+                <td>8:00 AM</td>
+                <td>8:25 AM</td>
+                <td><span class="badge cumplida">Cumplida</span></td>
+                <td>Retraso leve</td>
+              </tr>
+
+              <tr>
+                <td>12/05/2026</td>
+                <td>Metformina</td>
+                <td>8:00 PM</td>
+                <td>No registrada</td>
+                <td><span class="badge omitida">No cumplida</span></td>
+                <td>Olvido</td>
+              </tr>
+
+              <tr>
+                <td>12/05/2026</td>
+                <td>Losartán</td>
+                <td>8:00 AM</td>
+                <td>8:02 AM</td>
+                <td><span class="badge cumplida">Cumplida</span></td>
+                <td>Sin observaciones</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ALERTAS -->
+      <section class="pantalla" id="alertas">
+        <a href="#dashboard" class="volver">← Volver al Dashboard</a>
+
+        <div class="titulo-pantalla">
+          <div>
+            <h2>Alertas del Paciente</h2>
+            <p>Alertas automáticas relacionadas con adherencia, omisiones y próximas tomas.</p>
+          </div>
+        </div>
+
+        <div class="alertas-lista">
+          <div class="alerta-card grave">
+            <h3>Adherencia baja</h3>
+            <p>La adherencia semanal del paciente bajó a 62%, por debajo del mínimo recomendado del 70%.</p>
+            <span>Generada hoy</span>
+          </div>
+
+          <div class="alerta-card media">
+            <h3>Toma omitida</h3>
+            <p>El paciente no registró la toma nocturna de Metformina el día 12/05/2026.</p>
+            <span>Hace 1 día</span>
+          </div>
+
+          <div class="alerta-card leve">
+            <h3>Próxima toma</h3>
+            <p>La próxima toma programada es Metformina 850 mg a las 8:00 PM.</p>
+            <span>Hoy</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>
