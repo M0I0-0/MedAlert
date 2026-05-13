@@ -13,7 +13,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <link rel="stylesheet" href="css/login.css" />
+    <link rel="stylesheet" href="/css/login.css" />
   </head>
   <body>
     <div class="container">
@@ -206,7 +206,9 @@
                 </div>
               </div>
 
-              <div class="input-group role-field role-medico role-farmaceutico hidden">
+              <div
+                class="input-group role-field role-medico role-farmaceutico hidden"
+              >
                 <label for="register-cedula">Cédula profesional</label>
                 <div class="input-wrapper">
                   <i class="fa-regular fa-id-card"></i>
@@ -243,7 +245,9 @@
                 </div>
               </div>
 
-              <div class="input-group role-field role-paciente role-familiar hidden">
+              <div
+                class="input-group role-field role-paciente role-familiar hidden"
+              >
                 <label for="register-edad">Edad</label>
                 <div class="input-wrapper">
                   <i class="fa-solid fa-cake-candles"></i>
@@ -301,7 +305,9 @@
                 </div>
               </div>
 
-              <div class="input-group full-width role-field role-paciente hidden">
+              <div
+                class="input-group full-width role-field role-paciente hidden"
+              >
                 <label for="register-historial">Historial clínico</label>
                 <div class="input-wrapper">
                   <i class="fa-solid fa-notes-medical"></i>
@@ -314,7 +320,9 @@
                 </div>
               </div>
 
-              <div class="input-group full-width role-field role-paciente hidden">
+              <div
+                class="input-group full-width role-field role-paciente hidden"
+              >
                 <label for="register-alergias">Alergias</label>
                 <div class="input-wrapper">
                   <i class="fa-solid fa-triangle-exclamation"></i>
@@ -327,7 +335,9 @@
                 </div>
               </div>
 
-              <div class="input-group full-width role-field role-familiar hidden">
+              <div
+                class="input-group full-width role-field role-familiar hidden"
+              >
                 <label for="register-relacion">Relación con el paciente</label>
                 <div class="input-wrapper">
                   <i class="fa-solid fa-people-group"></i>
@@ -337,7 +347,9 @@
                     <option value="Esposo/a">Esposo/a</option>
                     <option value="Padre/Madre">Padre/Madre</option>
                     <option value="Hermano/a">Hermano/a</option>
-                    <option value="Cuidador profesional">Cuidador profesional</option>
+                    <option value="Cuidador profesional">
+                      Cuidador profesional
+                    </option>
                     <option value="Otro">Otro</option>
                   </select>
                 </div>
@@ -469,7 +481,9 @@
       const recoverForm = document.getElementById("recover-form");
       const registerRole = document.getElementById("register-rol");
       const roleFields = document.querySelectorAll(".role-field");
-      const registerAfterRole = document.querySelectorAll(".register-after-role");
+      const registerAfterRole = document.querySelectorAll(
+        ".register-after-role",
+      );
       const registerRoleHint = document.querySelector(".register-role-hint");
 
       function showMessage(message, type) {
@@ -518,7 +532,8 @@
 
         roleFields.forEach((field) => {
           const roleClasses = Array.from(field.classList).filter(
-            (className) => className.startsWith("role-") && className !== "role-field"
+            (className) =>
+              className.startsWith("role-") && className !== "role-field",
           );
           const shouldShow = hasRole && roleClasses.includes(`role-${role}`);
 
@@ -526,7 +541,8 @@
 
           field.querySelectorAll("input, select").forEach((input) => {
             if (!shouldShow) {
-              input.value = input.tagName === "SELECT" ? input.options[0]?.value || "" : "";
+              input.value =
+                input.tagName === "SELECT" ? input.options[0]?.value || "" : "";
             }
           });
         });
@@ -614,7 +630,9 @@
         clearMessage();
 
         const submitButton = registerForm.querySelector(".btn-submit");
-        const payload = Object.fromEntries(new FormData(registerForm).entries());
+        const payload = Object.fromEntries(
+          new FormData(registerForm).entries(),
+        );
         const confirmar = document.getElementById("register-confirmar").value;
         const acceptedTerms = document.getElementById("terms").checked;
 
@@ -661,7 +679,10 @@
           return;
         }
 
-        if (payload.rol === "paciente" && (!payload.edad || !payload.id_medico)) {
+        if (
+          payload.rol === "paciente" &&
+          (!payload.edad || !payload.id_medico)
+        ) {
           showMessage("La edad y el médico tratante son requeridos.", "error");
           return;
         }
