@@ -1,74 +1,96 @@
 // src/controllers/medicamentoController.js
 const { pool } = require("../database/connection");
 
+// 1. Obtener el inventario (Para que el Médico o Farmacéutico busquen medicinas)
+const obtenerCatalogo = async (req, res) => {
+  try {
+    const [medicamentos] = await pool.query(
+      `SELECT * FROM medicamento_catalogo`,
+    );
+    return res.json({ ok: true, medicamentos });
+  } catch (error) {
+    console.error("Error al obtener catálogo:", error.message);
+    return res
+      .status(500)
+      .json({ ok: false, mensaje: "Error interno del servidor." });
+  }
+};
+
+// 2. Crear una Prescripción (Aquí ocurre la magia)
 const prescribirMedicamento = async (req, res) => {
-  const id_medico = req.usuario.id; // Viene del token validado
+  const id_medico = req.usuario.id; // Lo sacamos del JWT, seguridad ante todo
   const {
     id_paciente,
-    nombre,
-    principio_activo,
-    dosis,
-    presentacion,
-    frecuencia_horas,
+    id_medicamento,
+    dosis_instruccion,
+    patron_horario,
     stock_estimado,
   } = req.body;
 
   if (
     !id_paciente ||
-    !nombre ||
-    !principio_activo ||
-    !dosis ||
-    !frecuencia_horas
+    !id_medicamento ||
+    !dosis_instruccion ||
+    !patron_horario
   ) {
-    return res.status(400).json({
-      ok: false,
-      mensaje: "Faltan datos obligatorios de la prescripción.",
-    });
+    return res
+      .status(400)
+      .json({ ok: false, mensaje: "Faltan datos de la prescripción." });
   }
 
+  // Usamos una transacción SQL para asegurar que todo se guarde perfecto
+  const conn = await pool.getConnection();
+
   try {
-    // 1. Validar que el paciente pertenezca a este médico
-    const [paciente] = await pool.query(
-      `SELECT id_paciente FROM paciente WHERE id_paciente = ? AND id_medico = ? LIMIT 1`,
-      [id_paciente, id_medico],
+    await conn.beginTransaction();
+
+    // --- A) MOTOR DE INTERACCIONES MÉDICAS ---
+    // 1. Saber qué le estamos intentando recetar
+    const [nuevoMed] = await conn.query(
+      `SELECT principio_activo FROM medicamento_catalogo WHERE id_medicamento = ?`,
+      [id_medicamento],
     );
+    if (nuevoMed.length === 0)
+      throw new Error("Medicamento no existe en el catálogo.");
+    const principioNuevo = nuevoMed[0].principio_activo;
 
-    if (paciente.length === 0) {
-      return res.status(403).json({
-        ok: false,
-        mensaje: "No tienes permiso para recetar a este paciente.",
-      });
-    }
-
-    // 2. Obtener los principios activos que el paciente YA está tomando
-    const [medsActivos] = await pool.query(
-      `SELECT principio_activo FROM medicamento WHERE id_paciente = ?`, // Asumiendo que están activos
+    // 2. Saber qué está tomando el paciente actualmente
+    const [activos] = await conn.query(
+      `
+      SELECT mc.principio_activo 
+      FROM prescripcion p
+      JOIN medicamento_catalogo mc ON p.id_medicamento = mc.id_medicamento
+      WHERE p.id_paciente = ? AND p.activa = 1
+    `,
       [id_paciente],
     );
 
-    const principiosActuales = medsActivos.map((m) => m.principio_activo);
+    const principiosActuales = activos.map((a) => a.principio_activo);
 
-    // 3. MOTOR DE INTERACCIONES: Verificar si el nuevo fármaco choca con los actuales
+    // 3. Buscar choques en la tabla de interacciones
     if (principiosActuales.length > 0) {
-      const [interacciones] = await pool.query(
-        `SELECT nivel_riesgo, descripcion 
-         FROM interacciones_medicas 
-         WHERE (principio_a = ? AND principio_b IN (?)) 
-            OR (principio_b = ? AND principio_a IN (?))`,
+      const [interacciones] = await conn.query(
+        `
+        SELECT nivel_riesgo, descripcion, principio_a, principio_b
+        FROM interacciones_medicas 
+        WHERE (principio_a = ? AND principio_b IN (?)) 
+           OR (principio_b = ? AND principio_a IN (?))
+      `,
         [
-          principio_activo,
+          principioNuevo,
           principiosActuales,
-          principio_activo,
+          principioNuevo,
           principiosActuales,
         ],
       );
 
-      // Si encuentra una interacción de riesgo alto o crítico, bloqueamos la receta
+      // Si hay riesgo alto o crítico, abortamos la transacción
       const alertasCriticas = interacciones.filter(
         (i) => i.nivel_riesgo === "alto" || i.nivel_riesgo === "critico",
       );
 
       if (alertasCriticas.length > 0) {
+        await conn.rollback();
         return res.status(409).json({
           ok: false,
           mensaje: "¡ALERTA MÉDICA! Se detectó una interacción peligrosa.",
@@ -77,54 +99,98 @@ const prescribirMedicamento = async (req, res) => {
       }
     }
 
-    // 4. Si es seguro, guardamos el medicamento
-    const [result] = await pool.query(
-      `INSERT INTO medicamento (id_paciente, id_medico, nombre, principio_activo, dosis, presentacion, frecuencia_horas, stock_estimado)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    // --- B) GUARDAR LA RECETA ---
+    const [result] = await conn.query(
+      `
+      INSERT INTO prescripcion (id_paciente, id_medico, id_medicamento, dosis_instruccion, patron_horario, stock_estimado, activa)
+      VALUES (?, ?, ?, ?, ?, ?, 1)
+    `,
       [
         id_paciente,
         id_medico,
-        nombre,
-        principio_activo,
-        dosis,
-        presentacion || null,
-        frecuencia_horas,
+        id_medicamento,
+        dosis_instruccion,
+        patron_horario,
         stock_estimado || 0,
       ],
     );
 
-    // NOTA: Aquí iría la lógica para generar automáticamente la tabla "recordatorio" (las alarmas)
+    const id_prescripcion = result.insertId;
 
+    // --- C) GENERADOR DE RECORDATORIOS (Automatización) ---
+    // Simulamos la creación de las tomas para los próximos 3 días
+    let horasDeToma = [];
+    if (patron_horario === "cada_8_horas")
+      horasDeToma = [8, 16, 24]; // 3 veces al día
+    else if (patron_horario === "cada_12_horas")
+      horasDeToma = [9, 21]; // 2 veces al día
+    else horasDeToma = [9]; // diario (1 vez al día a las 9 am) por defecto
+
+    for (let i = 0; i < 3; i++) {
+      // Proyectamos 3 días en el futuro
+      for (let hora of horasDeToma) {
+        const fechaToma = new Date();
+        fechaToma.setDate(fechaToma.getDate() + i);
+        fechaToma.setHours(hora, 0, 0, 0);
+
+        await conn.query(
+          `
+                INSERT INTO toma_recordatorio (id_prescripcion, fecha_hora_programada, estatus)
+                VALUES (?, ?, 'pendiente')
+            `,
+          [id_prescripcion, fechaToma],
+        );
+      }
+    }
+
+    // Si todo salió bien, guardamos en la base de datos de verdad
+    await conn.commit();
     return res.status(201).json({
       ok: true,
-      mensaje: "Medicamento prescrito de forma segura.",
-      medicamento: { id: result.insertId, nombre, principio_activo },
+      mensaje:
+        "Prescripción creada de forma segura y recordatorios programados.",
+      id_prescripcion,
     });
   } catch (error) {
-    console.error("Error prescribiendo medicamento:", error.message);
+    await conn.rollback(); // Si algo falla, deshacemos todo para no dejar basura
+    console.error("Error prescribiendo:", error.message);
     return res
       .status(500)
-      .json({ ok: false, mensaje: "Error interno del servidor." });
+      .json({
+        ok: false,
+        mensaje: error.message || "Error interno del servidor.",
+      });
+  } finally {
+    conn.release();
   }
 };
 
-const obtenerMedicamentosPaciente = async (req, res) => {
+// 3. Ver el historial del paciente
+const obtenerPrescripcionesPaciente = async (req, res) => {
   const { id_paciente } = req.params;
-
   try {
-    const [medicamentos] = await pool.query(
-      `SELECT id_medicamento, nombre, principio_activo, dosis, frecuencia_horas, stock_estimado 
-       FROM medicamento WHERE id_paciente = ?`,
+    const [prescripciones] = await pool.query(
+      `
+      SELECT p.id_prescripcion, p.dosis_instruccion, p.patron_horario, p.stock_estimado, 
+             mc.nombre_comercial, mc.principio_activo, mc.presentacion
+      FROM prescripcion p
+      JOIN medicamento_catalogo mc ON p.id_medicamento = mc.id_medicamento
+      WHERE p.id_paciente = ? AND p.activa = 1
+    `,
       [id_paciente],
     );
 
-    return res.status(200).json({ ok: true, medicamentos });
+    return res.status(200).json({ ok: true, prescripciones });
   } catch (error) {
-    console.error("Error obteniendo medicamentos:", error.message);
+    console.error("Error obteniendo prescripciones:", error.message);
     return res
       .status(500)
       .json({ ok: false, mensaje: "Error interno del servidor." });
   }
 };
 
-module.exports = { prescribirMedicamento, obtenerMedicamentosPaciente };
+module.exports = {
+  obtenerCatalogo,
+  prescribirMedicamento,
+  obtenerPrescripcionesPaciente,
+};

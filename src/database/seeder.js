@@ -11,11 +11,14 @@ async function seed() {
     await conn.query("SET FOREIGN_KEY_CHECKS = 0");
 
     const tablas = [
+      "password_resets",
       "token_sesion",
-      "recordatorio",
+      "toma_recordatorio", // Nueva tabla
+      "historial_prescripcion", // Nueva tabla
+      "prescripcion", // Nueva tabla
       "interacciones_medicas",
+      "medicamento_catalogo", // Nueva tabla
       "familiar_paciente",
-      "medicamento",
       "familiar_cuidador",
       "paciente",
       "farmaceutico",
@@ -52,6 +55,7 @@ async function seed() {
     `);
 
     // ─── 4. PACIENTES ────────────────────────────────────────────
+    // NOTA: Ya no incluimos historial_clinico porque no está en el esquema
     await conn.query(`
       INSERT INTO paciente (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg, telefono, correo, alergias, contrasena) VALUES
         (1, 1, 'Juan Pérez Hernández', 65, 168.00, 72.50, '5512345678', 'juan.perez@gmail.com', 'Penicilina', 'Paciente@123'),
@@ -65,12 +69,11 @@ async function seed() {
         (1, 'Cristian Medina', '5511112222', 'cristian.medina@gmail.com', 'Familiar@123')
     `);
 
-    // ─── 6. RELACIONES FAMILIAR ↔ PACIENTE ───────────────────────
-    await conn.query(`
-      INSERT INTO familiar_paciente (id_familiar, id_paciente) VALUES (1, 3)
-    `);
+    await conn.query(
+      `INSERT INTO familiar_paciente (id_familiar, id_paciente) VALUES (1, 3)`,
+    );
 
-    // ─── 7. INTERACCIONES MÉDICAS (Las 20 Críticas) ──────────────
+    // ─── 6. INTERACCIONES MÉDICAS (Las 20 Críticas) ──────────────
     await conn.query(`
       INSERT INTO interacciones_medicas (principio_a, principio_b, nivel_riesgo, descripcion) VALUES
         ('Warfarina', 'Aspirina', 'alto', 'Aumento significativo del riesgo de hemorragia gastrointestinal.'),
@@ -94,35 +97,39 @@ async function seed() {
         ('Fluconazol', 'Warfarina', 'alto', 'Inhibición del metabolismo de warfarina, riesgo de sangrado.'),
         ('Fenitoína', 'Anticonceptivos orales', 'medio', 'Reducción de la eficacia anticonceptiva, riesgo de embarazo.')
     `);
-    console.log(
-      "  ✅ Catálogo de Interacciones Médicas cargado (20 registros)",
-    );
 
-    // ─── 8. MEDICAMENTOS (Adaptados al nuevo esquema) ────────────
+    // ─── 7. CATÁLOGO DE MEDICAMENTOS (Inventario) ────────────
     await conn.query(`
-      INSERT INTO medicamento (id_farmaceutico, nombre, principio_activo, presentacion, stock_estimado) VALUES
-        (1, 'Aspirina Protect', 'Aspirina', 'Tableta 100mg', 30),
-        (1, 'Coumadin', 'Warfarina', 'Tableta 5mg', 20),
-        (1, 'Glafornil', 'Metformina', 'Tableta 850mg', 60),
-        (2, 'Lanoxin', 'Digoxina', 'Tableta 0.25mg', 15),
-        (2, 'Viagra', 'Sildenafil', 'Tableta 50mg', 10),
-        (1, 'Lipitor', 'Atorvastatina', 'Tableta 20mg', 30)
+      INSERT INTO medicamento_catalogo (id_farmaceutico, nombre_comercial, principio_activo, presentacion) VALUES
+        (1, 'Aspirina Protect', 'Aspirina', 'Tableta 100mg'),
+        (1, 'Coumadin', 'Warfarina', 'Tableta 5mg'),
+        (1, 'Glafornil', 'Metformina', 'Tableta 850mg'),
+        (2, 'Lanoxin', 'Digoxina', 'Tableta 0.25mg'),
+        (2, 'Viagra', 'Sildenafil', 'Tableta 50mg'),
+        (1, 'Lipitor', 'Atorvastatina', 'Tableta 20mg')
     `);
 
-    // ─── 9. RECORDATORIOS (Con simulador de adherencia) ──────────
-    // Simulamos que Gustavo tiene problemas de adherencia ("olvido")
+    // ─── 8. PRESCRIPCIONES (La Receta del Médico) ────────────
     await conn.query(`
-      INSERT INTO recordatorio (id_paciente, id_medicamento, dosis, fecha_hora_programada, fecha_hora_real, estatus, motivo_omision) VALUES
-        (1, 3, '1 tableta', '2026-05-13 08:00:00', '2026-05-13 08:05:00', 'tomado', NULL),
-        (1, 3, '1 tableta', '2026-05-13 20:00:00', NULL, 'pendiente', NULL),
-        (2, 5, '1 tableta', '2026-05-12 09:00:00', NULL, 'omitido', 'olvido'),
-        (2, 5, '1 tableta', '2026-05-13 09:00:00', NULL, 'omitido', 'olvido'),
-        (3, 6, '1 tableta', '2026-05-13 07:00:00', '2026-05-13 07:45:00', 'tomado', NULL)
+      INSERT INTO prescripcion (id_paciente, id_medico, id_medicamento, dosis_instruccion, patron_horario, stock_estimado, activa) VALUES
+        (1, 1, 3, '1 tableta de 850mg', 'diario_con_alimentos', 60, 1),
+        (2, 2, 5, '1 tableta', 'solo_fines_de_semana', 10, 1),
+        (3, 3, 6, '1 tableta 20mg', 'diario_noche', 30, 1)
     `);
-    console.log("  ✅ Recordatorios y métricas de prueba insertados");
 
+    // ─── 9. TOMAS / RECORDATORIOS (Simulando métricas de adherencia) ──────────
+    // Simulamos que Gustavo olvidó una toma y Margarita la reportó con efecto adverso
+    await conn.query(`
+      INSERT INTO toma_recordatorio (id_prescripcion, fecha_hora_programada, fecha_hora_real, estatus, motivo_omision, omision_justificada) VALUES
+        (1, '2026-05-13 08:00:00', '2026-05-13 08:05:00', 'cumplido', NULL, 0),
+        (1, '2026-05-13 20:00:00', NULL, 'pendiente', NULL, 0),
+        (2, '2026-05-09 20:00:00', NULL, 'no_cumplido', 'olvido', 0),
+        (3, '2026-05-12 21:00:00', NULL, 'no_cumplido', 'efecto_adverso', 1)
+    `);
+
+    console.log("  ✅ Datos de prueba insertados con la nueva arquitectura");
     console.log(
-      "\n🎉 Seeder completado. El motor de interacciones está listo para probarse.",
+      "\n🎉 Seeder completado. Todo listo para trabajar en el Backend.",
     );
   } catch (error) {
     console.error("\n❌ Error en el seeder:", error.message);
