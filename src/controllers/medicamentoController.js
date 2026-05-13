@@ -645,7 +645,10 @@ async function obtenerPrescripcionesPaciente(req, res) {
           p.id_prescripcion, p.id_paciente, p.dosis_instruccion, p.patron_horario,
           p.duracion_dias, p.indicaciones, p.stock_estimado, p.ultima_dispensacion,
           p.version, mc.nombre_comercial, mc.principio_activo, mc.presentacion
-        ORDER BY proxima_toma IS NULL, proxima_toma ASC, mc.nombre_comercial ASC
+        ORDER BY
+          MIN(CASE WHEN t.estatus = 'pendiente' THEN t.fecha_hora_programada END) IS NULL,
+          MIN(CASE WHEN t.estatus = 'pendiente' THEN t.fecha_hora_programada END) ASC,
+          mc.nombre_comercial ASC
       `,
       [id_paciente],
     );
@@ -1123,7 +1126,9 @@ async function obtenerAlertasStock(req, res) {
           AND pr.stock_estimado <= 5
           ${filtro}
         GROUP BY pr.id_prescripcion, pa.id_paciente, pa.nombre_completo, mc.nombre_comercial, pr.stock_estimado
-        ORDER BY pr.stock_estimado ASC, proxima_toma ASC
+        ORDER BY
+          pr.stock_estimado ASC,
+          MIN(CASE WHEN t.estatus = 'pendiente' THEN t.fecha_hora_programada END) ASC
       `,
       params,
     );

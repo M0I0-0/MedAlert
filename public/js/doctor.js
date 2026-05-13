@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const hospitalForm = document.getElementById("hospital-form");
   const hospitalTomasList = document.getElementById("hospital-tomas-list");
   const stockAlertsList = document.getElementById("stock-alerts-list");
+  const omissionReportsList = document.getElementById("omission-reports-list");
 
   doctorName.textContent = usuario.nombre_completo || "Médico";
   doctorSpecialty.textContent = usuario.especialidad || "Seguimiento clínico";
@@ -302,6 +303,44 @@ document.addEventListener("DOMContentLoaded", () => {
       .join("");
   }
 
+  function renderOmissionReports(tomas) {
+    const reportes = tomas
+      .filter((item) => item.estatus === "no_cumplido")
+      .sort(
+        (a, b) =>
+          new Date(b.fecha_hora_programada).getTime() -
+          new Date(a.fecha_hora_programada).getTime(),
+      )
+      .slice(0, 6);
+
+    if (!reportes.length) {
+      omissionReportsList.innerHTML = `
+        <div class="task-item">
+          <span class="task-marker marker-primary"></span>
+          <div>
+            <strong>Sin omisiones reportadas</strong>
+            <small>Cuando el paciente explique una omisión, aparecerá aquí.</small>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    omissionReportsList.innerHTML = reportes
+      .map(
+        (toma) => `
+          <div class="task-item">
+            <span class="task-marker marker-danger"></span>
+            <div>
+              <strong>${toma.nombre_comercial} • ${formatDate(toma.fecha_hora_programada)}</strong>
+              <small>Motivo: ${String(toma.motivo_omision || "otro").replaceAll("_", " ")}. ${toma.observaciones || "Sin explicación adicional."}</small>
+            </div>
+          </div>
+        `,
+      )
+      .join("");
+  }
+
   async function loadPrescriptionHistory(idPrescripcion) {
     try {
       const data = await MedAlertApi.apiJson(
@@ -409,6 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
       updateHero(null);
       renderActivePrescriptions([]);
       renderNotes([]);
+      renderOmissionReports([]);
       return;
     }
 
@@ -430,6 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderActivePrescriptions(prescripcionesData.prescripciones);
     renderNotes(notasData.notas);
     renderHospitalTomas(tomasData.tomas);
+    renderOmissionReports(tomasData.tomas);
   }
 
   async function loadData() {

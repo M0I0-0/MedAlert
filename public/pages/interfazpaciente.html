@@ -153,7 +153,50 @@
         <hr />
 
         <div class="bottom-section">
-          <h4><i class="fa-solid fa-clock-rotate-left"></i> Últimas Tomas</h4>
+          <h4><i class="fa-solid fa-comment-medical"></i> Reportar una toma omitida</h4>
+          <form class="omission-form" id="omission-form">
+            <div class="omission-grid">
+              <label class="omission-field">
+                <span>Toma pendiente</span>
+                <select id="omission-toma" required>
+                  <option value="">Selecciona la toma omitida</option>
+                </select>
+              </label>
+
+              <label class="omission-field">
+                <span>Motivo</span>
+                <select id="omission-motivo" required>
+                  <option value="olvido">Olvido</option>
+                  <option value="efecto_adverso">Efecto adverso</option>
+                  <option value="falta_stock">Falta de medicamento</option>
+                  <option value="decision_medica">Indicación médica</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </label>
+
+              <label class="omission-field omission-wide">
+                <span>Explicación para el médico</span>
+                <textarea
+                  id="omission-observaciones"
+                  rows="4"
+                  placeholder="Describe brevemente qué ocurrió. Esta explicación aparecerá en el panel de tu médico."
+                  required
+                ></textarea>
+              </label>
+            </div>
+
+            <div class="action-buttons omission-actions">
+              <button class="mark-btn" type="submit" id="omission-submit">
+                <i class="fa-solid fa-paper-plane"></i> Enviar reporte al médico
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <hr />
+
+        <div class="bottom-section">
+          <h4><i class="fa-solid fa-clock-rotate-left"></i> Últimas tomas y próximas pendientes</h4>
           <div class="cards-container" id="contenedor-tomas">
             <div class="empty-state" id="estado-tomas" style="grid-column: 1 / -1">
               <div class="empty-icon">

@@ -13,6 +13,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const notificacionesContainer = document.getElementById("contenedor-notificaciones");
   const notificacionesEmpty = document.getElementById("estado-notificaciones");
   const patientMessage = document.getElementById("patient-message");
+  const omissionForm = document.getElementById("omission-form");
+  const omissionToma = document.getElementById("omission-toma");
+  const omissionMotivo = document.getElementById("omission-motivo");
+  const omissionObservaciones = document.getElementById("omission-observaciones");
 
   function showMessage(message, type = "info") {
     patientMessage.style.display = "block";
@@ -42,22 +46,62 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${Math.abs(diffMinutes)} min de adelanto`;
   }
 
+  function nextPendingForPrescription(tomas, idPrescripcion) {
+    return tomas
+      .filter(
+        (item) =>
+          String(item.id_prescripcion) === String(idPrescripcion) &&
+          item.estatus === "pendiente",
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.fecha_hora_programada).getTime() -
+          new Date(b.fecha_hora_programada).getTime(),
+      )[0];
+  }
+
+  function tomasVisibles(tomas) {
+    const registradas = tomas
+      .filter((item) => item.estatus !== "pendiente")
+      .sort(
+        (a, b) =>
+          new Date(b.fecha_hora_programada).getTime() -
+          new Date(a.fecha_hora_programada).getTime(),
+      )
+      .slice(0, 6);
+
+    const pendientesPorReceta = new Map();
+    tomas
+      .filter((item) => item.estatus === "pendiente")
+      .forEach((item) => {
+        const actual = pendientesPorReceta.get(item.id_prescripcion);
+        if (
+          !actual ||
+          new Date(item.fecha_hora_programada) <
+            new Date(actual.fecha_hora_programada)
+        ) {
+          pendientesPorReceta.set(item.id_prescripcion, item);
+        }
+      });
+
+    return [...Array.from(pendientesPorReceta.values()), ...registradas].sort(
+      (a, b) =>
+        new Date(a.fecha_hora_programada).getTime() -
+        new Date(b.fecha_hora_programada).getTime(),
+    );
+  }
+
   async function marcarToma(idToma, estatus) {
     const payload = { estatus };
 
     if (estatus === "no_cumplido") {
-      const motivo = prompt(
-        "Motivo de omisión: olvido, efecto_adverso, falta_stock, decision_medica u otro",
-        "olvido",
-      );
-      if (!motivo) return;
-      const observaciones = prompt(
-        "Observaciones o efectos adversos (opcional)",
-        "",
-      );
-      payload.motivo_omision = motivo;
-      payload.observaciones = observaciones || null;
-      payload.omision_justificada = Number(motivo === "decision_medica");
+      omissionToma.value = idToma;
+      omissionObservaciones.focus();
+      document
+        .getElementById("omission-form")
+        .scrollIntoView({ behavior: "smooth", block: "center" });
+      showMessage("Escribe el motivo de la omisión y envíalo al médico.", "info");
+      return;
     } else {
       const observaciones = prompt(
         "Observaciones de la toma (opcional, por ejemplo náusea o mareo)",
@@ -80,10 +124,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderPrescriptions(prescripciones, tomas) {
     const cards = prescripciones.map((prescripcion) => {
-      const pending = tomas.find(
-        (item) =>
-          String(item.id_prescripcion) === String(prescripcion.id_prescripcion) &&
-          item.estatus === "pendiente",
+      const pending = nextPendingForPrescription(
+        tomas,
+        prescripcion.id_prescripcion,
       );
 
       return `
@@ -186,7 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderTomas(tomas) {
-    const tarjetas = tomas.map(
+    const visibles = tomasVisibles(tomas);
+    const tarjetas = visibles.map(
       (toma) => `
         <div class="medicine-card">
           <div class="card-header">
@@ -243,6 +287,61 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       showMessage(error.message, "error");
     }
+  }
+
+  async function enviarOmission(event) {
+    event.preventDefault();
+    if (!omissionToma.value || !omissionObservaciones.value.trim()) {
+      showMessage("Selecciona la toma y escribe una explicación para tu médico.", "error");
+      return;
+    }
+
+    const button = document.getElementById("omission-submit");
+    button.disabled = true;
+
+    try {
+      await MedAlertApi.apiJson(`/api/medicamentos/tomas/${omissionToma.value}/marcar`, {
+        method: "POST",
+        body: JSON.stringify({
+          estatus: "no_cumplido",
+          motivo_omision: omissionMotivo.value,
+          observaciones: omissionObservaciones.value.trim(),
+          omision_justificada: Number(omissionMotivo.value === "decision_medica"),
+        }),
+      });
+
+      omissionForm.reset();
+      showMessage("Tu explicación fue enviada al médico correctamente.", "success");
+      await loadData();
+    } catch (error) {
+      showMessage(error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  function renderOmissionOptions(tomas) {
+    const pendientes = tomas
+      .filter((item) => item.estatus === "pendiente")
+      .sort(
+        (a, b) =>
+          new Date(a.fecha_hora_programada).getTime() -
+          new Date(b.fecha_hora_programada).getTime(),
+      );
+
+    omissionToma.innerHTML =
+      '<option value="">Selecciona la toma omitida</option>' +
+      pendientes
+        .map(
+          (toma) => `
+            <option value="${toma.id_toma}">
+              ${toma.nombre_comercial} - ${formatDate(toma.fecha_hora_programada)}
+            </option>
+          `,
+        )
+        .join("");
+
+    document.getElementById("omission-submit").disabled = pendientes.length === 0;
   }
 
   function renderNotificaciones(notificaciones) {
@@ -330,6 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       tomasEmpty.style.display = "block";
     }
+    renderOmissionOptions(tomasData.tomas);
 
     if (notificacionesData.notificaciones.length) {
       renderNotificaciones(notificacionesData.notificaciones);
@@ -339,5 +439,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   window.logout = () => MedAlertApi.logout();
+  omissionForm.addEventListener("submit", enviarOmission);
   loadData().catch((error) => showMessage(error.message, "error"));
 });
