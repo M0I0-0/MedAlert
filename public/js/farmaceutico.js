@@ -21,23 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // 2. CARGAR DATOS DEL USUARIO EN LA INTERFAZ
+  // 2. CARGAR DATOS DEL USUARIO EN EL PERFIL
   document.getElementById("nombre-farmaceutico").textContent =
     usuario.nombre_completo;
-
-  // 3. NAVEGACIÓN ENTRE PANELES
-  const navItems = document.querySelectorAll(".nav-item");
-  const panels = document.querySelectorAll(".panel");
-
-  navItems.forEach((item) => {
-    item.addEventListener("click", () => {
-      navItems.forEach((n) => n.classList.remove("active"));
-      panels.forEach((p) => p.classList.remove("active"));
-
-      item.classList.add("active");
-      document.getElementById(item.dataset.target).classList.add("active");
-    });
-  });
 });
 
 function logout() {
@@ -45,97 +31,88 @@ function logout() {
   window.location.href = "/pages/index.html";
 }
 
-// --------------------------------------------------------
-// FUNCIONES DE NEGOCIO (Conectadas a la API Real)
-// --------------------------------------------------------
-
-// 1. Buscar receta de un paciente en la base de datos
+// ==========================================
+// MÓDULO 1: DISPENSAR RECETAS (IZQUIERDA)
+// ==========================================
 async function buscarReceta() {
   const idPaciente = document.getElementById("input-receta").value;
-  if (!idPaciente)
-    return alert("Ingresa un ID de paciente (Prueba con el ID 1 o 3).");
+  if (!idPaciente) return alert("Por favor, ingresa el ID del paciente.");
 
   const token = localStorage.getItem("accessToken");
-  const btn = document.querySelector("#dispensar .btn-primary");
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
+  const btn = document.getElementById("btn-buscar-receta");
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
   try {
     const response = await fetch(`/api/medicamentos/paciente/${idPaciente}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     const data = await response.json();
+    const contenedor = document.getElementById("resultado-receta");
 
     if (response.ok && data.ok) {
-      mostrarRecetas(data.prescripciones);
+      mostrarRecetasCards(data.prescripciones, contenedor);
     } else {
-      alert(data.mensaje || "No se encontró el paciente o no tienes permiso.");
-      document.getElementById("resultado-receta").style.display = "none";
+      contenedor.innerHTML = `<div class="empty-msg"><i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i><br>Paciente no encontrado o sin recetas activas.</div>`;
     }
   } catch (error) {
-    console.error("Error fetching recetas:", error);
-    alert("Error de conexión con el servidor.");
+    console.error("Error:", error);
   } finally {
-    btn.innerHTML = '<i class="fa-solid fa-search"></i> Buscar Receta';
+    btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Buscar';
   }
 }
 
-function mostrarRecetas(prescripciones) {
-  const tbody = document.getElementById("tabla-recetas");
-  tbody.innerHTML = "";
-
+function mostrarRecetasCards(prescripciones, contenedor) {
   if (!prescripciones || prescripciones.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;">No hay recetas activas para este paciente.</td></tr>`;
-  } else {
-    prescripciones.forEach((presc) => {
-      tbody.innerHTML += `
-                <tr>
-                    <td>
-                        <strong>${presc.nombre_comercial}</strong><br>
-                        <small style="color: #64748b;">${presc.principio_activo} - ${presc.presentacion}</small>
-                    </td>
-                    <td>
-                        <strong>Dosis:</strong> ${presc.dosis_instruccion}<br>
-                        <small><strong>Horario:</strong> ${presc.patron_horario.replace(/_/g, " ")}</small>
-                    </td>
-                    <td><span class="badge stock-ok">Stock: ${presc.stock_estimado}</span></td>
-                    <td>
-                        <button class="btn-primary" onclick="dispensar(${presc.id_prescripcion})" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                            <i class="fa-solid fa-check"></i> Entregar
-                        </button>
-                    </td>
-                </tr>
-            `;
-    });
+    contenedor.innerHTML = `<div class="empty-msg"><i class="fa-solid fa-box-open"></i><br>No hay recetas activas.</div>`;
+    return;
   }
-  document.getElementById("resultado-receta").style.display = "block";
+
+  let htmlCards = "";
+  prescripciones.forEach((presc) => {
+    htmlCards += `
+        <div class="result-card">
+            <h5>${presc.nombre_comercial}</h5>
+            <p><strong>Dosis:</strong> ${presc.dosis_instruccion}<br>
+               <strong>Frecuencia:</strong> ${presc.patron_horario.replace(/_/g, " ")}</p>
+            
+            <div class="tags">
+                <span>${presc.principio_activo}</span>
+                <span class="success"><i class="fa-solid fa-cubes"></i> Stock: ${presc.stock_estimado}</span>
+            </div>
+
+            <button class="dispensar-btn" onclick="dispensar(${presc.id_prescripcion})">
+                <i class="fa-solid fa-hand-holding-medical"></i> Entregar Medicamento
+            </button>
+        </div>
+        `;
+  });
+  contenedor.innerHTML = htmlCards;
 }
 
 function dispensar(idPrescripcion) {
   if (confirm("¿Confirmas la entrega de este medicamento al paciente?")) {
-    // Aquí a futuro se puede hacer un UPDATE para restar el stock_estimado
     alert(
-      `¡Medicamento entregado exitosamente! (Prescripción #${idPrescripcion})`,
+      `¡Medicamento entregado exitosamente! (ID Prescripción: ${idPrescripcion})`,
     );
-    buscarReceta();
+    buscarReceta(); // Refrescar la lista
   }
 }
 
-// 2. Buscador de Equivalencias (Consulta el Catálogo Global)
+// ==========================================
+// MÓDULO 2: EQUIVALENCIAS (DERECHA)
+// ==========================================
 async function buscarGenericos() {
   const principioBusqueda = document
     .getElementById("input-principio")
     .value.toLowerCase();
   if (!principioBusqueda)
-    return alert("Ingresa un principio activo (Ej. Metformina o Aspirina).");
+    return alert("Ingresa un principio activo para buscar.");
 
   const token = localStorage.getItem("accessToken");
-  const btn = document.querySelector("#genericos .btn-primary");
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Buscando...';
+  const btn = document.getElementById("btn-buscar-generico");
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
   try {
     const response = await fetch(`/api/medicamentos/catalogo`, {
@@ -144,42 +121,44 @@ async function buscarGenericos() {
     });
 
     const data = await response.json();
+    const contenedor = document.getElementById("resultado-genericos");
 
     if (response.ok && data.ok) {
-      // Filtramos el catálogo por el principio activo que escribió el farmacéutico
       const resultados = data.medicamentos.filter(
         (m) =>
           m.principio_activo.toLowerCase().includes(principioBusqueda) ||
           m.nombre_comercial.toLowerCase().includes(principioBusqueda),
       );
-      mostrarGenericos(resultados, principioBusqueda);
+      mostrarGenericosCards(resultados, contenedor, principioBusqueda);
     } else {
-      alert("No se pudo cargar el catálogo de medicamentos.");
+      contenedor.innerHTML = `<div class="empty-msg"><i class="fa-solid fa-triangle-exclamation"></i><br>Error al cargar el catálogo.</div>`;
     }
   } catch (error) {
-    console.error("Error fetching catálogo:", error);
+    console.error("Error:", error);
   } finally {
-    btn.innerHTML = '<i class="fa-solid fa-vial"></i> Buscar Equivalencias';
+    btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Buscar';
   }
 }
 
-function mostrarGenericos(medicamentos, busqueda) {
-  const tbody = document.getElementById("tabla-genericos");
-  tbody.innerHTML = "";
-
+function mostrarGenericosCards(medicamentos, contenedor, busqueda) {
   if (medicamentos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444;">No se encontraron equivalencias para "${busqueda}".</td></tr>`;
+    contenedor.innerHTML = `<div class="empty-msg"><i class="fa-solid fa-magnifying-glass-minus"></i><br>No se encontraron equivalencias para "${busqueda}".</div>`;
     return;
   }
 
+  let htmlCards = "";
   medicamentos.forEach((med) => {
-    tbody.innerHTML += `
-            <tr>
-                <td><strong>${med.nombre_comercial}</strong></td>
-                <td>${med.principio_activo}</td>
-                <td>${med.presentacion}</td>
-                <td><span class="badge stock-ok">Disponible</span></td>
-            </tr>
+    htmlCards += `
+        <div class="result-card">
+            <h5>${med.nombre_comercial}</h5>
+            <p><strong>Presentación:</strong> ${med.presentacion}</p>
+            
+            <div class="tags">
+                <span>${med.principio_activo}</span>
+                <span class="success">Disponible</span>
+            </div>
+        </div>
         `;
   });
+  contenedor.innerHTML = htmlCards;
 }

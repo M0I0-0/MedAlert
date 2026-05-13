@@ -3,10 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis medicamentos - Medilab</title>
+    <title>Perfil Paciente - Medilab</title>
 
     <link rel="stylesheet" href="/css/interfazpaciente.css" />
-
     <!-- ICONOS -->
     <link
       rel="stylesheet"
@@ -16,178 +15,179 @@
   <body>
     <!-- NAVBAR -->
     <header class="navbar">
-      <h1>Medilab</h1>
+      <h1>MedAlert</h1>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Salir
+      </button>
     </header>
 
     <!-- CONTENEDOR -->
     <div class="container">
-      <!-- HEADER -->
-      <div class="top-section">
-        <div>
-          <h2>Mis medicamentos</h2>
-          <p>
-            Consulta fácilmente tus medicamentos, horarios y próximas tomas.
-          </p>
-        </div>
+      <div class="profile-card">
+        <!-- PARTE SUPERIOR (PERFIL PACIENTE) -->
+        <div class="top-section">
+          <div class="doctor-image">
+            <!-- Avatar genérico para paciente -->
+            <img
+              src="https://ui-avatars.com/api/?name=Paciente&size=300&background=dbeafe&color=2563eb"
+              alt="Foto del Paciente"
+              id="img-paciente"
+            />
+          </div>
 
-        <button class="add-btn">
-          <i class="fa-solid fa-plus"></i>
-          Agregar medicamento
-        </button>
-      </div>
+          <div class="doctor-info">
+            <h2 id="nombre-paciente">Cargando Perfil...</h2>
+            <h3>Paciente Activo</h3>
 
-      <!-- FILTROS -->
-      <div class="filters">
-        <div class="search-box">
-          <i class="fa-solid fa-magnifying-glass"></i>
+            <div class="line"></div>
 
-          <input type="text" placeholder="Buscar medicamento..." />
-        </div>
+            <p>
+              Mantén el seguimiento de tus tratamientos médicos. Asegúrate de
+              marcar tus tomas a tiempo para mantener un alto porcentaje de
+              adherencia y mejorar tu salud.
+            </p>
 
-        <div class="filter-select">
-          <i class="fa-solid fa-filter"></i>
-
-          <select>
-            <option>Todos</option>
-            <option>Activos</option>
-            <option>Finalizados</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- TARJETAS -->
-      <div class="cards-container">
-        <!-- CARD -->
-        <div class="medicine-card">
-          <div class="card-header">
-            <div class="medicine-left">
-              <div class="icon-box">
-                <i class="fa-solid fa-capsules"></i>
+            <div class="mini-info">
+              <div class="mini-box">
+                <i
+                  class="fa-solid fa-triangle-exclamation"
+                  style="color: #ef4444"
+                ></i>
+                <div>
+                  <span style="color: #ef4444">Alergias</span>
+                  <p id="alergias-paciente">Cargando...</p>
+                </div>
               </div>
 
-              <div>
-                <h3>Paracetamol</h3>
-
-                <span class="status"> Activo </span>
+              <div class="mini-box">
+                <i class="fa-solid fa-qrcode"></i>
+                <div>
+                  <span>Mi ID de Farmacia</span>
+                  <p id="id-farmacia">Cargando...</p>
+                </div>
               </div>
             </div>
-
-            <i class="fa-solid fa-ellipsis-vertical dots"></i>
           </div>
-
-          <!-- INFO -->
-          <div class="info-grid">
-            <div class="info-box">
-              <span>Dosis</span>
-              <p>500mg</p>
-            </div>
-
-            <div class="info-box">
-              <span>Frecuencia</span>
-              <p>Cada 8 horas</p>
-            </div>
-
-            <div class="info-box">
-              <span>Horario</span>
-              <p>08:00 AM</p>
-            </div>
-
-            <div class="info-box">
-              <span>Próxima toma</span>
-              <p>04:00 PM</p>
-            </div>
-          </div>
-
-          <!-- PROGRESS -->
-          <div class="progress-section">
-            <div class="progress-text">
-              <span>Seguimiento</span>
-              <span>75%</span>
-            </div>
-
-            <div class="progress-bar">
-              <div class="progress"></div>
-            </div>
-          </div>
-
-          <button class="details-btn">Ver detalles</button>
         </div>
 
-        <!-- CARD -->
-        <div class="medicine-card">
-          <div class="card-header">
-            <div class="medicine-left">
-              <div class="icon-box">
-                <i class="fa-solid fa-pills"></i>
+        <hr />
+
+        <!-- SECCIÓN INFERIOR: TRATAMIENTOS -->
+        <div class="bottom-section">
+          <h4><i class="fa-solid fa-pills"></i> Mi Tratamiento Actual</h4>
+
+          <!-- CONTENEDOR DE TARJETAS DE MEDICAMENTOS -->
+          <div class="cards-container" id="contenedor-medicamentos">
+            <!-- Las tarjetas se inyectarán con JavaScript, pero dejo una de ejemplo 
+                         para que veas cómo se estructura visualmente -->
+
+            <!-- EJEMPLO DE TARJETA -->
+            <div class="medicine-card" style="display: none">
+              <div class="card-header">
+                <div class="medicine-left">
+                  <div class="icon-box">
+                    <i class="fa-solid fa-capsules"></i>
+                  </div>
+                  <div>
+                    <h3>Paracetamol</h3>
+                    <span class="status">Activo</span>
+                  </div>
+                </div>
+                <i
+                  class="fa-solid fa-ellipsis-vertical dots"
+                  style="color: #94a3b8; font-size: 24px"
+                ></i>
               </div>
 
-              <div>
-                <h3>Ibuprofeno</h3>
+              <div class="info-grid">
+                <div class="info-box">
+                  <span>Dosis</span>
+                  <p>500mg</p>
+                </div>
+                <div class="info-box">
+                  <span>Frecuencia</span>
+                  <p>Cada 8 horas</p>
+                </div>
+              </div>
 
-                <span class="status"> Activo </span>
+              <div class="progress-section">
+                <div class="progress-text">
+                  <span>Adherencia al tratamiento</span>
+                  <span>75%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress" style="width: 75%"></div>
+                </div>
+              </div>
+
+              <div class="action-buttons">
+                <button class="details-btn">
+                  <i class="fa-solid fa-circle-info"></i> Detalles
+                </button>
+                <button class="mark-btn">
+                  <i class="fa-solid fa-check"></i> Marcar Toma
+                </button>
               </div>
             </div>
+            <!-- FIN EJEMPLO -->
 
-            <i class="fa-solid fa-ellipsis-vertical dots"></i>
-          </div>
-
-          <!-- INFO -->
-          <div class="info-grid">
-            <div class="info-box">
-              <span>Dosis</span>
-              <p>400mg</p>
-            </div>
-
-            <div class="info-box">
-              <span>Frecuencia</span>
-              <p>Cada 12 horas</p>
-            </div>
-
-            <div class="info-box">
-              <span>Horario</span>
-              <p>09:00 AM</p>
-            </div>
-
-            <div class="info-box">
-              <span>Próxima toma</span>
-              <p>09:00 PM</p>
+            <!-- ESTADO VACÍO (Si el paciente no tiene recetas) -->
+            <div
+              class="empty-state"
+              id="estado-vacio"
+              style="grid-column: 1 / -1"
+            >
+              <div class="empty-icon">
+                <i class="fa-regular fa-folder-open"></i>
+              </div>
+              <h3>No tienes medicamentos activos</h3>
+              <p>
+                Tu médico tratante aún no ha registrado ninguna prescripción en
+                tu perfil.
+              </p>
             </div>
           </div>
-
-          <!-- PROGRESS -->
-          <div class="progress-section">
-            <div class="progress-text">
-              <span>Seguimiento</span>
-              <span>90%</span>
-            </div>
-
-            <div class="progress-bar">
-              <div class="progress progress2"></div>
-            </div>
-          </div>
-
-          <button class="details-btn">Ver detalles</button>
         </div>
-      </div>
-
-      <!-- ESTADO VACIO -->
-      <div class="empty-state">
-        <div class="empty-icon">
-          <i class="fa-regular fa-folder-open"></i>
-        </div>
-
-        <h3>No existen medicamentos registrados</h3>
-
-        <p>
-          Agrega un medicamento para comenzar el seguimiento de tus
-          tratamientos.
-        </p>
-
-        <button class="empty-btn">
-          <i class="fa-solid fa-plus"></i>
-          Agregar medicamento
-        </button>
       </div>
     </div>
+
+    <!-- SCRIPT DE LÓGICA -->
+    <script>
+      // Lógica súper básica para mostrar el nombre y validar sesión
+      document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("accessToken");
+        const usuarioRaw = localStorage.getItem("usuario");
+
+        if (!token || !usuarioRaw) {
+          window.location.href = "/pages/index.html";
+          return;
+        }
+
+        const usuario = JSON.parse(usuarioRaw);
+
+        // Validar rol
+        if (usuario.rol !== "paciente") {
+          alert("Acceso denegado.");
+          window.location.href = "/pages/index.html";
+          return;
+        }
+
+        // Llenar datos visuales
+        document.getElementById("nombre-paciente").textContent =
+          usuario.nombre_completo;
+        document.getElementById("id-farmacia").textContent =
+          `ID #${usuario.id}`;
+        document.getElementById("img-paciente").src =
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(usuario.nombre_completo)}&size=300&background=dbeafe&color=2563eb`;
+
+        // Aquí a futuro el compañero encargado de la vista de paciente
+        // agregará el 'fetch' para descargar las recetas y ocultar el estado vacío.
+      });
+
+      function logout() {
+        localStorage.clear();
+        window.location.href = "/pages/index.html";
+      }
+    </script>
   </body>
 </html>
