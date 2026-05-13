@@ -10,7 +10,7 @@
     "start": "node index.js",
     "migrate": "node src/database/migrate.js",
     "seed": "node src/database/seeder.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --check index.js && node --check src/controllers/authController.js && node --check src/controllers/medicamentoController.js && node --check public/js/api.js && node --check public/js/doctor.js && node --check public/js/paciente.js && node --check public/js/familiar.js && node --check public/js/farmaceutico.js"
   },
   "repository": {
     "type": "git",

@@ -2,21 +2,18 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   // 1. EL "GUARD" DE SEGURIDAD
-  const token = localStorage.getItem("accessToken");
-  const usuarioRaw = localStorage.getItem("usuario");
+  const usuario = MedAlertApi.getUsuario();
 
   // Si no hay token, lo mandamos al login
-  if (!token || !usuarioRaw) {
+  if (!usuario) {
     window.location.href = "/pages/index.html";
     return;
   }
 
-  const usuario = JSON.parse(usuarioRaw);
-
   // Si intenta entrar alguien que no es farmacéutico, lo sacamos
   if (usuario.rol !== "farmaceutico") {
     alert("Acceso denegado. Esta vista es exclusiva para Farmacéuticos.");
-    localStorage.clear();
+    MedAlertApi.clearSession();
     window.location.href = "/pages/index.html";
     return;
   }
@@ -27,8 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function logout() {
-  localStorage.clear();
-  window.location.href = "/pages/index.html";
+  MedAlertApi.logout();
 }
 
 // ==========================================
@@ -38,26 +34,15 @@ async function buscarReceta() {
   const idPaciente = document.getElementById("input-receta").value;
   if (!idPaciente) return alert("Por favor, ingresa el ID del paciente.");
 
-  const token = localStorage.getItem("accessToken");
   const btn = document.getElementById("btn-buscar-receta");
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
   try {
-    const response = await fetch(`/api/medicamentos/paciente/${idPaciente}`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const data = await response.json();
+    const data = await MedAlertApi.apiJson(`/api/medicamentos/paciente/${idPaciente}`);
     const contenedor = document.getElementById("resultado-receta");
-
-    if (response.ok && data.ok) {
-      mostrarRecetasCards(data.prescripciones, contenedor);
-    } else {
-      contenedor.innerHTML = `<div class="empty-msg"><i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i><br>Paciente no encontrado o sin recetas activas.</div>`;
-    }
+    mostrarRecetasCards(data.prescripciones, contenedor);
   } catch (error) {
-    console.error("Error:", error);
+    document.getElementById("resultado-receta").innerHTML = `<div class="empty-msg"><i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i><br>${error.message}</div>`;
   } finally {
     btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Buscar';
   }
@@ -91,12 +76,21 @@ function mostrarRecetasCards(prescripciones, contenedor) {
   contenedor.innerHTML = htmlCards;
 }
 
-function dispensar(idPrescripcion) {
+async function dispensar(idPrescripcion) {
   if (confirm("¿Confirmas la entrega de este medicamento al paciente?")) {
-    alert(
-      `¡Medicamento entregado exitosamente! (ID Prescripción: ${idPrescripcion})`,
-    );
-    buscarReceta(); // Refrescar la lista
+    try {
+      await MedAlertApi.apiJson(
+        `/api/medicamentos/prescripcion/${idPrescripcion}/dispensar`,
+        {
+          method: "POST",
+          body: JSON.stringify({ cantidad: 30 }),
+        },
+      );
+      alert("Medicamento entregado y stock actualizado.");
+      buscarReceta();
+    } catch (error) {
+      alert(error.message);
+    }
   }
 }
 
@@ -110,31 +104,20 @@ async function buscarGenericos() {
   if (!principioBusqueda)
     return alert("Ingresa un principio activo para buscar.");
 
-  const token = localStorage.getItem("accessToken");
   const btn = document.getElementById("btn-buscar-generico");
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
   try {
-    const response = await fetch(`/api/medicamentos/catalogo`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const data = await response.json();
+    const data = await MedAlertApi.apiJson(`/api/medicamentos/catalogo`);
     const contenedor = document.getElementById("resultado-genericos");
-
-    if (response.ok && data.ok) {
-      const resultados = data.medicamentos.filter(
-        (m) =>
-          m.principio_activo.toLowerCase().includes(principioBusqueda) ||
-          m.nombre_comercial.toLowerCase().includes(principioBusqueda),
-      );
-      mostrarGenericosCards(resultados, contenedor, principioBusqueda);
-    } else {
-      contenedor.innerHTML = `<div class="empty-msg"><i class="fa-solid fa-triangle-exclamation"></i><br>Error al cargar el catálogo.</div>`;
-    }
+    const resultados = data.medicamentos.filter(
+      (m) =>
+        m.principio_activo.toLowerCase().includes(principioBusqueda) ||
+        m.nombre_comercial.toLowerCase().includes(principioBusqueda),
+    );
+    mostrarGenericosCards(resultados, contenedor, principioBusqueda);
   } catch (error) {
-    console.error("Error:", error);
+    document.getElementById("resultado-genericos").innerHTML = `<div class="empty-msg"><i class="fa-solid fa-triangle-exclamation"></i><br>${error.message}</div>`;
   } finally {
     btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Buscar';
   }

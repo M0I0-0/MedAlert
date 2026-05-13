@@ -62,7 +62,7 @@
               <div class="mini-box">
                 <i class="fa-solid fa-qrcode"></i>
                 <div>
-                  <span>Mi ID de Farmacia</span>
+                  <span>Mi ID de Paciente</span>
                   <p id="id-farmacia">Cargando...</p>
                 </div>
               </div>
@@ -75,6 +75,7 @@
         <!-- SECCIÓN INFERIOR: TRATAMIENTOS -->
         <div class="bottom-section">
           <h4><i class="fa-solid fa-pills"></i> Mi Tratamiento Actual</h4>
+          <div id="patient-message" class="empty-state" style="display: none; grid-column: 1 / -1;"></div>
 
           <!-- CONTENEDOR DE TARJETAS DE MEDICAMENTOS -->
           <div class="cards-container" id="contenedor-medicamentos">
@@ -148,46 +149,25 @@
             </div>
           </div>
         </div>
+
+        <hr />
+
+        <div class="bottom-section">
+          <h4><i class="fa-solid fa-clock-rotate-left"></i> Últimas Tomas</h4>
+          <div class="cards-container" id="contenedor-tomas">
+            <div class="empty-state" id="estado-tomas" style="grid-column: 1 / -1">
+              <div class="empty-icon">
+                <i class="fa-regular fa-calendar-check"></i>
+              </div>
+              <h3>No hay tomas registradas todavía</h3>
+              <p>Tus confirmaciones aparecerán aquí con hora real y motivo si omitiste una dosis.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA -->
-    <script>
-      // Lógica súper básica para mostrar el nombre y validar sesión
-      document.addEventListener("DOMContentLoaded", () => {
-        const token = localStorage.getItem("accessToken");
-        const usuarioRaw = localStorage.getItem("usuario");
-
-        if (!token || !usuarioRaw) {
-          window.location.href = "/pages/index.html";
-          return;
-        }
-
-        const usuario = JSON.parse(usuarioRaw);
-
-        // Validar rol
-        if (usuario.rol !== "paciente") {
-          alert("Acceso denegado.");
-          window.location.href = "/pages/index.html";
-          return;
-        }
-
-        // Llenar datos visuales
-        document.getElementById("nombre-paciente").textContent =
-          usuario.nombre_completo;
-        document.getElementById("id-farmacia").textContent =
-          `ID #${usuario.id}`;
-        document.getElementById("img-paciente").src =
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(usuario.nombre_completo)}&size=300&background=dbeafe&color=2563eb`;
-
-        // Aquí a futuro el compañero encargado de la vista de paciente
-        // agregará el 'fetch' para descargar las recetas y ocultar el estado vacío.
-      });
-
-      function logout() {
-        localStorage.clear();
-        window.location.href = "/pages/index.html";
-      }
-    </script>
+    <script src="/js/api.js"></script>
+    <script src="/js/paciente.js"></script>
   </body>
 </html>

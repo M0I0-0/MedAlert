@@ -15,8 +15,9 @@
     </div>
 
     <div class="usuario">
-      <span>Laura Méndez</span>
-      <div class="avatar">LM</div>
+      <span id="familiar-nombre">Cargando...</span>
+      <div class="avatar" id="familiar-avatar">FM</div>
+      <button onclick="logout()" style="background:#ef4444;color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;">Salir</button>
     </div>
   </header>
 
@@ -41,55 +42,55 @@
             <p>Vista general del estado del paciente vinculado y su adherencia al tratamiento.</p>
           </div>
 
-          <span class="badge riesgo">Atención requerida</span>
+          <span class="badge riesgo" id="badge-riesgo">Atención requerida</span>
         </div>
 
         <div class="tarjetas">
           <div class="tarjeta">
             <p>Paciente vinculado</p>
-            <h3>Carlos Méndez</h3>
+            <h3 id="dashboard-paciente">Sin paciente</h3>
           </div>
 
           <div class="tarjeta">
             <p>Adherencia semanal</p>
-            <h3 class="texto-alerta">62%</h3>
+            <h3 class="texto-alerta" id="dashboard-adherencia">0%</h3>
           </div>
 
           <div class="tarjeta">
             <p>Tomas omitidas</p>
-            <h3 class="texto-advertencia">4</h3>
+            <h3 class="texto-advertencia" id="dashboard-omitidas">0</h3>
           </div>
 
           <div class="tarjeta">
             <p>Próxima toma</p>
-            <h3>8:00 PM</h3>
+            <h3 id="dashboard-proxima">Sin pendientes</h3>
           </div>
         </div>
 
-        <div class="mensaje-alerta">
-          La adherencia del paciente está por debajo del 70%. Se recomienda dar seguimiento.
+        <div class="mensaje-alerta" id="mensaje-alerta">
+          Cargando alertas automáticas...
         </div>
 
         <div class="grid-dos">
           <div class="panel">
             <h3>Resumen rápido</h3>
-            <p><strong>Paciente:</strong> Carlos Méndez</p>
-            <p><strong>Edad:</strong> 58 años</p>
-            <p><strong>Diagnóstico:</strong> Hipertensión</p>
-            <p><strong>Médico asignado:</strong> Dr. Juan Pérez</p>
-            <p><strong>Última toma registrada:</strong> Hoy, 8:25 AM</p>
+            <p><strong>Paciente:</strong> <span id="resumen-paciente">Sin paciente</span></p>
+            <p><strong>Edad:</strong> <span id="resumen-edad">N/D</span></p>
+            <p><strong>Diagnóstico:</strong> <span id="resumen-diagnostico">Sin historial clínico</span></p>
+            <p><strong>Médico asignado:</strong> <span id="resumen-medico">Sin médico</span></p>
+            <p><strong>Última toma registrada:</strong> <span id="resumen-ultima-toma">Sin tomas</span></p>
           </div>
 
           <div class="panel">
             <h3>Adherencia semanal</h3>
 
             <div class="grafica">
-              <div class="barra barra-alta">
-                <span>78%</span>
+              <div class="barra barra-alta" id="barra-anterior" style="height: 78%;">
+                <span id="grafica-anterior">0%</span>
               </div>
 
-              <div class="barra barra-baja">
-                <span>62%</span>
+              <div class="barra barra-baja" id="barra-actual" style="height: 62%;">
+                <span id="grafica-actual">0%</span>
               </div>
             </div>
 
@@ -115,29 +116,28 @@
         <div class="grid-dos">
           <div class="panel">
             <h3>Datos personales</h3>
-            <p><strong>Nombre:</strong> Carlos Méndez</p>
-            <p><strong>Edad:</strong> 58 años</p>
-            <p><strong>Peso:</strong> 72 kg</p>
-            <p><strong>Estatura:</strong> 1.70 m</p>
-            <p><strong>Alergias:</strong> Penicilina</p>
+            <p><strong>Nombre:</strong> <span id="detalle-nombre">Sin paciente</span></p>
+            <p><strong>Edad:</strong> <span id="detalle-edad">N/D</span></p>
+            <p><strong>Peso:</strong> <span id="detalle-peso">N/D</span></p>
+            <p><strong>Estatura:</strong> <span id="detalle-estatura">N/D</span></p>
+            <p><strong>Alergias:</strong> <span id="detalle-alergias">Sin datos</span></p>
           </div>
 
           <div class="panel">
             <h3>Estado del tratamiento</h3>
-            <p><strong>Adherencia semanal:</strong> 62%</p>
-            <p><strong>Estado:</strong> <span class="badge riesgo">Riesgo</span></p>
-            <p><strong>Medicamentos activos:</strong> 2</p>
-            <p><strong>Tomas cumplidas:</strong> 6</p>
-            <p><strong>Tomas no cumplidas:</strong> 4</p>
+            <p><strong>Adherencia semanal:</strong> <span id="detalle-adherencia">0%</span></p>
+            <p><strong>Estado:</strong> <span class="badge riesgo" id="detalle-estado">Sin evaluar</span></p>
+            <p><strong>Medicamentos activos:</strong> <span id="detalle-medicamentos">0</span></p>
+            <p><strong>Tomas cumplidas:</strong> <span id="detalle-cumplidas">0</span></p>
+            <p><strong>Tomas no cumplidas:</strong> <span id="detalle-omitidas">0</span></p>
           </div>
         </div>
 
         <div class="panel panel-completo">
           <h3>Notas importantes</h3>
-          <p>
-            El paciente ha presentado olvidos frecuentes en las tomas nocturnas.
-            Se recomienda supervisar las próximas tomas y contactar al médico si continúa la baja adherencia.
-          </p>
+          <div id="detalle-notas">
+            <p>Las notas del médico aparecerán aquí.</p>
+          </div>
         </div>
       </section>
 
@@ -165,25 +165,7 @@
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>Losartán</td>
-                <td>50 mg</td>
-                <td>Cada 24 h</td>
-                <td>8:00 AM</td>
-                <td>Mañana 8:00 AM</td>
-                <td><span class="badge activo">Activo</span></td>
-              </tr>
-
-              <tr>
-                <td>Metformina</td>
-                <td>850 mg</td>
-                <td>Cada 12 h</td>
-                <td>8:00 AM / 8:00 PM</td>
-                <td>Hoy 8:00 PM</td>
-                <td><span class="badge proximo">Próximo</span></td>
-              </tr>
-            </tbody>
+            <tbody id="tabla-medicamentos"></tbody>
           </table>
         </div>
 
@@ -217,34 +199,7 @@
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>13/05/2026</td>
-                <td>Losartán</td>
-                <td>8:00 AM</td>
-                <td>8:25 AM</td>
-                <td><span class="badge cumplida">Cumplida</span></td>
-                <td>Retraso leve</td>
-              </tr>
-
-              <tr>
-                <td>12/05/2026</td>
-                <td>Metformina</td>
-                <td>8:00 PM</td>
-                <td>No registrada</td>
-                <td><span class="badge omitida">No cumplida</span></td>
-                <td>Olvido</td>
-              </tr>
-
-              <tr>
-                <td>12/05/2026</td>
-                <td>Losartán</td>
-                <td>8:00 AM</td>
-                <td>8:02 AM</td>
-                <td><span class="badge cumplida">Cumplida</span></td>
-                <td>Sin observaciones</td>
-              </tr>
-            </tbody>
+            <tbody id="tabla-tomas"></tbody>
           </table>
         </div>
       </section>
@@ -260,29 +215,13 @@
           </div>
         </div>
 
-        <div class="alertas-lista">
-          <div class="alerta-card grave">
-            <h3>Adherencia baja</h3>
-            <p>La adherencia semanal del paciente bajó a 62%, por debajo del mínimo recomendado del 70%.</p>
-            <span>Generada hoy</span>
-          </div>
-
-          <div class="alerta-card media">
-            <h3>Toma omitida</h3>
-            <p>El paciente no registró la toma nocturna de Metformina el día 12/05/2026.</p>
-            <span>Hace 1 día</span>
-          </div>
-
-          <div class="alerta-card leve">
-            <h3>Próxima toma</h3>
-            <p>La próxima toma programada es Metformina 850 mg a las 8:00 PM.</p>
-            <span>Hoy</span>
-          </div>
-        </div>
+        <div class="alertas-lista" id="lista-alertas"></div>
       </section>
 
     </main>
   </div>
 
+  <script src="/js/api.js"></script>
+  <script src="/js/familiar.js"></script>
 </body>
 </html>

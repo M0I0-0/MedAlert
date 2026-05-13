@@ -170,6 +170,9 @@ const login = async (req, res) => {
         id: idUsuario,
         nombre_completo: usuario.nombre_completo || usuario.nombre,
         rol,
+        especialidad: usuario.especialidad || null,
+        telefono: usuario.telefono || null,
+        correo: usuario.correo || null,
       },
     });
   } catch (err) {
@@ -190,8 +193,10 @@ const signup = async (req, res) => {
     edad,
     estatura_cm,
     peso_kg,
+    historial_clinico,
     alergias,
     id_medico,
+    relacion_paciente,
   } = req.body;
 
   if (!rol || !CONFIG_ROL[rol])
@@ -238,7 +243,7 @@ const signup = async (req, res) => {
       );
     } else if (rol === "paciente") {
       [result] = await pool.query(
-        `INSERT INTO paciente (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg, telefono, correo, alergias, contrasena) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO paciente (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg, telefono, correo, historial_clinico, alergias, contrasena) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id_medico,
           administradorBase,
@@ -248,6 +253,7 @@ const signup = async (req, res) => {
           peso_kg || null,
           telefono || null,
           correo.trim(),
+          historial_clinico || null,
           alergias || null,
           hash,
         ],
@@ -267,12 +273,13 @@ const signup = async (req, res) => {
       );
     } else if (rol === "familiar") {
       [result] = await pool.query(
-        `INSERT INTO familiar_cuidador (id_administrador, nombre_completo, telefono, correo, contrasena) VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO familiar_cuidador (id_administrador, nombre_completo, telefono, correo, relacion_principal, contrasena) VALUES (?, ?, ?, ?, ?, ?)`,
         [
           administradorBase,
           nombre.trim(),
           telefono || null,
           correo.trim(),
+          relacion_paciente || null,
           hash,
         ],
       );

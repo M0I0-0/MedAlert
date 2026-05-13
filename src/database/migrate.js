@@ -98,6 +98,7 @@ const migrations = [
         peso_kg           DECIMAL(5,2)     NULL,
         telefono          VARCHAR(20)      NULL,
         correo            VARCHAR(150)     NOT NULL,
+        historial_clinico TEXT             NULL,
         alergias          TEXT             NULL,
         contrasena        VARCHAR(255)     NOT NULL,
         created_at        TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -119,6 +120,7 @@ const migrations = [
         nombre_completo   VARCHAR(150)  NOT NULL,
         telefono          VARCHAR(20)   NULL,
         correo            VARCHAR(150)  NOT NULL,
+        relacion_principal VARCHAR(100) NULL,
         contrasena        VARCHAR(255)  NOT NULL,
         created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id_familiar),
@@ -167,7 +169,10 @@ const migrations = [
         id_medicamento    INT NOT NULL,
         dosis_instruccion VARCHAR(255) NOT NULL COMMENT 'Ej: 5mg/kg/dia',
         patron_horario    VARCHAR(100) NOT NULL COMMENT 'Ej: diario, fines_de_semana',
+        duracion_dias     INT DEFAULT 7,
+        indicaciones      TEXT NULL,
         stock_estimado    INT DEFAULT 0,
+        ultima_dispensacion DATETIME NULL,
         activa            TINYINT(1) DEFAULT 1,
         version           INT DEFAULT 1,
         created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -188,11 +193,28 @@ const migrations = [
         id_medico_editor   INT NOT NULL,
         dosis_anterior     VARCHAR(255),
         patron_anterior    VARCHAR(100),
+        stock_anterior     INT NULL,
+        accion             ENUM('creacion','actualizacion','desactivacion','dispensacion') NOT NULL DEFAULT 'actualizacion',
         fecha_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         
         PRIMARY KEY (id_historial),
         CONSTRAINT fk_hist_presc FOREIGN KEY (id_prescripcion) REFERENCES prescripcion (id_prescripcion) ON DELETE CASCADE
       ) ENGINE=InnoDB COMMENT='Auditoría de cambios en las recetas';
+    `,
+  },
+  {
+    name: "Tabla: nota_medica",
+    sql: `
+      CREATE TABLE IF NOT EXISTS nota_medica (
+        id_nota          INT NOT NULL AUTO_INCREMENT,
+        id_paciente      INT NOT NULL,
+        id_medico        INT NOT NULL,
+        contenido        TEXT NOT NULL,
+        created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id_nota),
+        CONSTRAINT fk_nota_paciente FOREIGN KEY (id_paciente) REFERENCES paciente (id_paciente) ON DELETE CASCADE,
+        CONSTRAINT fk_nota_medico FOREIGN KEY (id_medico) REFERENCES medico (id_medico) ON DELETE CASCADE
+      ) ENGINE=InnoDB COMMENT='Notas remotas del médico para seguimiento clínico';
     `,
   },
   {
@@ -256,6 +278,22 @@ const migrations = [
         UNIQUE KEY uq_password_reset_token (token),
         INDEX idx_password_reset_correo (correo)
       ) ENGINE=InnoDB;
+    `,
+  },
+  {
+    name: "Ajustes incrementales MedAlert",
+    sql: `
+      ALTER TABLE paciente
+        ADD COLUMN IF NOT EXISTS historial_clinico TEXT NULL AFTER correo;
+      ALTER TABLE familiar_cuidador
+        ADD COLUMN IF NOT EXISTS relacion_principal VARCHAR(100) NULL AFTER correo;
+      ALTER TABLE prescripcion
+        ADD COLUMN IF NOT EXISTS duracion_dias INT DEFAULT 7 AFTER patron_horario,
+        ADD COLUMN IF NOT EXISTS indicaciones TEXT NULL AFTER duracion_dias,
+        ADD COLUMN IF NOT EXISTS ultima_dispensacion DATETIME NULL AFTER stock_estimado;
+      ALTER TABLE historial_prescripcion
+        ADD COLUMN IF NOT EXISTS stock_anterior INT NULL AFTER patron_anterior,
+        ADD COLUMN IF NOT EXISTS accion ENUM('creacion','actualizacion','desactivacion','dispensacion') NOT NULL DEFAULT 'actualizacion' AFTER stock_anterior;
     `,
   },
   {

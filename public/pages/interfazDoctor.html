@@ -78,11 +78,11 @@
             </p>
 
             <div class="hero-actions">
-              <button class="btn btn-primary" type="button">
+              <button class="btn btn-primary" type="button" id="focus-recipe-button">
                 <i class="fa-solid fa-prescription-bottle-medical"></i>
                 Nueva receta
               </button>
-              <button class="btn btn-secondary" type="button">
+              <button class="btn btn-secondary" type="button" id="focus-active-button">
                 <i class="fa-solid fa-clock"></i>
                 Configurar horario
               </button>
@@ -93,23 +93,23 @@
             <div class="status-row">
               <div>
                 <small>Paciente seleccionado</small>
-                <strong id="selected-patient-name">Ana Gómez</strong>
+                <strong id="selected-patient-name">Sin paciente seleccionado</strong>
               </div>
-              <span class="status-pill" id="patient-dose-mode">Peso: 64 kg</span>
+              <span class="status-pill" id="patient-dose-mode">Selecciona un paciente</span>
             </div>
 
             <div class="status-list">
               <div class="status-item">
                 <span>Recetas activas</span>
-                <strong>03</strong>
+                <strong id="hero-active-count">0</strong>
               </div>
               <div class="status-item">
                 <span>Alergias registradas</span>
-                <strong>Penicilina</strong>
+                <strong id="hero-allergy-text">Sin datos</strong>
               </div>
               <div class="status-item">
                 <span>Último ajuste de dosis</span>
-                <strong>Hace 2 días</strong>
+                <strong id="hero-last-update">Sin movimientos</strong>
               </div>
             </div>
           </div>
@@ -120,7 +120,7 @@
             <div class="metric-icon">
               <i class="fa-solid fa-capsules"></i>
             </div>
-            <strong>12</strong>
+            <strong id="metric-medicamentos">0</strong>
             <p>Medicamentos disponibles</p>
           </article>
 
@@ -128,7 +128,7 @@
             <div class="metric-icon">
               <i class="fa-solid fa-stopwatch"></i>
             </div>
-            <strong>4</strong>
+            <strong id="metric-horarios">0</strong>
             <p>Horarios complejos guardados hoy</p>
           </article>
 
@@ -136,7 +136,7 @@
             <div class="metric-icon">
               <i class="fa-solid fa-calculator"></i>
             </div>
-            <strong>9</strong>
+            <strong id="metric-dosis">0</strong>
             <p>Dosis calculadas automáticamente</p>
           </article>
 
@@ -144,7 +144,7 @@
             <div class="metric-icon">
               <i class="fa-solid fa-bell"></i>
             </div>
-            <strong>2</strong>
+            <strong id="metric-alertas">0</strong>
             <p>Recetas pendientes por confirmar</p>
           </article>
         </section>
@@ -157,27 +157,24 @@
                   <h3>Formulario de nueva receta</h3>
                   <p>Campos principales para crear la receta médica.</p>
                 </div>
-                <a href="#">Guardar borrador</a>
+                <a href="#agenda">Ver recetas activas</a>
               </div>
 
-              <form class="prescription-form">
+              <div id="doctor-message" class="note-card" style="display: none;"></div>
+
+              <form class="prescription-form" id="prescription-form">
                 <div class="form-grid-doctor">
                   <label class="field">
                     <span>Paciente</span>
-                    <select id="patient-select">
-                      <option value="Ana Gómez|64|34|Penicilina">Ana Gómez</option>
-                      <option value="Laura Martínez|58|51|Ninguna">Laura Martínez</option>
-                      <option value="Carlos Rivera|82|67|Ibuprofeno">Carlos Rivera</option>
+                    <select id="patient-select" required>
+                      <option value="">Selecciona un paciente</option>
                     </select>
                   </label>
 
                   <label class="field">
                     <span>Medicamento</span>
-                    <select>
-                      <option>Amoxicilina</option>
-                      <option>Paracetamol</option>
-                      <option>Metformina</option>
-                      <option>Losartán</option>
+                    <select id="medication-select" required>
+                      <option value="">Selecciona un medicamento</option>
                     </select>
                   </label>
 
@@ -194,50 +191,79 @@
                     <span>Dosis</span>
                     <input
                       id="dose-input"
+                      name="dosis_instruccion"
                       type="text"
-                      value="640 mg"
                       placeholder="Ej. 500 mg"
+                      required
                     />
                   </label>
 
                   <label class="field">
                     <span>Frecuencia</span>
-                    <select>
-                      <option>Cada 8 horas</option>
-                      <option>Cada 12 horas</option>
-                      <option>Días alternos</option>
-                      <option>Fines de semana</option>
+                    <select id="schedule-select" required>
+                      <option value="">Selecciona una frecuencia</option>
+                      <option value="cada_8_horas">Cada 8 horas</option>
+                      <option value="cada_12_horas">Cada 12 horas</option>
+                      <option value="dias_alternos">Días alternos</option>
+                      <option value="solo_fines_de_semana">Fines de semana</option>
+                      <option value="diario_con_alimentos">Con alimentos</option>
+                      <option value="diario_noche">Solo en la noche</option>
                     </select>
                   </label>
 
                   <label class="field">
                     <span>Duración</span>
-                    <input type="text" placeholder="Ej. 7 días" value="7 días" />
+                    <input id="duration-input" type="number" min="1" value="7" />
+                  </label>
+
+                  <label class="field">
+                    <span>Stock estimado actual</span>
+                    <input id="stock-input" type="number" min="0" value="30" />
                   </label>
 
                   <label class="field field-wide">
                     <span>Horario complejo</span>
-                    <div class="schedule-chips">
-                      <span>08:00</span>
-                      <span>16:00</span>
-                      <span>00:00</span>
+                    <div class="schedule-chips" id="schedule-preview">
+                      <span>Selecciona una frecuencia</span>
                     </div>
                   </label>
 
                   <label class="field field-wide">
                     <span>Indicaciones</span>
-                    <textarea rows="4" placeholder="Escribe indicaciones para el paciente">Tomar después de alimentos y suspender ante reacción alérgica.</textarea>
+                    <textarea id="instructions-input" rows="4" placeholder="Escribe indicaciones para el paciente"></textarea>
                   </label>
                 </div>
 
                 <div class="form-actions">
-                  <button class="btn btn-primary" type="button">
+                  <button class="btn btn-primary" type="submit" id="save-prescription-button">
                     <i class="fa-solid fa-floppy-disk"></i>
                     Guardar receta
                   </button>
-                  <button class="btn btn-secondary" type="button">
+                  <button class="btn btn-secondary" type="button" id="refresh-active-button">
                     <i class="fa-solid fa-file-lines"></i>
                     Ver recetas activas
+                  </button>
+                </div>
+              </form>
+
+              <div class="section-head" style="margin-top: 24px;">
+                <div class="section-title">
+                  <h3>Nota remota para el paciente</h3>
+                  <p>Se mostrará también en la vista del paciente y el familiar.</p>
+                </div>
+              </div>
+
+              <form class="prescription-form" id="note-form">
+                <div class="form-grid-doctor">
+                  <label class="field field-wide">
+                    <span>Nota médica</span>
+                    <textarea id="note-content" rows="4" placeholder="Ej. Ajustar dosis si aparece mareo o náusea persistente." required></textarea>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-secondary" type="submit" id="save-note-button">
+                    <i class="fa-solid fa-note-sticky"></i>
+                    Guardar nota
                   </button>
                 </div>
               </form>
@@ -253,38 +279,18 @@
               </div>
 
               <div class="patient-list">
-                <article class="patient-card">
-                  <div class="patient-avatar">AM</div>
-                  <div>
-                    <h4>Amoxicilina 500 mg</h4>
-                    <div class="patient-meta">
-                      Cada 8 horas • 7 días • Activa desde 11 mayo
+                <div id="active-prescriptions-list" style="width: 100%;">
+                  <article class="patient-card">
+                    <div class="patient-avatar">--</div>
+                    <div>
+                      <h4>Selecciona un paciente</h4>
+                      <div class="patient-meta">
+                        Aquí aparecerán las prescripciones activas y sus acciones.
+                      </div>
                     </div>
-                  </div>
-                  <span class="patient-status status-stable">Activa</span>
-                </article>
-
-                <article class="patient-card">
-                  <div class="patient-avatar">PA</div>
-                  <div>
-                    <h4>Paracetamol 650 mg</h4>
-                    <div class="patient-meta">
-                      Cada 12 horas • 5 días • Requiere seguimiento
-                    </div>
-                  </div>
-                  <span class="patient-status status-review">Vigilar</span>
-                </article>
-
-                <article class="patient-card">
-                  <div class="patient-avatar">LO</div>
-                  <div>
-                    <h4>Losartán 50 mg</h4>
-                    <div class="patient-meta">
-                      Días alternos • Control de presión arterial
-                    </div>
-                  </div>
-                  <span class="patient-status status-alert">Ajustar</span>
-                </article>
+                    <span class="patient-status status-stable">Sin datos</span>
+                  </article>
+                </div>
               </div>
             </section>
           </div>
@@ -292,44 +298,16 @@
           <div class="stack">
             <aside class="task-list" id="alertas">
               <div class="section-title">
-                <h3>Criterios del panel</h3>
-                <p>Lo que este flujo médico debe cubrir.</p>
+                <h3>Pacientes cargados</h3>
+                <p>Resumen operativo de tu consulta.</p>
               </div>
 
-              <div class="task-items">
+              <div class="task-items" id="doctor-patient-list">
                 <div class="task-item">
                   <span class="task-marker marker-primary"></span>
                   <div>
-                    <strong>Agregar campos de medicamento, dosis, frecuencia, duración e indicaciones</strong>
-                    <small>Base del formulario de receta médica</small>
-                  </div>
-                </div>
-                <div class="task-item">
-                  <span class="task-marker marker-accent"></span>
-                  <div>
-                    <strong>Crear selector de horarios complejos</strong>
-                    <small>Cada 8 h, cada 12 h, días alternos o fines de semana</small>
-                  </div>
-                </div>
-                <div class="task-item">
-                  <span class="task-marker marker-primary"></span>
-                  <div>
-                    <strong>Autocompletar la dosis si se elige la regla por kg de peso</strong>
-                    <small>Cálculo automático tomando el peso del paciente</small>
-                  </div>
-                </div>
-                <div class="task-item">
-                  <span class="task-marker marker-danger"></span>
-                  <div>
-                    <strong>Validar que exista al menos un medicamento y una frecuencia</strong>
-                    <small>Evitar recetas incompletas</small>
-                  </div>
-                </div>
-                <div class="task-item">
-                  <span class="task-marker marker-primary"></span>
-                  <div>
-                    <strong>Mandar al inicio de recetas activas si los datos son correctos</strong>
-                    <small>Flujo claro después de guardar la receta</small>
+                    <strong>Cargando pacientes</strong>
+                    <small>Espera un momento...</small>
                   </div>
                 </div>
               </div>
@@ -337,30 +315,16 @@
 
             <aside class="timeline">
               <div class="section-title">
-                <h3>Validaciones sugeridas</h3>
-                <p>Comportamientos importantes del formulario.</p>
+                <h3>Últimas notas</h3>
+                <p>Seguimiento remoto del paciente seleccionado.</p>
               </div>
 
-              <div class="timeline-items">
+              <div class="timeline-items" id="doctor-notes-list">
                 <div class="timeline-item">
                   <span class="timeline-marker marker-primary"></span>
                   <div>
-                    <strong>Mostrar error si faltan datos obligatorios</strong>
-                    <small>Paciente, medicamento, dosis, frecuencia y duración</small>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <span class="timeline-marker marker-accent"></span>
-                  <div>
-                    <strong>Programar lógica para cálculo automático</strong>
-                    <small>Por peso o edad del paciente</small>
-                  </div>
-                </div>
-                <div class="timeline-item">
-                  <span class="timeline-marker marker-danger"></span>
-                  <div>
-                    <strong>Crear CRUD de medicamentos</strong>
-                    <small>Alta, edición, eliminación y consulta rápida</small>
+                    <strong>Sin notas todavía</strong>
+                    <small>Cuando guardes una, aparecerá aquí.</small>
                   </div>
                 </div>
               </div>
@@ -369,9 +333,8 @@
             <aside class="note-card">
               <h4>Nota del flujo</h4>
               <p>
-                Este panel ya está orientado al caso de uso que mostraste.
-                El siguiente paso natural es conectarlo a datos reales y a la
-                lógica del servidor para guardar recetas y calcular dosis.
+                Este panel ahora trabaja con pacientes reales del médico,
+                recetas activas, notas remotas y cálculo automático por peso o edad.
               </p>
             </aside>
           </div>
@@ -379,77 +342,7 @@
       </main>
     </div>
 
-    <script>
-      const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
-      const doctorName = document.getElementById("doctor-name");
-      const doctorSpecialty = document.getElementById("doctor-specialty");
-      const logoutButton = document.getElementById("logout-button");
-      const patientSelect = document.getElementById("patient-select");
-      const selectedPatientName = document.getElementById(
-        "selected-patient-name",
-      );
-      const patientDoseMode = document.getElementById("patient-dose-mode");
-      const doseRule = document.getElementById("dose-rule");
-      const doseInput = document.getElementById("dose-input");
-
-      if (usuario.nombre) {
-        doctorName.textContent = usuario.nombre;
-      }
-
-      if (usuario.nombre_completo) {
-        doctorName.textContent = usuario.nombre_completo;
-      }
-
-      if (usuario.especialidad) {
-        doctorSpecialty.textContent = usuario.especialidad;
-      }
-
-      function calcularDosis() {
-        if (!patientSelect || !doseRule || !doseInput) return;
-
-        const [nombre, peso, edad, alergia] = patientSelect.value.split("|");
-        const pesoNumero = Number(peso);
-        const edadNumero = Number(edad);
-
-        if (selectedPatientName) {
-          selectedPatientName.textContent = nombre;
-        }
-
-        if (patientDoseMode) {
-          patientDoseMode.textContent = `Peso: ${peso} kg • Alergia: ${alergia}`;
-        }
-
-        if (doseRule.value === "peso") {
-          doseInput.value = `${pesoNumero * 10} mg`;
-        } else if (doseRule.value === "edad") {
-          doseInput.value = `${Math.max(250, edadNumero * 10)} mg`;
-        }
-      }
-
-      patientSelect?.addEventListener("change", calcularDosis);
-      doseRule?.addEventListener("change", calcularDosis);
-      calcularDosis();
-
-      logoutButton?.addEventListener("click", async () => {
-        const refreshToken = localStorage.getItem("refreshToken");
-
-        try {
-          if (refreshToken) {
-            await fetch("/auth/logout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ refreshToken }),
-            });
-          }
-        } catch (_error) {
-          // Aunque falle el request, cerramos la sesión localmente.
-        } finally {
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("usuario");
-          window.location.href = "/";
-        }
-      });
-    </script>
+    <script src="/js/api.js"></script>
+    <script src="/js/doctor.js"></script>
   </body>
 </html>

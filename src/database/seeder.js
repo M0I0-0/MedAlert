@@ -13,6 +13,7 @@ async function seed() {
     const tablas = [
       "password_resets",
       "token_sesion",
+      "nota_medica",
       "toma_recordatorio", // Nueva tabla
       "historial_prescripcion", // Nueva tabla
       "prescripcion", // Nueva tabla
@@ -57,16 +58,16 @@ async function seed() {
     // ─── 4. PACIENTES ────────────────────────────────────────────
     // NOTA: Ya no incluimos historial_clinico porque no está en el esquema
     await conn.query(`
-      INSERT INTO paciente (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg, telefono, correo, alergias, contrasena) VALUES
-        (1, 1, 'Juan Pérez Hernández', 65, 168.00, 72.50, '5512345678', 'juan.perez@gmail.com', 'Penicilina', 'Paciente@123'),
-        (2, 1, 'Gustavo Ruiz', 24, 175.00, 70.00, '5523456789', 'gustavo.ruiz@gmail.com', 'Ninguna', 'Paciente@123'),
-        (3, 1, 'Margarita Pech', 55, 160.00, 65.00, '5534567891', 'margarita.pech@gmail.com', 'Sulfonamidas', 'Paciente@123')
+      INSERT INTO paciente (id_medico, id_administrador, nombre_completo, edad, estatura_cm, peso_kg, telefono, correo, historial_clinico, alergias, contrasena) VALUES
+        (1, 1, 'Juan Pérez Hernández', 65, 168.00, 72.50, '5512345678', 'juan.perez@gmail.com', 'Diabetes mellitus tipo 2 e hipertensión.', 'Penicilina', 'Paciente@123'),
+        (2, 1, 'Gustavo Ruiz', 24, 175.00, 70.00, '5523456789', 'gustavo.ruiz@gmail.com', 'Tratamiento ambulatorio por migraña.', 'Ninguna', 'Paciente@123'),
+        (3, 1, 'Margarita Pech', 55, 160.00, 65.00, '5534567891', 'margarita.pech@gmail.com', 'Control lipídico y seguimiento cardiometabólico.', 'Sulfonamidas', 'Paciente@123')
     `);
 
     // ─── 5. FAMILIARES / CUIDADORES ──────────────────────────────
     await conn.query(`
-      INSERT INTO familiar_cuidador (id_administrador, nombre_completo, telefono, correo, contrasena) VALUES
-        (1, 'Cristian Medina', '5511112222', 'cristian.medina@gmail.com', 'Familiar@123')
+      INSERT INTO familiar_cuidador (id_administrador, nombre_completo, telefono, correo, relacion_principal, contrasena) VALUES
+        (1, 'Cristian Medina', '5511112222', 'cristian.medina@gmail.com', 'Cuidador profesional', 'Familiar@123')
     `);
 
     await conn.query(
@@ -111,10 +112,10 @@ async function seed() {
 
     // ─── 8. PRESCRIPCIONES (La Receta del Médico) ────────────
     await conn.query(`
-      INSERT INTO prescripcion (id_paciente, id_medico, id_medicamento, dosis_instruccion, patron_horario, stock_estimado, activa) VALUES
-        (1, 1, 3, '1 tableta de 850mg', 'diario_con_alimentos', 60, 1),
-        (2, 2, 5, '1 tableta', 'solo_fines_de_semana', 10, 1),
-        (3, 3, 6, '1 tableta 20mg', 'diario_noche', 30, 1)
+      INSERT INTO prescripcion (id_paciente, id_medico, id_medicamento, dosis_instruccion, patron_horario, duracion_dias, indicaciones, stock_estimado, activa, ultima_dispensacion) VALUES
+        (1, 1, 3, '1 tableta de 850mg', 'diario_con_alimentos', 30, 'Tomar con alimentos y evitar omitir la toma nocturna.', 60, 1, NOW()),
+        (2, 2, 5, '1 tableta', 'solo_fines_de_semana', 14, 'Usar solo si aparece el cuadro indicado por su médico.', 10, 1, NOW()),
+        (3, 3, 6, '1 tableta 20mg', 'diario_noche', 30, 'Tomar antes de dormir con seguimiento semanal.', 30, 1, NOW())
     `);
 
     // ─── 9. TOMAS / RECORDATORIOS (Simulando métricas de adherencia) ──────────
@@ -125,6 +126,12 @@ async function seed() {
         (1, '2026-05-13 20:00:00', NULL, 'pendiente', NULL, 0),
         (2, '2026-05-09 20:00:00', NULL, 'no_cumplido', 'olvido', 0),
         (3, '2026-05-12 21:00:00', NULL, 'no_cumplido', 'efecto_adverso', 1)
+    `);
+
+    await conn.query(`
+      INSERT INTO nota_medica (id_paciente, id_medico, contenido) VALUES
+        (1, 1, 'Reforzar adherencia nocturna y vigilar glucosa capilar.'),
+        (3, 3, 'Si presenta mareo persistente, programar revisión remota de dosis.')
     `);
 
     console.log("  ✅ Datos de prueba insertados con la nueva arquitectura");
