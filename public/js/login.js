@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
             destino = "/pages/InterfazUsuario.html";
             break;
           case "medico":
-            destino = "/pages/VistaTarjetas.html";
+            destino = "/doctor";
             break;
           case "farmaceutico":
             destino = "/pages/InterfazFarmaceutico.html";
