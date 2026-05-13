@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         switch (data.usuario?.rol) {
           case "paciente":
-            destino = "/pages/InterfazUsuario.html";
+            destino = "/pages/Interfazpaciente.html";
             break;
           case "medico":
             destino = "/doctor";
