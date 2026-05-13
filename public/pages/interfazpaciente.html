@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis medicamentos - Medilab</title>
+
+    <link rel="stylesheet" href="css/interfazpaciente.css">
+
+    <!-- ICONOS -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <h1>Medilab</h1>
+    </header>
+
+    <!-- CONTENEDOR -->
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="top-section">
+
+            <div>
+                <h2>Mis medicamentos</h2>
+                <p>
+                    Consulta fácilmente tus medicamentos, horarios y próximas tomas.
+                </p>
+            </div>
+
+            <button class="add-btn">
+                <i class="fa-solid fa-plus"></i>
+                Agregar medicamento
+            </button>
+
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filters">
+
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input type="text" placeholder="Buscar medicamento...">
+            </div>
+
+            <div class="filter-select">
+
+                <i class="fa-solid fa-filter"></i>
+
+                <select>
+                    <option>Todos</option>
+                    <option>Activos</option>
+                    <option>Finalizados</option>
+                </select>
+
+            </div>
+
+        </div>
+
+        <!-- TARJETAS -->
+        <div class="cards-container">
+
+            <!-- CARD -->
+            <div class="medicine-card">
+
+                <div class="card-header">
+
+                    <div class="medicine-left">
+
+                        <div class="icon-box">
+                            <i class="fa-solid fa-capsules"></i>
+                        </div>
+
+                        <div>
+                            <h3>Paracetamol</h3>
+
+                            <span class="status">
+                                Activo
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <i class="fa-solid fa-ellipsis-vertical dots"></i>
+
+                </div>
+
+                <!-- INFO -->
+                <div class="info-grid">
+
+                    <div class="info-box">
+                        <span>Dosis</span>
+                        <p>500mg</p>
+                    </div>
+
+                    <div class="info-box">
+                        <span>Frecuencia</span>
+                        <p>Cada 8 horas</p>
+                    </div>
+
+                    <div class="info-box">
+                        <span>Horario</span>
+                        <p>08:00 AM</p>
+                    </div>
+
+                    <div class="info-box">
+                        <span>Próxima toma</span>
+                        <p>04:00 PM</p>
+                    </div>
+
+                </div>
+
+                <!-- PROGRESS -->
+                <div class="progress-section">
+
+                    <div class="progress-text">
+                        <span>Seguimiento</span>
+                        <span>75%</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+
+                </div>
+
+                <button class="details-btn">
+                    Ver detalles
+                </button>
+
+            </div>
+
+            <!-- CARD -->
+            <div class="medicine-card">
+
+                <div class="card-header">
+
+                    <div class="medicine-left">
+
+                        <div class="icon-box">
+                            <i class="fa-solid fa-pills"></i>
+                        </div>
+
+                        <div>
+                            <h3>Ibuprofeno</h3>
+
+                            <span class="status">
+                                Activo
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <i class="fa-solid fa-ellipsis-vertical dots"></i>
+
+                </div>
+
+                <!-- INFO -->
+                <div class="info-grid">
+
+                    <div class="info-box">
+                        <span>Dosis</span>
+                        <p>400mg</p>
+                    </div>
+
+                    <div class="info-box">
+                        <span>Frecuencia</span>
+                        <p>Cada 12 horas</p>
+                    </div>
+
+                    <div class="info-box">
+                        <span>Horario</span>
+                        <p>09:00 AM</p>
+                    </div>
+
+                    <div class="info-box">
+                        <span>Próxima toma</span>
+                        <p>09:00 PM</p>
+                    </div>
+
+                </div>
+
+                <!-- PROGRESS -->
+                <div class="progress-section">
+
+                    <div class="progress-text">
+                        <span>Seguimiento</span>
+                        <span>90%</span>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress progress2"></div>
+                    </div>
+
+                </div>
+
+                <button class="details-btn">
+                    Ver detalles
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- ESTADO VACIO -->
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                <i class="fa-regular fa-folder-open"></i>
+            </div>
+
+            <h3>No existen medicamentos registrados</h3>
+
+            <p>
+                Agrega un medicamento para comenzar el seguimiento de tus tratamientos.
+            </p>
+
+            <button class="empty-btn">
+                <i class="fa-solid fa-plus"></i>
+                Agregar medicamento
+            </button>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
