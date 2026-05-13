@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Farmacia - MedAlert</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Reutilizamos tu CSS base, pero agregamos estilos para el dashboard -->
+    <style>
+      :root {
+        --primary: #2563eb;
+        --surface: #ffffff;
+        --background: #f8fafc;
+        --text: #1e293b;
+        --text-light: #64748b;
+        --border: #e2e8f0;
+      }
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background: var(--background);
+        color: var(--text);
+        display: flex;
+        height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 260px;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+      }
+      .nav-item {
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        color: var(--text-light);
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .nav-item:hover,
+      .nav-item.active {
+        background: #eff6ff;
+        color: var(--primary);
+      }
+      .user-info {
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+      }
+      .user-info p {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--text-light);
+      }
+      .user-info h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+      }
+      .btn-logout {
+        width: 100%;
+        padding: 0.5rem;
+        background: #fee2e2;
+        color: #ef4444;
+        border: none;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 1rem;
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        padding: 2rem;
+        overflow-y: auto;
+      }
+      .header {
+        margin-bottom: 2rem;
+      }
+      .header h2 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.875rem;
+      }
+      .header p {
+        margin: 0;
+        color: var(--text-light);
+      }
+
+      /* Cards y Paneles */
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+      .card {
+        background: var(--surface);
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+      }
+
+      /* Buscador */
+      .search-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .search-bar input {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        outline: none;
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      /* Tablas */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        color: var(--text-light);
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+      .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge.stock-ok {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .badge.stock-low {
+        background: #fef08a;
+        color: #854d0e;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Barra lateral de navegación -->
+    <aside class="sidebar">
+      <div class="logo">
+        <i class="fa-solid fa-pills"></i> Medi<span>Alert</span>
+      </div>
+
+      <div class="nav-item active" data-target="dispensar">
+        <i class="fa-solid fa-prescription-bottle-medical"></i> Dispensar Receta
+      </div>
+      <div class="nav-item" data-target="genericos">
+        <i class="fa-solid fa-magnifying-glass"></i> Buscador de Equivalencias
+      </div>
+      <div class="nav-item" data-target="historial">
+        <i class="fa-solid fa-clock-rotate-left"></i> Historial de Suministros
+      </div>
+
+      <div class="user-info">
+        <p>Farmacéutico en turno</p>
+        <h4 id="nombre-farmaceutico">Cargando...</h4>
+        <p id="permiso-info">
+          <i class="fa-solid fa-check-circle"></i> Permiso activo
+        </p>
+        <button class="btn-logout" onclick="logout()">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Área de trabajo -->
+    <main class="main-content">
+      <!-- VISTA 1: DISPENSAR RECETA -->
+      <section id="dispensar" class="panel active">
+        <div class="header">
+          <h2>Dispensar Receta</h2>
+          <p>
+            Valida la receta digital del paciente para entregar el medicamento.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="search-bar">
+            <input
+              type="text"
+              id="input-receta"
+              placeholder="Ingrese el ID del paciente o código de la receta..."
+            />
+            <button class="btn-primary" onclick="buscarReceta()">
+              <i class="fa-solid fa-search"></i> Buscar Receta
+            </button>
+          </div>
+
+          <div id="resultado-receta" style="display: none">
+            <h3>Prescripciones Activas</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Medicamento</th>
+                  <th>Dosis</th>
+                  <th>Médico</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-recetas">
+                <!-- Se llena con JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA 2: BUSCADOR DE GENÉRICOS -->
+      <section id="genericos" class="panel">
+        <div class="header">
+          <h2>Buscador de Equivalencias</h2>
+          <p>
+            Busca por principio activo para ofrecer alternativas al paciente.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="search-bar">
+            <input
+              type="text"
+              id="input-principio"
+              placeholder="Ej. Metformina, Paracetamol..."
+            />
+            <button class="btn-primary" onclick="buscarGenericos()">
+              <i class="fa-solid fa-vial"></i> Buscar Equivalencias
+            </button>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre Comercial</th>
+                <th>Principio Activo</th>
+                <th>Presentación</th>
+                <th>Stock</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-genericos">
+              <tr>
+                <td
+                  colspan="4"
+                  style="text-align: center; color: var(--text-light)"
+                >
+                  Realiza una búsqueda para ver resultados.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VISTA 3: HISTORIAL -->
+      <section id="historial" class="panel">
+        <div class="header">
+          <h2>Historial de Suministros</h2>
+          <p>
+            Registro de los últimos medicamentos entregados en esta sucursal.
+          </p>
+        </div>
+        <div class="card">
+          <p style="text-align: center; color: var(--text-light)">
+            Esta vista se conectará al módulo de reportes pronto.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/js/farmaceutico.js"></script>
+  </body>
+</html>
