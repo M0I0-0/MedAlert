@@ -69,22 +69,22 @@
       <main class="main-content">
         <section class="panel hero" id="inicio">
           <div class="hero-copy">
-            <span class="panel-kicker">Resumen del día</span>
-            <h2>Todo lo importante de tu consulta, sin perder tiempo.</h2>
+            <span class="panel-kicker">Receta inteligente</span>
+            <h2>Recetar medicamentos con horarios complejos y dosis automática.</h2>
             <p>
-              Este panel está pensado para que el médico revise pacientes,
-              alertas y actividades del día en una sola pantalla. Podemos
-              seguirlo adaptando exactamente a tu flujo.
+              Prepara una receta médica completa con validación de campos,
+              reglas por peso y acceso rápido a las recetas activas del
+              paciente.
             </p>
 
             <div class="hero-actions">
               <button class="btn btn-primary" type="button">
-                <i class="fa-solid fa-user-plus"></i>
-                Nuevo paciente
+                <i class="fa-solid fa-prescription-bottle-medical"></i>
+                Nueva receta
               </button>
               <button class="btn btn-secondary" type="button">
-                <i class="fa-solid fa-file-medical"></i>
-                Crear nota médica
+                <i class="fa-solid fa-clock"></i>
+                Configurar horario
               </button>
             </div>
           </div>
@@ -92,24 +92,24 @@
           <div class="status-card">
             <div class="status-row">
               <div>
-                <small>Próxima consulta</small>
-                <strong>11:30 AM</strong>
+                <small>Paciente seleccionado</small>
+                <strong id="selected-patient-name">Ana Gómez</strong>
               </div>
-              <span class="status-pill">En 25 min</span>
+              <span class="status-pill" id="patient-dose-mode">Peso: 64 kg</span>
             </div>
 
             <div class="status-list">
               <div class="status-item">
-                <span>Pacientes citados hoy</span>
-                <strong>08</strong>
-              </div>
-              <div class="status-item">
-                <span>Alertas por revisar</span>
+                <span>Recetas activas</span>
                 <strong>03</strong>
               </div>
               <div class="status-item">
-                <span>Recetas pendientes</span>
-                <strong>05</strong>
+                <span>Alergias registradas</span>
+                <strong>Penicilina</strong>
+              </div>
+              <div class="status-item">
+                <span>Último ajuste de dosis</span>
+                <strong>Hace 2 días</strong>
               </div>
             </div>
           </div>
@@ -118,34 +118,34 @@
         <section class="metrics-grid">
           <article class="metric-card">
             <div class="metric-icon">
-              <i class="fa-solid fa-user-doctor"></i>
-            </div>
-            <strong>24</strong>
-            <p>Pacientes activos asignados</p>
-          </article>
-
-          <article class="metric-card">
-            <div class="metric-icon">
-              <i class="fa-solid fa-notes-medical"></i>
+              <i class="fa-solid fa-capsules"></i>
             </div>
             <strong>12</strong>
-            <p>Notas clínicas esta semana</p>
+            <p>Medicamentos disponibles</p>
           </article>
 
           <article class="metric-card">
             <div class="metric-icon">
-              <i class="fa-solid fa-pills"></i>
+              <i class="fa-solid fa-stopwatch"></i>
             </div>
-            <strong>07</strong>
-            <p>Ajustes de tratamiento</p>
+            <strong>4</strong>
+            <p>Horarios complejos guardados hoy</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-icon">
+              <i class="fa-solid fa-calculator"></i>
+            </div>
+            <strong>9</strong>
+            <p>Dosis calculadas automáticamente</p>
           </article>
 
           <article class="metric-card">
             <div class="metric-icon">
               <i class="fa-solid fa-bell"></i>
             </div>
-            <strong>03</strong>
-            <p>Alertas que requieren atención</p>
+            <strong>2</strong>
+            <p>Recetas pendientes por confirmar</p>
           </article>
         </section>
 
@@ -154,79 +154,137 @@
             <section class="panel" id="pacientes">
               <div class="section-head">
                 <div class="section-title">
-                  <h3>Pacientes prioritarios</h3>
-                  <p>Seguimiento rápido para consultas y evolución reciente.</p>
+                  <h3>Formulario de nueva receta</h3>
+                  <p>Campos principales para crear la receta médica.</p>
                 </div>
-                <a href="#">Ver historial completo</a>
+                <a href="#">Guardar borrador</a>
               </div>
 
-              <div class="patient-list">
-                <article class="patient-card">
-                  <div class="patient-avatar">LM</div>
-                  <div>
-                    <h4>Laura Martínez</h4>
-                    <div class="patient-meta">
-                      Control de hipertensión • Última visita: 09 mayo
-                    </div>
-                  </div>
-                  <span class="patient-status status-review">Revisar</span>
-                </article>
+              <form class="prescription-form">
+                <div class="form-grid-doctor">
+                  <label class="field">
+                    <span>Paciente</span>
+                    <select id="patient-select">
+                      <option value="Ana Gómez|64|34|Penicilina">Ana Gómez</option>
+                      <option value="Laura Martínez|58|51|Ninguna">Laura Martínez</option>
+                      <option value="Carlos Rivera|82|67|Ibuprofeno">Carlos Rivera</option>
+                    </select>
+                  </label>
 
-                <article class="patient-card">
-                  <div class="patient-avatar">CR</div>
-                  <div>
-                    <h4>Carlos Rivera</h4>
-                    <div class="patient-meta">
-                      Seguimiento posoperatorio • Signos estables
-                    </div>
-                  </div>
-                  <span class="patient-status status-stable">Estable</span>
-                </article>
+                  <label class="field">
+                    <span>Medicamento</span>
+                    <select>
+                      <option>Amoxicilina</option>
+                      <option>Paracetamol</option>
+                      <option>Metformina</option>
+                      <option>Losartán</option>
+                    </select>
+                  </label>
 
-                <article class="patient-card">
-                  <div class="patient-avatar">AG</div>
-                  <div>
-                    <h4>Ana Gómez</h4>
-                    <div class="patient-meta">
-                      Reportó mareo y omisión de dosis durante la madrugada
+                  <label class="field">
+                    <span>Regla de dosis</span>
+                    <select id="dose-rule">
+                      <option value="manual">Manual</option>
+                      <option value="peso" selected>Por kg de peso</option>
+                      <option value="edad">Por edad</option>
+                    </select>
+                  </label>
+
+                  <label class="field">
+                    <span>Dosis</span>
+                    <input
+                      id="dose-input"
+                      type="text"
+                      value="640 mg"
+                      placeholder="Ej. 500 mg"
+                    />
+                  </label>
+
+                  <label class="field">
+                    <span>Frecuencia</span>
+                    <select>
+                      <option>Cada 8 horas</option>
+                      <option>Cada 12 horas</option>
+                      <option>Días alternos</option>
+                      <option>Fines de semana</option>
+                    </select>
+                  </label>
+
+                  <label class="field">
+                    <span>Duración</span>
+                    <input type="text" placeholder="Ej. 7 días" value="7 días" />
+                  </label>
+
+                  <label class="field field-wide">
+                    <span>Horario complejo</span>
+                    <div class="schedule-chips">
+                      <span>08:00</span>
+                      <span>16:00</span>
+                      <span>00:00</span>
                     </div>
-                  </div>
-                  <span class="patient-status status-alert">Urgente</span>
-                </article>
-              </div>
+                  </label>
+
+                  <label class="field field-wide">
+                    <span>Indicaciones</span>
+                    <textarea rows="4" placeholder="Escribe indicaciones para el paciente">Tomar después de alimentos y suspender ante reacción alérgica.</textarea>
+                  </label>
+                </div>
+
+                <div class="form-actions">
+                  <button class="btn btn-primary" type="button">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Guardar receta
+                  </button>
+                  <button class="btn btn-secondary" type="button">
+                    <i class="fa-solid fa-file-lines"></i>
+                    Ver recetas activas
+                  </button>
+                </div>
+              </form>
             </section>
 
             <section class="panel" id="agenda">
               <div class="section-head">
                 <div class="section-title">
-                  <h3>Agenda clínica</h3>
-                  <p>Actividades programadas para hoy.</p>
+                  <h3>Recetas activas del paciente</h3>
+                  <p>Vista rápida antes de agregar o modificar tratamiento.</p>
                 </div>
-                <a href="#">Administrar agenda</a>
+                <a href="#">Abrir expediente</a>
               </div>
 
-              <div class="timeline-items">
-                <div class="timeline-item">
-                  <span class="timeline-marker marker-primary"></span>
+              <div class="patient-list">
+                <article class="patient-card">
+                  <div class="patient-avatar">AM</div>
                   <div>
-                    <strong>09:00 AM • Revisión de laboratorio</strong>
-                    <small>Paciente: José Hernández</small>
+                    <h4>Amoxicilina 500 mg</h4>
+                    <div class="patient-meta">
+                      Cada 8 horas • 7 días • Activa desde 11 mayo
+                    </div>
                   </div>
-                </div>
-                <div class="timeline-item">
-                  <span class="timeline-marker marker-accent"></span>
+                  <span class="patient-status status-stable">Activa</span>
+                </article>
+
+                <article class="patient-card">
+                  <div class="patient-avatar">PA</div>
                   <div>
-                    <strong>11:30 AM • Consulta de seguimiento</strong>
-                    <small>Paciente: Laura Martínez</small>
+                    <h4>Paracetamol 650 mg</h4>
+                    <div class="patient-meta">
+                      Cada 12 horas • 5 días • Requiere seguimiento
+                    </div>
                   </div>
-                </div>
-                <div class="timeline-item">
-                  <span class="timeline-marker marker-danger"></span>
+                  <span class="patient-status status-review">Vigilar</span>
+                </article>
+
+                <article class="patient-card">
+                  <div class="patient-avatar">LO</div>
                   <div>
-                    <strong>02:15 PM • Ajuste de medicación</strong>
-                    <small>Paciente: Ana Gómez</small>
+                    <h4>Losartán 50 mg</h4>
+                    <div class="patient-meta">
+                      Días alternos • Control de presión arterial
+                    </div>
                   </div>
-                </div>
+                  <span class="patient-status status-alert">Ajustar</span>
+                </article>
               </div>
             </section>
           </div>
@@ -234,30 +292,44 @@
           <div class="stack">
             <aside class="task-list" id="alertas">
               <div class="section-title">
-                <h3>Alertas médicas</h3>
-                <p>Eventos que merecen una respuesta rápida.</p>
+                <h3>Criterios del panel</h3>
+                <p>Lo que este flujo médico debe cubrir.</p>
               </div>
 
               <div class="task-items">
                 <div class="task-item">
-                  <span class="task-marker marker-danger"></span>
+                  <span class="task-marker marker-primary"></span>
                   <div>
-                    <strong>Paciente omitió medicamento nocturno</strong>
-                    <small>Ana Gómez • Hace 18 minutos</small>
+                    <strong>Agregar campos de medicamento, dosis, frecuencia, duración e indicaciones</strong>
+                    <small>Base del formulario de receta médica</small>
                   </div>
                 </div>
                 <div class="task-item">
                   <span class="task-marker marker-accent"></span>
                   <div>
-                    <strong>Presión arterial por encima del rango</strong>
-                    <small>Laura Martínez • Hace 42 minutos</small>
+                    <strong>Crear selector de horarios complejos</strong>
+                    <small>Cada 8 h, cada 12 h, días alternos o fines de semana</small>
                   </div>
                 </div>
                 <div class="task-item">
                   <span class="task-marker marker-primary"></span>
                   <div>
-                    <strong>Nuevo resultado de laboratorio disponible</strong>
-                    <small>José Hernández • Hace 1 hora</small>
+                    <strong>Autocompletar la dosis si se elige la regla por kg de peso</strong>
+                    <small>Cálculo automático tomando el peso del paciente</small>
+                  </div>
+                </div>
+                <div class="task-item">
+                  <span class="task-marker marker-danger"></span>
+                  <div>
+                    <strong>Validar que exista al menos un medicamento y una frecuencia</strong>
+                    <small>Evitar recetas incompletas</small>
+                  </div>
+                </div>
+                <div class="task-item">
+                  <span class="task-marker marker-primary"></span>
+                  <div>
+                    <strong>Mandar al inicio de recetas activas si los datos son correctos</strong>
+                    <small>Flujo claro después de guardar la receta</small>
                   </div>
                 </div>
               </div>
@@ -265,41 +337,41 @@
 
             <aside class="timeline">
               <div class="section-title">
-                <h3>Acciones rápidas</h3>
-                <p>Tareas frecuentes dentro del panel del médico.</p>
+                <h3>Validaciones sugeridas</h3>
+                <p>Comportamientos importantes del formulario.</p>
               </div>
 
               <div class="timeline-items">
                 <div class="timeline-item">
                   <span class="timeline-marker marker-primary"></span>
                   <div>
-                    <strong>Actualizar expediente clínico</strong>
-                    <small>Registra evolución, signos y observaciones.</small>
+                    <strong>Mostrar error si faltan datos obligatorios</strong>
+                    <small>Paciente, medicamento, dosis, frecuencia y duración</small>
                   </div>
                 </div>
                 <div class="timeline-item">
                   <span class="timeline-marker marker-accent"></span>
                   <div>
-                    <strong>Emitir receta o ajuste</strong>
-                    <small>Prepara cambios de tratamiento rápidamente.</small>
+                    <strong>Programar lógica para cálculo automático</strong>
+                    <small>Por peso o edad del paciente</small>
                   </div>
                 </div>
                 <div class="timeline-item">
                   <span class="timeline-marker marker-danger"></span>
                   <div>
-                    <strong>Contactar familiar responsable</strong>
-                    <small>Para alertas, cambios críticos o seguimiento.</small>
+                    <strong>Crear CRUD de medicamentos</strong>
+                    <small>Alta, edición, eliminación y consulta rápida</small>
                   </div>
                 </div>
               </div>
             </aside>
 
             <aside class="note-card">
-              <h4>Espacio listo para tus requerimientos</h4>
+              <h4>Nota del flujo</h4>
               <p>
-                Aquí podemos conectar tablas reales, formularios, recetas,
-                seguimiento de pacientes, historial clínico o lo que necesites
-                para tu flujo médico.
+                Este panel ya está orientado al caso de uso que mostraste.
+                El siguiente paso natural es conectarlo a datos reales y a la
+                lógica del servidor para guardar recetas y calcular dosis.
               </p>
             </aside>
           </div>
@@ -312,6 +384,13 @@
       const doctorName = document.getElementById("doctor-name");
       const doctorSpecialty = document.getElementById("doctor-specialty");
       const logoutButton = document.getElementById("logout-button");
+      const patientSelect = document.getElementById("patient-select");
+      const selectedPatientName = document.getElementById(
+        "selected-patient-name",
+      );
+      const patientDoseMode = document.getElementById("patient-dose-mode");
+      const doseRule = document.getElementById("dose-rule");
+      const doseInput = document.getElementById("dose-input");
 
       if (usuario.nombre) {
         doctorName.textContent = usuario.nombre;
@@ -324,6 +403,32 @@
       if (usuario.especialidad) {
         doctorSpecialty.textContent = usuario.especialidad;
       }
+
+      function calcularDosis() {
+        if (!patientSelect || !doseRule || !doseInput) return;
+
+        const [nombre, peso, edad, alergia] = patientSelect.value.split("|");
+        const pesoNumero = Number(peso);
+        const edadNumero = Number(edad);
+
+        if (selectedPatientName) {
+          selectedPatientName.textContent = nombre;
+        }
+
+        if (patientDoseMode) {
+          patientDoseMode.textContent = `Peso: ${peso} kg • Alergia: ${alergia}`;
+        }
+
+        if (doseRule.value === "peso") {
+          doseInput.value = `${pesoNumero * 10} mg`;
+        } else if (doseRule.value === "edad") {
+          doseInput.value = `${Math.max(250, edadNumero * 10)} mg`;
+        }
+      }
+
+      patientSelect?.addEventListener("change", calcularDosis);
+      doseRule?.addEventListener("change", calcularDosis);
+      calcularDosis();
 
       logoutButton?.addEventListener("click", async () => {
         const refreshToken = localStorage.getItem("refreshToken");

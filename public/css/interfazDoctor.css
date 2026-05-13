@@ -355,6 +355,76 @@ a {
   gap: 20px;
 }
 
+.prescription-form {
+  display: grid;
+  gap: 18px;
+}
+
+.form-grid-doctor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font: inherit;
+  color: var(--text);
+  outline: none;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.schedule-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.schedule-chips span {
+  background: var(--fondo-tag);
+  color: var(--azul-tag);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .section-head {
   display: flex;
   justify-content: space-between;
@@ -525,8 +595,13 @@ a {
     justify-items: start;
   }
 
+  .form-grid-doctor {
+    grid-template-columns: 1fr;
+  }
+
   .hero-actions,
-  .section-head {
+  .section-head,
+  .form-actions {
     align-items: stretch;
   }
 
