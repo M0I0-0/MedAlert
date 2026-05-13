@@ -29,6 +29,18 @@ app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "pages", "index.html"));
 });
 
+app.get("/doctor", (_req, res) => {
+  res.sendFile(
+    path.join(__dirname, "public", "pages", "interfazDoctor.html"),
+  );
+});
+
+app.get("/paciente", (_req, res) => {
+  res.sendFile(
+    path.join(__dirname, "public", "pages", "interfazpaciente.html"),
+  );
+});
+
 // ─── Arranque ─────────────────────────────────────────────────────────────────
 async function main() {
   await testConnection();

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MedAlert | Panel del médico</title>
+    <link rel="stylesheet" href="../css/interfazDoctor.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="dashboard-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <div>
+            <small>Panel clínico</small>
+            <h1>MedAlert</h1>
+          </div>
+        </div>
+
+        <div class="doctor-badge">
+          <span>Médico conectado</span>
+          <strong id="doctor-name">Dra. Especialista</strong>
+          <span id="doctor-specialty">Seguimiento integral del paciente</span>
+          <img
+            src="../assets/img/doctor.webp"
+            alt="Perfil del médico"
+          />
+        </div>
+
+        <nav class="nav-group">
+          <span class="nav-group-title">Atajos</span>
+          <a class="nav-link active" href="#inicio">
+            <i class="fa-solid fa-house"></i>
+            Inicio
+          </a>
+          <a class="nav-link" href="#pacientes">
+            <i class="fa-solid fa-user-group"></i>
+            Pacientes
+          </a>
+          <a class="nav-link" href="#agenda">
+            <i class="fa-solid fa-calendar-check"></i>
+            Agenda
+          </a>
+          <a class="nav-link" href="#alertas">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Alertas
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <p class="footer-note">
+            Ten una vista clara de pacientes, pendientes y evolución clínica
+            desde un solo lugar.
+          </p>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section class="panel hero" id="inicio">
+          <div class="hero-copy">
+            <span class="panel-kicker">Resumen del día</span>
+            <h2>Todo lo importante de tu consulta, sin perder tiempo.</h2>
+            <p>
+              Este panel está pensado para que el médico revise pacientes,
+              alertas y actividades del día en una sola pantalla. Podemos
+              seguirlo adaptando exactamente a tu flujo.
+            </p>
+
+            <div class="hero-actions">
+              <button class="btn btn-primary" type="button">
+                <i class="fa-solid fa-user-plus"></i>
+                Nuevo paciente
+              </button>
+              <button class="btn btn-secondary" type="button">
+                <i class="fa-solid fa-file-medical"></i>
+                Crear nota médica
+              </button>
+            </div>
+          </div>
+
+          <div class="status-card">
+            <div class="status-row">
+              <div>
+                <small>Próxima consulta</small>
+                <strong>11:30 AM</strong>
+              </div>
+              <span class="status-pill">En 25 min</span>
+            </div>
+
+            <div class="status-list">
+              <div class="status-item">
+                <span>Pacientes citados hoy</span>
+                <strong>08</strong>
+              </div>
+              <div class="status-item">
+                <span>Alertas por revisar</span>
+                <strong>03</strong>
+              </div>
+              <div class="status-item">
+                <span>Recetas pendientes</span>
+                <strong>05</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="metrics-grid">
+          <article class="metric-card">
+            <div class="metric-icon">
+              <i class="fa-solid fa-user-doctor"></i>
+            </div>
+            <strong>24</strong>
+            <p>Pacientes activos asignados</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-icon">
+              <i class="fa-solid fa-notes-medical"></i>
+            </div>
+            <strong>12</strong>
+            <p>Notas clínicas esta semana</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-icon">
+              <i class="fa-solid fa-pills"></i>
+            </div>
+            <strong>07</strong>
+            <p>Ajustes de tratamiento</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-icon">
+              <i class="fa-solid fa-bell"></i>
+            </div>
+            <strong>03</strong>
+            <p>Alertas que requieren atención</p>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <div class="stack">
+            <section class="panel" id="pacientes">
+              <div class="section-head">
+                <div class="section-title">
+                  <h3>Pacientes prioritarios</h3>
+                  <p>Seguimiento rápido para consultas y evolución reciente.</p>
+                </div>
+                <a href="#">Ver historial completo</a>
+              </div>
+
+              <div class="patient-list">
+                <article class="patient-card">
+                  <div class="patient-avatar">LM</div>
+                  <div>
+                    <h4>Laura Martínez</h4>
+                    <div class="patient-meta">
+                      Control de hipertensión • Última visita: 09 mayo
+                    </div>
+                  </div>
+                  <span class="patient-status status-review">Revisar</span>
+                </article>
+
+                <article class="patient-card">
+                  <div class="patient-avatar">CR</div>
+                  <div>
+                    <h4>Carlos Rivera</h4>
+                    <div class="patient-meta">
+                      Seguimiento posoperatorio • Signos estables
+                    </div>
+                  </div>
+                  <span class="patient-status status-stable">Estable</span>
+                </article>
+
+                <article class="patient-card">
+                  <div class="patient-avatar">AG</div>
+                  <div>
+                    <h4>Ana Gómez</h4>
+                    <div class="patient-meta">
+                      Reportó mareo y omisión de dosis durante la madrugada
+                    </div>
+                  </div>
+                  <span class="patient-status status-alert">Urgente</span>
+                </article>
+              </div>
+            </section>
+
+            <section class="panel" id="agenda">
+              <div class="section-head">
+                <div class="section-title">
+                  <h3>Agenda clínica</h3>
+                  <p>Actividades programadas para hoy.</p>
+                </div>
+                <a href="#">Administrar agenda</a>
+              </div>
+
+              <div class="timeline-items">
+                <div class="timeline-item">
+                  <span class="timeline-marker marker-primary"></span>
+                  <div>
+                    <strong>09:00 AM • Revisión de laboratorio</strong>
+                    <small>Paciente: José Hernández</small>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-marker marker-accent"></span>
+                  <div>
+                    <strong>11:30 AM • Consulta de seguimiento</strong>
+                    <small>Paciente: Laura Martínez</small>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-marker marker-danger"></span>
+                  <div>
+                    <strong>02:15 PM • Ajuste de medicación</strong>
+                    <small>Paciente: Ana Gómez</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="stack">
+            <aside class="task-list" id="alertas">
+              <div class="section-title">
+                <h3>Alertas médicas</h3>
+                <p>Eventos que merecen una respuesta rápida.</p>
+              </div>
+
+              <div class="task-items">
+                <div class="task-item">
+                  <span class="task-marker marker-danger"></span>
+                  <div>
+                    <strong>Paciente omitió medicamento nocturno</strong>
+                    <small>Ana Gómez • Hace 18 minutos</small>
+                  </div>
+                </div>
+                <div class="task-item">
+                  <span class="task-marker marker-accent"></span>
+                  <div>
+                    <strong>Presión arterial por encima del rango</strong>
+                    <small>Laura Martínez • Hace 42 minutos</small>
+                  </div>
+                </div>
+                <div class="task-item">
+                  <span class="task-marker marker-primary"></span>
+                  <div>
+                    <strong>Nuevo resultado de laboratorio disponible</strong>
+                    <small>José Hernández • Hace 1 hora</small>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            <aside class="timeline">
+              <div class="section-title">
+                <h3>Acciones rápidas</h3>
+                <p>Tareas frecuentes dentro del panel del médico.</p>
+              </div>
+
+              <div class="timeline-items">
+                <div class="timeline-item">
+                  <span class="timeline-marker marker-primary"></span>
+                  <div>
+                    <strong>Actualizar expediente clínico</strong>
+                    <small>Registra evolución, signos y observaciones.</small>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-marker marker-accent"></span>
+                  <div>
+                    <strong>Emitir receta o ajuste</strong>
+                    <small>Prepara cambios de tratamiento rápidamente.</small>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <span class="timeline-marker marker-danger"></span>
+                  <div>
+                    <strong>Contactar familiar responsable</strong>
+                    <small>Para alertas, cambios críticos o seguimiento.</small>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            <aside class="note-card">
+              <h4>Espacio listo para tus requerimientos</h4>
+              <p>
+                Aquí podemos conectar tablas reales, formularios, recetas,
+                seguimiento de pacientes, historial clínico o lo que necesites
+                para tu flujo médico.
+              </p>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+      const doctorName = document.getElementById("doctor-name");
+      const doctorSpecialty = document.getElementById("doctor-specialty");
+
+      if (usuario.nombre) {
+        doctorName.textContent = usuario.nombre;
+      }
+
+      if (usuario.especialidad) {
+        doctorSpecialty.textContent = usuario.especialidad;
+      }
+    </script>
+  </body>
+</html>
