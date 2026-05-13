@@ -4,6 +4,14 @@ const router = express.Router();
 const { autenticar, autorizar } = require("../middlewares/auth");
 const medicamentoController = require("../controllers/medicamentoController");
 
+// Ruta para obtener el inventario (Médicos y Farmacéuticos)
+router.get(
+  "/catalogo",
+  autenticar,
+  autorizar("medico", "farmaceutico"),
+  medicamentoController.obtenerCatalogo,
+);
+
 // Ruta para recetar (Exclusivo de médicos)
 router.post(
   "/prescribir",
@@ -12,12 +20,12 @@ router.post(
   medicamentoController.prescribirMedicamento,
 );
 
-// Ruta para ver historial (Pueden verlo médicos, el propio paciente, o su familiar/cuidador)
+// Ruta para ver historial (Médicos, Farmacéuticos, Paciente o Familiar)
 router.get(
   "/paciente/:id_paciente",
   autenticar,
-  autorizar("medico", "paciente", "familiar"),
-  medicamentoController.obtenerMedicamentosPaciente,
+  autorizar("medico", "farmaceutico", "paciente", "familiar"),
+  medicamentoController.obtenerPrescripcionesPaciente,
 );
 
 module.exports = router;
