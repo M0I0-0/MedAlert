@@ -11,10 +11,9 @@ async function seed() {
     await conn.query("SET FOREIGN_KEY_CHECKS = 0");
 
     const tablas = [
-      "password_resets",
       "token_sesion",
       "recordatorio",
-      "interacciones_medicas", // Nueva tabla
+      "interacciones_medicas",
       "familiar_paciente",
       "medicamento",
       "familiar_cuidador",
