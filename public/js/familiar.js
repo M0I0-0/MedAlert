@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ID del paciente vinculado, se rellena al cargar datos
   let pacienteIdActual = null;
+  let chartAdherencia = null;
+  let chartDistribucion = null;
 
   function formatDate(dateString) {
     if (!dateString) return "Sin dato";
@@ -86,6 +88,103 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.disabled = false;
       btn.innerHTML = textoOriginal;
     }
+  }
+
+  function renderizarGraficos(comparativo, metricas) {
+    if (chartAdherencia) chartAdherencia.destroy();
+    if (chartDistribucion) chartDistribucion.destroy();
+
+    const container = document.getElementById("graficas-contenedor");
+    const emptyState = document.getElementById("graficas-vacias");
+
+    const totalTomas = Number(metricas.total || 0);
+    if (totalTomas === 0) {
+      if (container) container.style.display = "none";
+      if (emptyState) emptyState.style.display = "flex";
+      return;
+    }
+
+    if (container) container.style.display = "grid";
+    if (emptyState) emptyState.style.display = "none";
+
+    const ctxBar = document.getElementById("chartAdherenciaComparada").getContext("2d");
+    chartAdherencia = new Chart(ctxBar, {
+      type: "bar",
+      data: {
+        labels: ["Semana Anterior", "Semana Actual"],
+        datasets: [{
+          label: "Adherencia (%)",
+          data: [comparativo.semana_anterior || 0, comparativo.semana_actual || 0],
+          backgroundColor: ["#0f172a", "#3b82f6"],
+          borderRadius: 8,
+          borderWidth: 0,
+          maxBarThickness: 45
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Adherencia: ${context.parsed.y}%`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            grid: { color: "#f1f5f9" },
+            ticks: {
+              callback: function(value) { return value + "%"; }
+            }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    const ctxDoughnut = document.getElementById("chartDistribucionTomas").getContext("2d");
+    chartDistribucion = new Chart(ctxDoughnut, {
+      type: "doughnut",
+      data: {
+        labels: ["Cumplidas", "Omitidas", "Pendientes"],
+        datasets: [{
+          data: [metricas.cumplidos || 0, metricas.omitidos || 0, metricas.pendientes || 0],
+          backgroundColor: ["#16a34a", "#dc2626", "#f59e0b"],
+          borderWidth: 2,
+          borderColor: "#ffffff"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "right",
+            labels: {
+              boxWidth: 12,
+              font: { size: 10 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || "";
+                const val = context.parsed || 0;
+                const pct = ((val / totalTomas) * 100).toFixed(0);
+                return ` ${label}: ${val} (${pct}%)`;
+              }
+            }
+          }
+        },
+        cutout: "60%"
+      }
+    });
   }
 
   async function loadData() {

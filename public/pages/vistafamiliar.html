@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/css/medalert-shared.css">
   <link rel="stylesheet" href="/css/vistafamiliar.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -114,22 +115,20 @@
           </div>
 
           <div class="note-card" style="display: flex; flex-direction: column;">
-            <h4>Adherencia comparada</h4>
-            <div class="grafica-container" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-              <div class="grafica">
-                <div class="barra barra-anterior" id="barra-anterior">
-                  <span id="grafica-anterior">0%</span>
-                </div>
-
-                <div class="barra barra-actual" id="barra-actual">
-                  <span id="grafica-actual">0%</span>
-                </div>
+            <h4>Evolución y Adherencia</h4>
+            <div id="graficas-contenedor" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 12px; flex: 1; align-items: center;">
+              <div class="chart-box" style="position: relative; height: 180px; width: 100%;">
+                <canvas id="chartAdherenciaComparada"></canvas>
               </div>
-
-              <div class="leyenda">
-                <span>Semana anterior</span>
-                <span>Semana actual</span>
+              <div class="chart-box" style="position: relative; height: 180px; width: 100%;">
+                <canvas id="chartDistribucionTomas"></canvas>
               </div>
+            </div>
+            <!-- Estado vacío para cuando no hay datos -->
+            <div id="graficas-vacias" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 20px; text-align: center; color: var(--texto-secundario);">
+              <i class="fa-solid fa-chart-pie" style="font-size: 2.5rem; color: #cbd5e1;"></i>
+              <strong style="color: var(--texto-principal);">Sin registros de adherencia</strong>
+              <p style="font-size: 0.8rem; margin: 0;">Aún no se han registrado tomas para este paciente.</p>
             </div>
           </div>
         </div>

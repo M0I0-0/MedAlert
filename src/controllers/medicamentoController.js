@@ -1422,6 +1422,16 @@ async function exportarReportePDF(req, res) {
         Subject: "Reporte de evolución clínica",
       },
     });
+
+    doc.on("error", (err) => {
+      console.error("Error en PDFDocument:", err);
+    });
+
+    res.on("close", () => {
+      doc.unpipe(res);
+      doc.end();
+    });
+
     doc.pipe(res);
 
     // ── Paleta de colores ──
@@ -1694,6 +1704,7 @@ async function exportarReportePDF(req, res) {
 
     doc.end();
   } catch (error) {
+    console.error("Error en exportarReportePDF:", error);
     if (!res.headersSent) {
       res.status(500).json({ ok: false, mensaje: "Error generando el PDF." });
     }
@@ -1975,6 +1986,7 @@ async function exportarReporteExcel(req, res) {
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {
+    console.error("Error en exportarReporteExcel:", error);
     if (!res.headersSent) {
       res.status(500).json({ ok: false, mensaje: "Error generando el Excel." });
     }
