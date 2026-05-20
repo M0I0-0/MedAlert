@@ -80,15 +80,29 @@ async function asegurarNotificacionesPendientes() {
 
 async function enviarNotificacionesVencidas() {
   const [notificaciones] = await pool.query(`
-    SELECT *
-    FROM notificacion_recordatorio
-    WHERE estado = 'pendiente'
-      AND programada_para <= NOW()
-    ORDER BY programada_para ASC
+    SELECT n.*, t.estatus AS toma_estatus
+    FROM notificacion_recordatorio n
+    JOIN toma_recordatorio t ON t.id_toma = n.id_toma
+    WHERE n.estado = 'pendiente'
+      AND n.programada_para <= NOW()
+    ORDER BY n.programada_para ASC
     LIMIT 50
   `);
 
   for (const notificacion of notificaciones) {
+    if (notificacion.etapa === "10_min_despues" && notificacion.toma_estatus !== "pendiente") {
+      // Si la toma ya fue confirmada (cumplida o no_cumplida), cancelamos el envío
+      await pool.query(
+        `
+          UPDATE notificacion_recordatorio
+          SET estado = 'fallida'
+          WHERE id_notificacion = ?
+        `,
+        [notificacion.id_notificacion],
+      );
+      continue;
+    }
+
     await pool.query(
       `
         INSERT INTO sms_log (id_notificacion, telefono, mensaje)

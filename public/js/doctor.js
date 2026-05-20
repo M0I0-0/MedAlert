@@ -207,73 +207,126 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderActivePrescriptions(prescripciones) {
+    const activePresc = prescripciones.filter((item) => item.activa === 1);
+    const inactivePresc = prescripciones.filter((item) => item.activa === 0);
+
     document.getElementById("hero-active-count").textContent = String(
-      prescripciones.length,
+      activePresc.length,
     );
     document.getElementById("metric-horarios").textContent = String(
-      prescripciones.filter((item) =>
+      activePresc.filter((item) =>
         ["cada_8_horas", "cada_12_horas", "dias_alternos", "solo_fines_de_semana"].includes(
           item.patron_horario,
         ),
       ).length,
     );
     document.getElementById("metric-alertas").textContent = String(
-      prescripciones.filter((item) => Number(item.porcentaje_adherencia) < 70).length,
+      activePresc.filter((item) => Number(item.porcentaje_adherencia) < 70).length,
     );
-    document.getElementById("hero-last-update").textContent = prescripciones.length
-      ? formatDate(prescripciones[0].proxima_toma || new Date())
+    document.getElementById("hero-last-update").textContent = activePresc.length
+      ? formatDate(activePresc[0].proxima_toma || new Date())
       : "Sin movimientos";
 
-    if (!prescripciones.length) {
+    // 1. Renderizar lista activa
+    if (!activePresc.length) {
       activePrescriptionsList.innerHTML = `
         <article class="patient-card">
           <div class="patient-avatar">--</div>
           <div>
             <h4>No hay recetas activas</h4>
-            <div class="patient-meta">Puedes crear una nueva receta desde el formulario.</div>
+            <div class="patient-meta">Puedes crear una nueva receta desde el formulario o reactivar una inactiva abajo.</div>
           </div>
           <span class="patient-status status-stable">Vacío</span>
         </article>
       `;
-      return;
+    } else {
+      activePrescriptionsList.innerHTML = activePresc
+        .map(
+          (item) => `
+            <article class="patient-card">
+              <div class="patient-avatar">${initials(item.nombre_comercial)}</div>
+              <div>
+                <h4>${item.nombre_comercial}</h4>
+                <div class="patient-meta">
+                  ${item.dosis_instruccion} • ${item.patron_horario.replaceAll("_", " ")} • ${item.duracion_dias || 7} días
+                </div>
+                <div class="patient-meta">
+                  Próxima toma: ${item.proxima_toma ? formatDate(item.proxima_toma) : "Sin pendientes"} • Stock ${item.stock_estimado}
+                </div>
+              </div>
+              <span class="patient-status ${
+                Number(item.porcentaje_adherencia) < 70 ? "status-alert" : "status-stable"
+              }">${item.porcentaje_adherencia}%</span>
+              <div style="display:flex; gap:10px; margin-left:auto;">
+                <button class="btn btn-secondary doctor-edit" data-id="${item.id_prescripcion}" type="button">Editar</button>
+                <button class="btn btn-secondary doctor-history" data-id="${item.id_prescripcion}" type="button">Historial</button>
+                <button class="btn btn-primary doctor-disable" data-id="${item.id_prescripcion}" type="button">Desactivar</button>
+              </div>
+            </article>
+          `,
+        )
+        .join("");
+
+      activePrescriptionsList.querySelectorAll(".doctor-edit").forEach((button) => {
+        button.addEventListener("click", () => loadPrescriptionIntoForm(button.dataset.id));
+      });
+      activePrescriptionsList.querySelectorAll(".doctor-history").forEach((button) => {
+        button.addEventListener("click", () => loadPrescriptionHistory(button.dataset.id));
+      });
+      activePrescriptionsList.querySelectorAll(".doctor-disable").forEach((button) => {
+        button.addEventListener("click", () => disablePrescription(button.dataset.id));
+      });
     }
 
-    activePrescriptionsList.innerHTML = prescripciones
-      .map(
-        (item) => `
-          <article class="patient-card">
-            <div class="patient-avatar">${initials(item.nombre_comercial)}</div>
-            <div>
-              <h4>${item.nombre_comercial}</h4>
-              <div class="patient-meta">
-                ${item.dosis_instruccion} • ${item.patron_horario.replaceAll("_", " ")} • ${item.duracion_dias || 7} días
-              </div>
-              <div class="patient-meta">
-                Próxima toma: ${item.proxima_toma ? formatDate(item.proxima_toma) : "Sin pendientes"} • Stock ${item.stock_estimado}
-              </div>
-            </div>
-            <span class="patient-status ${
-              Number(item.porcentaje_adherencia) < 70 ? "status-alert" : "status-stable"
-            }">${item.porcentaje_adherencia}%</span>
-            <div style="display:flex; gap:10px; margin-left:auto;">
-              <button class="btn btn-secondary doctor-edit" data-id="${item.id_prescripcion}" type="button">Editar</button>
-              <button class="btn btn-secondary doctor-history" data-id="${item.id_prescripcion}" type="button">Historial</button>
-              <button class="btn btn-primary doctor-disable" data-id="${item.id_prescripcion}" type="button">Desactivar</button>
-            </div>
-          </article>
-        `,
-      )
-      .join("");
+    // 2. Renderizar lista inactiva
+    const inactiveContainer = document.getElementById("inactive-prescriptions-list");
+    if (!inactiveContainer) return;
 
-    activePrescriptionsList.querySelectorAll(".doctor-edit").forEach((button) => {
-      button.addEventListener("click", () => loadPrescriptionIntoForm(button.dataset.id));
-    });
-    activePrescriptionsList.querySelectorAll(".doctor-history").forEach((button) => {
-      button.addEventListener("click", () => loadPrescriptionHistory(button.dataset.id));
-    });
-    activePrescriptionsList.querySelectorAll(".doctor-disable").forEach((button) => {
-      button.addEventListener("click", () => disablePrescription(button.dataset.id));
-    });
+    if (!inactivePresc.length) {
+      inactiveContainer.innerHTML = `
+        <article class="patient-card">
+          <div class="patient-avatar">--</div>
+          <div>
+            <h4>Sin recetas inactivas</h4>
+            <div class="patient-meta">No hay tratamientos desactivados para este paciente.</div>
+          </div>
+          <span class="patient-status status-stable">Vacío</span>
+        </article>
+      `;
+    } else {
+      inactiveContainer.innerHTML = inactivePresc
+        .map(
+          (item) => `
+            <article class="patient-card" style="opacity: 0.75;">
+              <div class="patient-avatar" style="background-color: var(--fondo-secundario); color: var(--texto-secundario);">
+                ${initials(item.nombre_comercial)}
+              </div>
+              <div>
+                <h4>${item.nombre_comercial} <span style="font-size: 11px; background: var(--fondo-secundario); padding: 2px 8px; border-radius: 10px; color: var(--texto-secundario); margin-left: 6px;">Inactivo</span></h4>
+                <div class="patient-meta">
+                  ${item.dosis_instruccion} • ${item.patron_horario.replaceAll("_", " ")} • ${item.duracion_dias || 7} días
+                </div>
+                <div class="patient-meta">
+                  Desactivada • Adherencia registrada: ${item.porcentaje_adherencia}%
+                </div>
+              </div>
+              <span class="patient-status status-stable" style="background-color: var(--fondo-secundario); color: var(--texto-secundario);">${item.porcentaje_adherencia}%</span>
+              <div style="display:flex; gap:10px; margin-left:auto;">
+                <button class="btn btn-secondary doctor-history" data-id="${item.id_prescripcion}" type="button">Historial</button>
+                <button class="btn btn-primary doctor-enable" data-id="${item.id_prescripcion}" type="button" style="background-color: var(--success); border-color: var(--success);">Activar</button>
+              </div>
+            </article>
+          `,
+        )
+        .join("");
+
+      inactiveContainer.querySelectorAll(".doctor-history").forEach((button) => {
+        button.addEventListener("click", () => loadPrescriptionHistory(button.dataset.id));
+      });
+      inactiveContainer.querySelectorAll(".doctor-enable").forEach((button) => {
+        button.addEventListener("click", () => enablePrescription(button.dataset.id));
+      });
+    }
   }
 
   function renderHospitalTomas(tomas) {
@@ -442,6 +495,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     showMessage("Prescripción desactivada correctamente.", "success");
     await loadSelectedPatientData();
+  }
+
+  async function enablePrescription(id) {
+    if (!confirm("¿Deseas activar/reactivar esta prescripción?")) return;
+    try {
+      await MedAlertApi.apiJson(`/api/medicamentos/prescripcion/${id}/activar`, {
+        method: "POST",
+      });
+      showMessage("Prescripción activada y tomas programadas correctamente.", "success");
+      await loadSelectedPatientData();
+    } catch (error) {
+      showMessage(error.message, "error");
+    }
   }
 
   // ─── Descarga autenticada de reportes ─────────────────────────────────────

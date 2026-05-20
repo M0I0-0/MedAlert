@@ -616,6 +616,52 @@ async function desactivarPrescripcion(req, res) {
   }
 }
 
+async function activarPrescripcion(req, res) {
+  const { id_prescripcion } = req.params;
+  const conn = await pool.getConnection();
+
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.query(
+      `
+        SELECT p.*
+        FROM prescripcion p
+        JOIN paciente pa ON pa.id_paciente = p.id_paciente
+        WHERE p.id_prescripcion = ? AND pa.id_medico = ?
+        LIMIT 1
+      `,
+      [id_prescripcion, req.usuario.id],
+    );
+
+    const actual = rows[0];
+    if (!actual) {
+      await conn.rollback();
+      return res.status(404).json({
+        ok: false,
+        mensaje: "Prescripción no encontrada o sin permisos.",
+      });
+    }
+
+    await conn.query(
+      `UPDATE prescripcion SET activa = 1 WHERE id_prescripcion = ?`,
+      [id_prescripcion],
+    );
+
+    await guardarHistorial(conn, actual, "actualizacion", req.usuario.id);
+
+    // Recreamos recordatorios futuros para la receta activada
+    await recrearRecordatorios(conn, actual);
+
+    await conn.commit();
+    return res.json({ ok: true, mensaje: "Prescripción activada y tomas programadas." });
+  } catch (error) {
+    await conn.rollback();
+    return res.status(500).json({ ok: false, mensaje: "Error interno del servidor." });
+  } finally {
+    conn.release();
+  }
+}
+
 async function obtenerPrescripcionesPaciente(req, res) {
   const { id_paciente } = req.params;
   const conn = await asegurarAccesoPaciente(req, res, id_paciente);
@@ -634,6 +680,7 @@ async function obtenerPrescripcionesPaciente(req, res) {
           p.stock_estimado,
           p.ultima_dispensacion,
           p.version,
+          p.activa,
           mc.nombre_comercial,
           mc.principio_activo,
           mc.presentacion,
@@ -643,11 +690,11 @@ async function obtenerPrescripcionesPaciente(req, res) {
         FROM prescripcion p
         JOIN medicamento_catalogo mc ON p.id_medicamento = mc.id_medicamento
         LEFT JOIN toma_recordatorio t ON t.id_prescripcion = p.id_prescripcion
-        WHERE p.id_paciente = ? AND p.activa = 1
+        WHERE p.id_paciente = ?
         GROUP BY
           p.id_prescripcion, p.id_paciente, p.dosis_instruccion, p.patron_horario,
           p.duracion_dias, p.indicaciones, p.stock_estimado, p.ultima_dispensacion,
-          p.version, mc.nombre_comercial, mc.principio_activo, mc.presentacion
+          p.version, p.activa, mc.nombre_comercial, mc.principio_activo, mc.presentacion
         ORDER BY
           MIN(CASE WHEN t.estatus = 'pendiente' THEN t.fecha_hora_programada END) IS NULL,
           MIN(CASE WHEN t.estatus = 'pendiente' THEN t.fecha_hora_programada END) ASC,
@@ -1367,6 +1414,7 @@ async function exportarReportePDF(req, res) {
     );
 
     const doc = new PDFDocument({
+      bufferPages: true,
       size: "A4",
       margins: { top: 50, bottom: 50, left: 50, right: 50 },
       info: {
@@ -1965,6 +2013,7 @@ async function obtenerAdherenciaMensual(req, res) {
 }
 
 module.exports = {
+  activarPrescripcion,
   actualizarPrescripcion,
   actualizarMedicamentoCatalogo,
   confirmarLecturaNotificacion,

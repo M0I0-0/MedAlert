@@ -418,10 +418,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("alergias-paciente").textContent =
       resumenData.paciente.alergias || "Sin alergias registradas";
 
-    if (!prescripcionesData.prescripciones.length) {
+    const activePresc = prescripcionesData.prescripciones.filter((p) => p.activa === 1);
+    if (!activePresc.length) {
       emptyState.style.display = "block";
     } else {
-      renderPrescriptions(prescripcionesData.prescripciones, tomasData.tomas);
+      renderPrescriptions(activePresc, tomasData.tomas);
     }
 
     if (tomasData.tomas.length) {
