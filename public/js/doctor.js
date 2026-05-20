@@ -40,6 +40,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnDownloadExcel = document.getElementById("btn-download-excel");
   const btnViewAdherence = document.getElementById("btn-view-adherence");
 
+  // Elementos de Monitoreo Clínico
+  const monitoreoGrid = document.getElementById("monitoreo-grid");
+  const monitoreoSearch = document.getElementById("monitoreo-search");
+  const monitoreoSort = document.getElementById("monitoreo-sort");
+  const filterButtons = document.querySelectorAll(".btn-filter");
+
+  let activeFilter = "todos"; // todos, criticos, estables
+
   doctorName.textContent = usuario.nombre_completo || "Médico";
   doctorSpecialty.textContent = usuario.especialidad || "Seguimiento clínico";
 
@@ -144,6 +152,125 @@ document.addEventListener("DOMContentLoaded", () => {
         `,
       )
       .join("");
+  }
+
+  function renderMonitoreoGrid() {
+    if (!monitoreoGrid) return;
+
+    const searchTerm = monitoreoSearch.value.trim().toLowerCase();
+    const sortBy = monitoreoSort.value;
+
+    // 1. Filtrar
+    let filtered = state.pacientes.filter((paciente) => {
+      // Búsqueda por nombre
+      const matchesSearch = paciente.nombre_completo.toLowerCase().includes(searchTerm);
+      if (!matchesSearch) return false;
+
+      // Filtro de adherencia
+      const adherencia = Number(paciente.porcentaje_adherencia || 0);
+      if (activeFilter === "criticos") {
+        return adherencia < 70;
+      } else if (activeFilter === "estables") {
+        return adherencia >= 70;
+      }
+      return true;
+    });
+
+    // 2. Ordenar
+    filtered.sort((a, b) => {
+      if (sortBy === "nombre") {
+        return a.nombre_completo.localeCompare(b.nombre_completo);
+      } else if (sortBy === "menor") {
+        return Number(a.porcentaje_adherencia || 0) - Number(b.porcentaje_adherencia || 0);
+      } else if (sortBy === "mayor") {
+        return Number(b.porcentaje_adherencia || 0) - Number(a.porcentaje_adherencia || 0);
+      }
+      return 0;
+    });
+
+    // 3. Renderizar
+    if (!filtered.length) {
+      monitoreoGrid.innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-folder-open"></i>
+          <p>No se encontraron pacientes con los criterios de búsqueda o filtros seleccionados.</p>
+        </div>
+      `;
+      return;
+    }
+
+    monitoreoGrid.innerHTML = filtered
+      .map((paciente) => {
+        const adherencia = Number(paciente.porcentaje_adherencia || 0);
+        const omitidos = Number(paciente.omitidos || 0);
+        const esCritico = adherencia < 70;
+
+        // Clases y badges
+        const progressClass = esCritico ? "progress-critico" : "progress-estable";
+        const badgeClass = omitidos > 0 ? "badge-riesgo" : "badge-control";
+        const badgeIcon = omitidos > 0 ? "fa-triangle-exclamation" : "fa-shield-halved";
+        const badgeText = omitidos > 0 
+          ? `${omitidos} Omitida${omitidos > 1 ? "s" : ""}` 
+          : "Sin omisiones";
+
+        return `
+          <article class="monitoreo-card" data-id="${paciente.id_paciente}">
+            <div class="monitoreo-card-header">
+              <div class="monitoreo-card-avatar">${initials(paciente.nombre_completo)}</div>
+              <div class="monitoreo-card-info">
+                <h4>${paciente.nombre_completo}</h4>
+                <p>Edad: ${paciente.edad || "N/D"} años • ${paciente.peso_kg || "N/D"} kg</p>
+              </div>
+            </div>
+
+            <div class="monitoreo-card-metrics">
+              <div class="monitoreo-metric-item">
+                <span>Adherencia</span>
+                <strong style="color: ${esCritico ? "var(--danger)" : "#10b981"};">${adherencia}%</strong>
+              </div>
+              <div class="monitoreo-metric-item">
+                <span>Estado Omisiones</span>
+                <div>
+                  <span class="monitoreo-omisiones-badge ${badgeClass}">
+                    <i class="fa-solid ${badgeIcon}"></i> ${badgeText}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="monitoreo-progress-container">
+              <div class="monitoreo-progress-label">
+                <span>Progreso terapéutico</span>
+                <span>${adherencia}%</span>
+              </div>
+              <div class="monitoreo-progress-bar">
+                <div class="monitoreo-progress-fill ${progressClass}" style="width: ${adherencia}%;"></div>
+              </div>
+            </div>
+
+            <div class="monitoreo-card-actions">
+              <button class="btn btn-monitorear doctor-monitorear" data-id="${paciente.id_paciente}" type="button">
+                <i class="fa-solid fa-stethoscope"></i> Monitorear Paciente
+              </button>
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+
+    // Registrar eventos para el botón de monitoreo rápido
+    monitoreoGrid.querySelectorAll(".doctor-monitorear").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idPaciente = btn.dataset.id;
+        patientSelect.value = idPaciente;
+        loadSelectedPatientData()
+          .then(() => {
+            // Hacer scroll suave hacia el formulario de recetas
+            document.getElementById("pacientes").scrollIntoView({ behavior: "smooth" });
+          })
+          .catch((error) => showMessage(error.message, "error"));
+      });
+    });
   }
 
   function fillPatientSelect() {
@@ -594,6 +721,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fillPatientSelect();
     fillMedicationSelect();
     renderStockAlerts(stockData.alertas);
+    renderMonitoreoGrid();
   }
 
   prescriptionForm.addEventListener("submit", async (event) => {
@@ -712,6 +840,23 @@ document.addEventListener("DOMContentLoaded", () => {
   patientSelect.addEventListener("change", () => {
     loadSelectedPatientData().catch((error) => showMessage(error.message, "error"));
   });
+
+  // Eventos de Monitoreo Clínico
+  if (monitoreoSearch) {
+    monitoreoSearch.addEventListener("input", renderMonitoreoGrid);
+  }
+  if (monitoreoSort) {
+    monitoreoSort.addEventListener("change", renderMonitoreoGrid);
+  }
+  filterButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      filterButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      activeFilter = btn.dataset.filter;
+      renderMonitoreoGrid();
+    });
+  });
+
   doseRule.addEventListener("change", calculateDose);
   scheduleSelect.addEventListener("change", renderSchedulePreview);
   document

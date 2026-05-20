@@ -5,6 +5,7 @@ const {
 const PDFDocument = require("pdfkit");
 const ExcelJS = require("exceljs");
 const adherenciaService = require("../services/adherenciaService");
+const firmaService = require("../services/firmaService");
 
 function normalizarPatron(patron = "") {
   return String(patron).trim().toLowerCase().replace(/\s+/g, "_");
@@ -1403,6 +1404,13 @@ async function exportarReportePDF(req, res) {
       return res.status(404).json({ ok: false, mensaje: "Paciente no encontrado." });
     }
 
+    // Generar firma digital criptográfica de autenticidad
+    const { hash: hashFirma, timestamp: timestampFirma } = await firmaService.generarFirmaYRegistrar(
+      id_paciente,
+      "pdf",
+      { paciente, metricas, prescripciones, tomas }
+    );
+
     const nombreArchivo = `reporte_${(paciente.nombre_completo || "paciente")
       .replace(/\s+/g, "_")
       .toLowerCase()}_${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -1687,6 +1695,68 @@ async function exportarReportePDF(req, res) {
       });
     }
 
+    // ── Sección: Firma Digital de Autenticidad ──
+    if (doc.y > doc.page.height - 150) {
+      doc.addPage();
+    } else {
+      doc.moveDown(1.5);
+    }
+
+    const yFirma = doc.y;
+    const wFirmaBox = W;
+    const hFirmaBox = 80;
+
+    // Caja de firma
+    doc.rect(50, yFirma, wFirmaBox, hFirmaBox).fill("#f8fafc").stroke("#3b82f6");
+    // Línea gruesa izquierda (indicación de seguridad)
+    doc.rect(50, yFirma, 5, hFirmaBox).fill("#3b82f6");
+
+    // Icono / Título de Firma
+    doc
+      .fillColor("#0f172a")
+      .fontSize(10)
+      .font("Helvetica-Bold")
+      .text("🔒 CONSTE DE FIRMA DIGITAL Y SEGURIDAD CRIPTOGRÁFICA", 65, yFirma + 10);
+
+    // Texto de explicación
+    doc
+      .fillColor("#475569")
+      .fontSize(7.5)
+      .font("Helvetica")
+      .text(
+        "Este reporte clínico digital ha sido firmado electrónicamente por el sistema MedAlert utilizando un algoritmo HMAC-SHA256 para asegurar que la información médica contenida es legítima, íntegra y no ha sido alterada posteriormente por terceros.",
+        65,
+        yFirma + 25,
+        { width: wFirmaBox - 30 }
+      );
+
+    // Detalles del hash y fecha
+    doc
+      .fillColor("#0f172a")
+      .fontSize(7.5)
+      .font("Helvetica-Bold")
+      .text("Fecha y Hora de Firma: ", 65, yFirma + 50, { continued: true })
+      .font("Helvetica")
+      .fillColor("#475569")
+      .text(fmtFecha(timestampFirma), { continued: true })
+      .font("Helvetica-Bold")
+      .fillColor("#0f172a")
+      .text("   |   ID de Verificación (SHA-256): ", { continued: true })
+      .font("Courier-Bold")
+      .fillColor("#3b82f6")
+      .text(hashFirma);
+
+    doc
+      .fillColor("#94a3b8")
+      .fontSize(7)
+      .font("Helvetica-Oblique")
+      .text(
+        "Para verificar la autenticidad e integridad de este documento, visite el portal oficial de validación de MedAlert e introduzca el ID de Verificación anterior.",
+        65,
+        yFirma + 64,
+        { width: wFirmaBox - 30 }
+      );
+
     // ── Pie de página ──
     const totalPags = doc.bufferedPageRange().count;
     for (let i = 0; i < totalPags; i++) {
@@ -1727,6 +1797,13 @@ async function exportarReporteExcel(req, res) {
     if (!paciente) {
       return res.status(404).json({ ok: false, mensaje: "Paciente no encontrado." });
     }
+
+    // Generar firma digital criptográfica de autenticidad
+    const { hash: hashFirma, timestamp: timestampFirma } = await firmaService.generarFirmaYRegistrar(
+      id_paciente,
+      "excel",
+      { paciente, metricas, prescripciones, tomas }
+    );
 
     const nombreArchivo = `reporte_${(paciente.nombre_completo || "paciente")
       .replace(/\s+/g, "_")
@@ -1974,6 +2051,49 @@ async function exportarReporteExcel(req, res) {
       });
     }
 
+    // ── Sección: Firma Digital de Autenticidad en Excel ──
+    r++;
+    ws.mergeCells(r, 1, r, 6);
+    const secFirma = ws.getCell(r, 1);
+    secFirma.value = "🔒 DETALLE DE FIRMA DIGITAL Y SEGURIDAD CRIPTOGRÁFICA";
+    secFirma.font = { bold: true, size: 10, color: { argb: "FFFFFFFF" } };
+    secFirma.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } };
+    secFirma.alignment = { vertical: "middle", horizontal: "left" };
+    ws.getRow(r).height = 20;
+    r++;
+
+    ws.mergeCells(r, 1, r + 1, 6);
+    const exFirma = ws.getCell(r, 1);
+    exFirma.value = "Este reporte clínico digital ha sido firmado electrónicamente por el sistema MedAlert utilizando un algoritmo HMAC-SHA256 para asegurar que la información médica contenida es legítima, íntegra y no ha sido alterada posteriormente por terceros. Para verificar su validez, visite el portal de validación de MedAlert.";
+    exFirma.font = { italic: true, size: 8.5, color: { argb: "FF475569" } };
+    exFirma.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+    exFirma.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+    ws.getRow(r).height = 18;
+    ws.getRow(r+1).height = 18;
+    
+    for(let col = 1; col <= 6; col++) {
+      ws.getCell(r, col).border = { top: { style: "thin", color: { argb: "FFE2E8F0" } }, left: { style: "thin", color: { argb: "FFE2E8F0" } } };
+      ws.getCell(r+1, col).border = { bottom: { style: "thin", color: { argb: "FFE2E8F0" } }, right: { style: "thin", color: { argb: "FFE2E8F0" } } };
+    }
+    r += 2;
+
+    // Fila del timestamp
+    ws.mergeCells(r, 1, r, 2);
+    cellStyle(r, 1, "Fecha y Hora de Firma", true, "F8FAFC", "0F172A", 9);
+    ws.mergeCells(r, 3, r, 6);
+    cellStyle(r, 3, fmtFecha(timestampFirma), false, "FFFFFF", "475569", 9);
+    ws.getRow(r).height = 18;
+    r++;
+
+    // Fila del Hash SHA-256
+    ws.mergeCells(r, 1, r, 2);
+    cellStyle(r, 1, "ID de Verificación (SHA-256)", true, "F8FAFC", "0F172A", 9);
+    ws.mergeCells(r, 3, r, 6);
+    const hashCell = cellStyle(r, 3, hashFirma, true, "FFFFFF", "3B82F6", 9);
+    hashCell.alignment = { vertical: "middle", horizontal: "left" };
+    ws.getRow(r).height = 18;
+    r++;
+
     // ── Escribir y responder ──
     res.setHeader(
       "Content-Type",
@@ -2024,6 +2144,50 @@ async function obtenerAdherenciaMensual(req, res) {
   }
 }
 
+// ─── Verificar Firma del Reporte ────────────────────────────────────────────────
+async function verificarFirma(req, res) {
+  const { hash_sha256 } = req.params;
+  try {
+    const result = await firmaService.verificarFirmaReporte(hash_sha256);
+    if (!result.verificado) {
+      return res.status(404).json({
+        ok: false,
+        mensaje: result.mensaje
+      });
+    }
+
+    // Verificar acceso al paciente
+    const idPaciente = result.datos_firma.id_paciente;
+    const conn = await pool.getConnection();
+    try {
+      const permitido = await puedeVerPaciente({
+        conn,
+        usuario: req.usuario,
+        idPaciente
+      });
+      if (!permitido) {
+        return res.status(403).json({
+          ok: false,
+          mensaje: "No tienes permiso para visualizar la información de este paciente."
+        });
+      }
+    } finally {
+      conn.release();
+    }
+
+    return res.json({
+      ok: true,
+      ...result
+    });
+  } catch (error) {
+    console.error("Error en verificarFirma:", error);
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error al verificar la firma digital."
+    });
+  }
+}
+
 module.exports = {
   activarPrescripcion,
   actualizarPrescripcion,
@@ -2050,4 +2214,5 @@ module.exports = {
   procesarNotificacionesManual,
   prescribirMedicamento,
   obtenerAdherenciaMensual,
+  verificarFirma,
 };

@@ -357,6 +357,24 @@ const migrations = [
       GROUP BY p.id_paciente, p.nombre_completo;
     `,
   },
+  {
+    name: "Tabla: reporte_firma",
+    sql: `
+      CREATE TABLE IF NOT EXISTS reporte_firma (
+        id_firma      INT           NOT NULL AUTO_INCREMENT,
+        id_paciente   INT           NOT NULL,
+        tipo_reporte  VARCHAR(10)   NOT NULL,
+        hash_sha256   VARCHAR(64)   NOT NULL,
+        timestamp     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        datos_origen  JSON          NOT NULL,
+        PRIMARY KEY (id_firma),
+        UNIQUE KEY uq_firma_hash (hash_sha256),
+        KEY idx_firma_paciente (id_paciente),
+        CONSTRAINT fk_firma_paciente FOREIGN KEY (id_paciente)
+          REFERENCES paciente (id_paciente) ON DELETE CASCADE
+      ) ENGINE=InnoDB;
+    `,
+  },
 ];
 
 async function runMigrations() {

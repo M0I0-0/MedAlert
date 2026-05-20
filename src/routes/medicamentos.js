@@ -183,4 +183,12 @@ router.get(
   medicamentoController.exportarReporteExcel,
 );
 
+// ─── Verificación de firmas de reportes ───────────────────────────────────────
+router.get(
+  "/reporte/verificar/:hash_sha256",
+  autenticar,
+  autorizar("medico", "familiar", "paciente", "farmaceutico"),
+  medicamentoController.verificarFirma,
+);
+
 module.exports = router;

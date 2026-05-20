@@ -40,6 +40,10 @@
             <i class="fa-solid fa-house"></i>
             Inicio
           </a>
+          <a class="nav-link" href="#monitoreo">
+            <i class="fa-solid fa-chart-simple"></i>
+            Monitoreo Clínico
+          </a>
           <a class="nav-link" href="#pacientes">
             <i class="fa-solid fa-user-group"></i>
             Pacientes
@@ -51,6 +55,10 @@
           <a class="nav-link" href="#alertas">
             <i class="fa-solid fa-triangle-exclamation"></i>
             Alertas
+          </a>
+          <a class="nav-link" href="/pages/verificacion.html">
+            <i class="fa-solid fa-signature"></i>
+            Verificar Reportes
           </a>
         </nav>
 
@@ -148,6 +156,51 @@
             <strong id="metric-alertas">0</strong>
             <p>Recetas pendientes por confirmar</p>
           </article>
+        </section>
+
+        <section class="panel" id="monitoreo">
+          <div class="section-head">
+            <div class="section-title">
+              <h3>Monitoreo Clínico de Adherencia</h3>
+              <p>Seguimiento de adherencia terapéutica y detección de omisiones críticas en tus pacientes.</p>
+            </div>
+          </div>
+
+          <div class="monitoreo-toolbar">
+            <div class="monitoreo-search-container">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input
+                type="text"
+                id="monitoreo-search"
+                placeholder="Buscar paciente por nombre..."
+              />
+            </div>
+            
+            <div class="monitoreo-filters">
+              <button class="btn btn-filter active" data-filter="todos" type="button">
+                Todos
+              </button>
+              <button class="btn btn-filter" data-filter="criticos" type="button">
+                <i class="fa-solid fa-circle-exclamation"></i> Críticos (&lt;70%)
+              </button>
+              <button class="btn btn-filter" data-filter="estables" type="button">
+                <i class="fa-solid fa-circle-check"></i> Estables (≥70%)
+              </button>
+            </div>
+
+            <div class="monitoreo-sort-container">
+              <label for="monitoreo-sort">Ordenar por:</label>
+              <select id="monitoreo-sort">
+                <option value="nombre">Nombre (A-Z)</option>
+                <option value="menor">Menor Adherencia</option>
+                <option value="mayor">Mayor Adherencia</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="monitoreo-grid" id="monitoreo-grid">
+            <!-- Tarjetas de pacientes cargadas dinámicamente -->
+          </div>
         </section>
 
         <section class="content-grid">
