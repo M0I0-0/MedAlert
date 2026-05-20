@@ -92,6 +92,13 @@ router.get(
 );
 
 router.get(
+  "/paciente/:id_paciente/adherencia-mensual",
+  autenticar,
+  autorizar("medico", "paciente", "familiar"),
+  medicamentoController.obtenerAdherenciaMensual,
+);
+
+router.get(
   "/paciente/:id_paciente/tomas",
   autenticar,
   autorizar("medico", "farmaceutico", "paciente", "familiar"),

@@ -4,6 +4,7 @@ const {
 } = require("../services/notificationScheduler");
 const PDFDocument = require("pdfkit");
 const ExcelJS = require("exceljs");
+const adherenciaService = require("../services/adherenciaService");
 
 function normalizarPatron(patron = "") {
   return String(patron).trim().toLowerCase().replace(/\s+/g, "_");
@@ -1995,6 +1996,34 @@ async function exportarReporteExcel(req, res) {
   }
 }
 
+async function obtenerAdherenciaMensual(req, res) {
+  const { id_paciente } = req.params;
+  const { mes, agrupar } = req.query;
+
+  const conn = await asegurarAccesoPaciente(req, res, id_paciente);
+  if (!conn) return;
+
+  try {
+    conn.release();
+
+    const datosAdherencia = await adherenciaService.obtenerTendenciaMensual(
+      Number(id_paciente),
+      mes,
+      agrupar
+    );
+
+    return res.status(200).json({
+      ok: true,
+      ...datosAdherencia
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      mensaje: error.message || "Error interno del servidor al obtener adherencia."
+    });
+  }
+}
+
 module.exports = {
   activarPrescripcion,
   actualizarPrescripcion,
@@ -2020,4 +2049,5 @@ module.exports = {
   obtenerTomasPaciente,
   procesarNotificacionesManual,
   prescribirMedicamento,
+  obtenerAdherenciaMensual,
 };

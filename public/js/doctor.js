@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const omissionReportsList = document.getElementById("omission-reports-list");
   const btnDownloadPdf = document.getElementById("btn-download-pdf");
   const btnDownloadExcel = document.getElementById("btn-download-excel");
+  const btnViewAdherence = document.getElementById("btn-view-adherence");
 
   doctorName.textContent = usuario.nombre_completo || "Médico";
   doctorSpecialty.textContent = usuario.especialidad || "Seguimiento clínico";
@@ -551,10 +552,12 @@ document.addEventListener("DOMContentLoaded", () => {
       renderOmissionReports([]);
       btnDownloadPdf.disabled = true;
       btnDownloadExcel.disabled = true;
+      btnViewAdherence.disabled = true;
       return;
     }
     btnDownloadPdf.disabled = false;
     btnDownloadExcel.disabled = false;
+    btnViewAdherence.disabled = false;
 
     const patient = state.pacientes.find(
       (item) => String(item.id_paciente) === String(idPaciente),
@@ -729,6 +732,12 @@ document.addEventListener("DOMContentLoaded", () => {
   logoutButton.addEventListener("click", () => MedAlertApi.logout());
   btnDownloadPdf.addEventListener("click", () => descargarReporte("pdf"));
   btnDownloadExcel.addEventListener("click", () => descargarReporte("excel"));
+  btnViewAdherence.addEventListener("click", () => {
+    const idPaciente = patientSelect.value;
+    if (idPaciente) {
+      window.location.href = `/pages/adherencia.html?id_paciente=${idPaciente}`;
+    }
+  });
 
   renderSchedulePreview();
   loadData()
