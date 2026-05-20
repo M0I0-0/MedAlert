@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MedAlert | Tendencia de Adherencia</title>
+    <meta name="description" content="Dashboard clínico de tendencia mensual de adherencia al tratamiento." />
+    <!-- Fuentes y Iconos -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Estilos compartidos y específicos -->
+    <link rel="stylesheet" href="/css/medalert-shared.css" />
+    <link rel="stylesheet" href="/css/adherencia.css" />
+    <!-- Librería Gráfica Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-shell">
+      <!-- ═══ SIDEBAR ═══════════════════════════════════════════ -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <div>
+            <small>Panel de Adherencia</small>
+            <h1>MedAlert</h1>
+          </div>
+        </div>
+
+        <div class="user-badge" id="user-session-badge">
+          <div class="badge-role" id="session-role">Cargando...</div>
+          <div class="badge-avatar" id="session-avatar">--</div>
+          <div class="badge-name" id="session-name">Usuario Conectado</div>
+          <div class="badge-sub" id="session-sub">Cargando información...</div>
+        </div>
+
+        <nav class="nav-group">
+          <span class="nav-group-title">Navegación</span>
+          <a class="nav-link" id="btn-back-dashboard" href="#">
+            <i class="fa-solid fa-arrow-left"></i>
+            Volver al Panel
+          </a>
+          <a class="nav-link active" href="#">
+            <i class="fa-solid fa-chart-line"></i>
+            Evolución Mensual
+          </a>
+        </nav>
+
+        <button class="logout-button" id="logout-btn" type="button">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          Cerrar sesión
+        </button>
+      </aside>
+
+      <!-- ═══ MAIN CONTENT ═══════════════════════════════════════ -->
+      <main class="main-content">
+        <!-- Encabezado de Sección -->
+        <section class="panel" style="padding: 20px 26px; border-radius: 24px;">
+          <div class="section-head" style="margin-bottom: 0;">
+            <div class="section-title">
+              <span class="section-kicker">Historia de Usuario 3.4</span>
+              <h3>Evolución y Tendencia de Adherencia</h3>
+              <p>Visualiza el desempeño a largo plazo y la constancia de toma de medicamentos.</p>
+            </div>
+            <a href="#" class="btn btn-secondary" id="btn-print-report" style="border-radius: 12px; font-size: 0.85rem;">
+              <i class="fa-solid fa-print"></i> Imprimir Reporte
+            </a>
+          </div>
+        </section>
+
+        <!-- Barra de Filtros Dinámicos -->
+        <section class="filters-bar">
+          <!-- Selector de Paciente (Visible solo para Médicos y Familiares) -->
+          <div class="filter-item" id="filter-patient-container" style="display: none;">
+            <label for="patient-select-adherence">Paciente a Evaluar</label>
+            <select id="patient-select-adherence">
+              <option value="">Cargando pacientes...</option>
+            </select>
+          </div>
+
+          <!-- Selector de Mes -->
+          <div class="filter-item narrow">
+            <label for="month-select-adherence">Mes Seleccionado</label>
+            <input type="month" id="month-select-adherence" required />
+          </div>
+
+          <!-- Agrupación (Día / Semana) -->
+          <div class="filter-item narrow">
+            <label>Agrupar datos</label>
+            <div class="toggle-group">
+              <button class="active" id="btn-group-day" type="button">Por Día</button>
+              <button id="btn-group-week" type="button">Por Semana</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Notificación de error -->
+        <div class="alert-card danger" id="adherence-error-message" style="display: none; margin-bottom: 12px; font-weight: 600;">
+          <i class="fa-solid fa-triangle-exclamation"></i> <span id="error-text">Ocurrió un error al cargar la información.</span>
+        </div>
+
+        <!-- Dashboard Grid (Gráfico y KPIs) -->
+        <div class="content-grid">
+          <!-- Bloque de Gráfico principal -->
+          <div class="stack">
+            <div class="chart-container-wrapper">
+              <div class="section-head">
+                <div class="section-title">
+                  <h3 id="chart-title">Evolución de Adherencia Diaria</h3>
+                  <p>Porcentaje de cumplimiento en tomas programadas del mes.</p>
+                </div>
+              </div>
+
+              <!-- Gráfico Chart.js -->
+              <div class="chart-height-limit" id="chart-canvas-container">
+                <canvas id="adherenceTrendChart"></canvas>
+              </div>
+
+              <!-- Estado Vacío (Sin registros) -->
+              <div class="empty-state" id="adherence-empty-state" style="display: none;">
+                <i class="fa-solid fa-calendar-minus"></i>
+                <h4>Sin registros en este mes</h4>
+                <p>No se encontraron tomas cumplidas ni omitidas para el paciente en el periodo seleccionado.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bloque Lateral con KPIs de Adherencia -->
+          <div class="stack">
+            <div class="panel adherence-widget">
+              <div class="adherence-circle-container">
+                <div class="adherence-circle-bg"></div>
+                <div class="adherence-circle-progress" id="gauge-circle-fill"></div>
+                <div class="adherence-value-text">
+                  <span id="gauge-percent">0</span><span class="adherence-value-percent">%</span>
+                </div>
+              </div>
+              <h4 style="margin-bottom: 4px; color: var(--azul-oscuro);">Adherencia Mensual</h4>
+              <p style="font-size: 0.85rem; color: var(--texto-secundario);" id="gauge-month-label">Mayo 2026</p>
+              <span class="adherence-eval-badge adherence-eval-empty" id="gauge-eval">Sin datos</span>
+            </div>
+
+            <div class="metrics-grid" style="grid-template-columns: 1fr; gap: 14px;">
+              <article class="metric-card" style="display: flex; align-items: center; gap: 16px; padding: 14px 20px;">
+                <div class="metric-icon" style="margin-bottom: 0; flex-shrink: 0; background: #e0f2fe; color: #0284c7;">
+                  <i class="fa-solid fa-list-check"></i>
+                </div>
+                <div>
+                  <small style="color: var(--texto-secundario); font-size: 0.8rem; font-weight: 500;">Dosis Programadas</small>
+                  <strong id="kpi-total-scheduled" style="font-size: 1.4rem; margin-bottom: 0;">0</strong>
+                </div>
+              </article>
+
+              <article class="metric-card" style="display: flex; align-items: center; gap: 16px; padding: 14px 20px;">
+                <div class="metric-icon" style="margin-bottom: 0; flex-shrink: 0; background: #dcfce7; color: #16a34a;">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                  <small style="color: var(--texto-secundario); font-size: 0.8rem; font-weight: 500;">Dosis Cumplidas</small>
+                  <strong id="kpi-total-completed" style="font-size: 1.4rem; margin-bottom: 0;">0</strong>
+                </div>
+              </article>
+
+              <article class="metric-card" style="display: flex; align-items: center; gap: 16px; padding: 14px 20px;">
+                <div class="metric-icon" style="margin-bottom: 0; flex-shrink: 0; background: #fee2e2; color: #dc2626;">
+                  <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+                <div>
+                  <small style="color: var(--texto-secundario); font-size: 0.8rem; font-weight: 500;">Dosis Omitidas</small>
+                  <strong id="kpi-total-omitted" style="font-size: 1.4rem; margin-bottom: 0;">0</strong>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla detallada de desglose -->
+        <section class="panel">
+          <div class="section-head">
+            <div class="section-title">
+              <h3>Tabla de Desglose de Cumplimiento</h3>
+              <p>Valores numéricos de las tomas y la tasa de adherencia del periodo agrupado.</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th id="th-periodo">Periodo</th>
+                  <th>Tomas Programadas</th>
+                  <th>Tomas Cumplidas</th>
+                  <th>Tomas Omitidas</th>
+                  <th>Porcentaje de Adherencia</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="table-adherence-tbody">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--texto-secundario); padding: 24px;">
+                    Cargando datos detallados de adherencia...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/api.js"></script>
+    <script src="/js/adherencia.js"></script>
+  </body>
+</html>

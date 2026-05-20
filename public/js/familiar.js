@@ -258,12 +258,38 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   window.logout = () => MedAlertApi.logout();
-
+ 
   // ─── Wiring de botones de reporte ──────────────────────────────────────────
   const btnFamiliarPdf = document.getElementById("btn-familiar-pdf");
   const btnFamiliarExcel = document.getElementById("btn-familiar-excel");
   if (btnFamiliarPdf) btnFamiliarPdf.addEventListener("click", () => descargarReporte("pdf"));
   if (btnFamiliarExcel) btnFamiliarExcel.addEventListener("click", () => descargarReporte("excel"));
+
+  // ─── Wiring de botón y enlace de evolución mensual ─────────────────────────
+  const btnFamiliarViewAdherence = document.getElementById("btn-familiar-view-adherence");
+  const navAdherenceFamiliar = document.getElementById("nav-adherence-familiar");
+
+  function irAEvolucionMensual(e) {
+    e.preventDefault();
+    if (!pacienteIdActual) {
+      const msg = document.getElementById("mensaje-alerta");
+      if (msg) {
+        msg.style.display = "block";
+        msg.textContent = "No hay un paciente vinculado para ver su evolución mensual.";
+      } else {
+        alert("No hay un paciente vinculado para ver su evolución mensual.");
+      }
+      return;
+    }
+    window.location.href = `/pages/adherencia.html?id_paciente=${pacienteIdActual}`;
+  }
+
+  if (btnFamiliarViewAdherence) {
+    btnFamiliarViewAdherence.addEventListener("click", irAEvolucionMensual);
+  }
+  if (navAdherenceFamiliar) {
+    navAdherenceFamiliar.addEventListener("click", irAEvolucionMensual);
+  }
 
   loadData().catch((error) => {
     document.getElementById("mensaje-alerta").textContent = error.message;
