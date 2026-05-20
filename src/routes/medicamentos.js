@@ -63,6 +63,13 @@ router.delete(
 );
 
 router.post(
+  "/prescripcion/:id_prescripcion/activar",
+  autenticar,
+  autorizar("medico"),
+  medicamentoController.activarPrescripcion,
+);
+
+router.post(
   "/prescripcion/:id_prescripcion/dispensar",
   autenticar,
   autorizar("farmaceutico"),

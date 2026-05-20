@@ -114,6 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
       MedAlertApi.apiJson(`/api/medicamentos/paciente/${paciente.id_paciente}/notas`),
     ]);
 
+    const activePresc = prescripcionesData.prescripciones.filter((p) => p.activa === 1);
+
     const resumen = resumenData.paciente;
     const metricas = resumenData.metricas;
     const comparativo = resumenData.comparativo;
@@ -168,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `${metricas.porcentaje_adherencia}%`;
     document.getElementById("detalle-estado").textContent = alerta ? "Riesgo" : "Estable";
     document.getElementById("detalle-medicamentos").textContent = String(
-      prescripcionesData.prescripciones.length,
+      activePresc.length,
     );
     document.getElementById("detalle-cumplidas").textContent = String(metricas.cumplidos);
     document.getElementById("detalle-omitidas").textContent = String(metricas.omitidos);
@@ -183,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : "<p>No hay notas cl\u00ednicas registradas todav\u00eda.</p>";
 
     document.getElementById("tabla-medicamentos").innerHTML =
-      prescripcionesData.prescripciones
+      activePresc
         .map(
           (prescripcion) => `
             <tr>
