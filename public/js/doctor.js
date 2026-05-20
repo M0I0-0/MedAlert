@@ -36,6 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const hospitalTomasList = document.getElementById("hospital-tomas-list");
   const stockAlertsList = document.getElementById("stock-alerts-list");
   const omissionReportsList = document.getElementById("omission-reports-list");
+  const btnDownloadPdf = document.getElementById("btn-download-pdf");
+  const btnDownloadExcel = document.getElementById("btn-download-excel");
 
   doctorName.textContent = usuario.nombre_completo || "Médico";
   doctorSpecialty.textContent = usuario.especialidad || "Seguimiento clínico";
@@ -441,6 +443,38 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadSelectedPatientData();
   }
 
+  // ─── Descarga autenticada de reportes ─────────────────────────────────────
+  async function descargarReporte(tipo) {
+    const idPaciente = patientSelect.value;
+    if (!idPaciente) return;
+    const url = `/api/medicamentos/paciente/${idPaciente}/reporte/${tipo}`;
+    const btn = tipo === "pdf" ? btnDownloadPdf : btnDownloadExcel;
+    const textoOriginal = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generando...`;
+    try {
+      const resp = await MedAlertApi.apiFetch(url);
+      if (!resp.ok) throw new Error("Error al generar el reporte.");
+      const blob = await resp.blob();
+      const disposition = resp.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      const filename = match ? match[1] : `reporte.${tipo === "pdf" ? "pdf" : "xlsx"}`;
+      const urlObj = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = urlObj;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(urlObj);
+    } catch (error) {
+      showMessage(error.message, "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = textoOriginal;
+    }
+  }
+
   async function loadSelectedPatientData() {
     const idPaciente = patientSelect.value;
     if (!idPaciente) {
@@ -449,8 +483,12 @@ document.addEventListener("DOMContentLoaded", () => {
       renderActivePrescriptions([]);
       renderNotes([]);
       renderOmissionReports([]);
+      btnDownloadPdf.disabled = true;
+      btnDownloadExcel.disabled = true;
       return;
     }
+    btnDownloadPdf.disabled = false;
+    btnDownloadExcel.disabled = false;
 
     const patient = state.pacientes.find(
       (item) => String(item.id_paciente) === String(idPaciente),
@@ -623,6 +661,8 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("agenda").scrollIntoView({ behavior: "smooth" }),
     );
   logoutButton.addEventListener("click", () => MedAlertApi.logout());
+  btnDownloadPdf.addEventListener("click", () => descargarReporte("pdf"));
+  btnDownloadExcel.addEventListener("click", () => descargarReporte("excel"));
 
   renderSchedulePreview();
   loadData()

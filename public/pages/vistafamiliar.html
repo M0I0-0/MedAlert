@@ -3,156 +3,195 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MedAlert - Vista Familiar</title>
+  <title>MedAlert | Vista Familiar</title>
+  <meta name="description" content="Portal del familiar y cuidador para el seguimiento del paciente." />
+  <link rel="stylesheet" href="/css/medalert-shared.css">
   <link rel="stylesheet" href="/css/vistafamiliar.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 <body>
 
-  <header class="encabezado">
-    <div>
-      <h1>MedAlert</h1>
-      <p>Vista Familiar / Cuidador</p>
-    </div>
+  <div class="dashboard-shell">
 
-    <div class="usuario">
-      <span id="familiar-nombre">Cargando...</span>
-      <div class="avatar" id="familiar-avatar">FM</div>
-      <button onclick="logout()" style="background:#ef4444;color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;">Salir</button>
-    </div>
-  </header>
+    <!-- ═══ SIDEBAR ═══════════════════════════════════════════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><i class="fa-solid fa-heart-pulse"></i></div>
+        <div>
+          <small>Familiar / Cuidador</small>
+          <h1>MedAlert</h1>
+        </div>
+      </div>
 
-  <div class="contenedor">
+      <div class="user-badge">
+        <div class="badge-role">Familiar</div>
+        <div class="badge-avatar" id="familiar-avatar">FM</div>
+        <div class="badge-name" id="familiar-nombre">Cargando...</div>
+        <div class="badge-sub">Cuidador vinculado</div>
+      </div>
 
-    <nav class="menu">
-      <h2>Menú</h2>
-      <a href="#dashboard">Dashboard Familiar</a>
-      <a href="#resumen">Resumen del Paciente</a>
-      <a href="#medicamentos">Medicamentos</a>
-      <a href="#historial">Historial de Tomas</a>
-      <a href="#alertas">Alertas</a>
-    </nav>
+      <nav class="nav-group">
+        <span class="nav-group-title">Navegación</span>
+        <a class="nav-link active" href="#dashboard">
+          <i class="fa-solid fa-chart-line"></i> Dashboard
+        </a>
+        <a class="nav-link" href="#resumen">
+          <i class="fa-solid fa-user"></i> Datos del Paciente
+        </a>
+        <a class="nav-link" href="#medicamentos">
+          <i class="fa-solid fa-pills"></i> Medicamentos
+        </a>
+        <a class="nav-link" href="#historial">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historial
+        </a>
+        <a class="nav-link" href="#alertas">
+          <i class="fa-solid fa-triangle-exclamation"></i> Alertas
+        </a>
+        <a class="nav-link" href="#exportar">
+          <i class="fa-solid fa-file-export"></i> Exportar Reporte
+        </a>
+      </nav>
 
-    <main class="contenido">
+      <button class="logout-button" id="logout-btn" onclick="logout()" type="button">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+      </button>
+    </aside>
+
+    <!-- ═══ MAIN ════════════════════════════════════════════════ -->
+    <main class="main-content">
 
       <!-- DASHBOARD -->
-      <section class="pantalla" id="dashboard">
-        <div class="titulo-pantalla">
-          <div>
-            <h2>Dashboard Familiar</h2>
+      <section class="panel" id="dashboard">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Estado general</span>
+            <h3>Dashboard Familiar</h3>
             <p>Vista general del estado del paciente vinculado y su adherencia al tratamiento.</p>
           </div>
-
-          <span class="badge riesgo" id="badge-riesgo">Atención requerida</span>
+          <span class="badge badge-red" id="badge-riesgo">Atención requerida</span>
         </div>
 
-        <div class="tarjetas">
-          <div class="tarjeta">
+        <div class="metrics-grid" style="margin-bottom: 24px;">
+          <div class="metric-card">
+            <div class="metric-icon"><i class="fa-solid fa-user-injured"></i></div>
             <p>Paciente vinculado</p>
-            <h3 id="dashboard-paciente">Sin paciente</h3>
+            <strong id="dashboard-paciente" style="font-size: 1.3rem;">Sin paciente</strong>
           </div>
 
-          <div class="tarjeta">
+          <div class="metric-card">
+            <div class="metric-icon"><i class="fa-solid fa-percent"></i></div>
             <p>Adherencia semanal</p>
-            <h3 class="texto-alerta" id="dashboard-adherencia">0%</h3>
+            <strong id="dashboard-adherencia">0%</strong>
           </div>
 
-          <div class="tarjeta">
+          <div class="metric-card">
+            <div class="metric-icon"><i class="fa-solid fa-circle-xmark"></i></div>
             <p>Tomas omitidas</p>
-            <h3 class="texto-advertencia" id="dashboard-omitidas">0</h3>
+            <strong id="dashboard-omitidas" class="texto-alerta">0</strong>
           </div>
 
-          <div class="tarjeta">
+          <div class="metric-card">
+            <div class="metric-icon"><i class="fa-solid fa-hourglass-half"></i></div>
             <p>Próxima toma</p>
-            <h3 id="dashboard-proxima">Sin pendientes</h3>
+            <strong id="dashboard-proxima" style="font-size: 1.1rem; line-height: 1.2; word-break: break-word;">Sin pendientes</strong>
           </div>
         </div>
 
-        <div class="mensaje-alerta" id="mensaje-alerta">
+        <div class="alert-card danger" id="mensaje-alerta" style="margin-bottom: 24px; font-weight: 600;">
           Cargando alertas automáticas...
         </div>
 
-        <div class="grid-dos">
-          <div class="panel">
-            <h3>Resumen rápido</h3>
-            <p><strong>Paciente:</strong> <span id="resumen-paciente">Sin paciente</span></p>
-            <p><strong>Edad:</strong> <span id="resumen-edad">N/D</span></p>
-            <p><strong>Diagnóstico:</strong> <span id="resumen-diagnostico">Sin historial clínico</span></p>
-            <p><strong>Médico asignado:</strong> <span id="resumen-medico">Sin médico</span></p>
-            <p><strong>Última toma registrada:</strong> <span id="resumen-ultima-toma">Sin tomas</span></p>
+        <div class="grid-2">
+          <div class="note-card">
+            <h4>Resumen rápido</h4>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.92rem;">
+              <p style="margin: 0;"><strong>Paciente:</strong> <span id="resumen-paciente">Sin paciente</span></p>
+              <p style="margin: 0;"><strong>Edad:</strong> <span id="resumen-edad">N/D</span></p>
+              <p style="margin: 0;"><strong>Diagnóstico:</strong> <span id="resumen-diagnostico">Sin historial clínico</span></p>
+              <p style="margin: 0;"><strong>Médico asignado:</strong> <span id="resumen-medico">Sin médico</span></p>
+              <p style="margin: 0;"><strong>Última toma registrada:</strong> <span id="resumen-ultima-toma">Sin tomas</span></p>
+            </div>
           </div>
 
-          <div class="panel">
-            <h3>Adherencia semanal</h3>
+          <div class="note-card" style="display: flex; flex-direction: column;">
+            <h4>Adherencia comparada</h4>
+            <div class="grafica-container" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <div class="grafica">
+                <div class="barra barra-anterior" id="barra-anterior">
+                  <span id="grafica-anterior">0%</span>
+                </div>
 
-            <div class="grafica">
-              <div class="barra barra-alta" id="barra-anterior" style="height: 78%;">
-                <span id="grafica-anterior">0%</span>
+                <div class="barra barra-actual" id="barra-actual">
+                  <span id="grafica-actual">0%</span>
+                </div>
               </div>
 
-              <div class="barra barra-baja" id="barra-actual" style="height: 62%;">
-                <span id="grafica-actual">0%</span>
+              <div class="leyenda">
+                <span>Semana anterior</span>
+                <span>Semana actual</span>
               </div>
-            </div>
-
-            <div class="leyenda">
-              <span>Semana anterior</span>
-              <span>Semana actual</span>
             </div>
           </div>
         </div>
       </section>
 
       <!-- RESUMEN -->
-      <section class="pantalla" id="resumen">
-        <a href="#dashboard" class="volver">← Volver al Dashboard</a>
-
-        <div class="titulo-pantalla">
-          <div>
-            <h2>Resumen del Paciente</h2>
+      <section class="panel" id="resumen">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Ficha clínica</span>
+            <h3>Resumen del Paciente</h3>
             <p>Información general del paciente vinculado al familiar o cuidador.</p>
           </div>
+          <a href="#dashboard" class="volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
         </div>
 
-        <div class="grid-dos">
-          <div class="panel">
-            <h3>Datos personales</h3>
-            <p><strong>Nombre:</strong> <span id="detalle-nombre">Sin paciente</span></p>
-            <p><strong>Edad:</strong> <span id="detalle-edad">N/D</span></p>
-            <p><strong>Peso:</strong> <span id="detalle-peso">N/D</span></p>
-            <p><strong>Estatura:</strong> <span id="detalle-estatura">N/D</span></p>
-            <p><strong>Alergias:</strong> <span id="detalle-alergias">Sin datos</span></p>
+        <div class="grid-2" style="margin-bottom: 22px;">
+          <div class="note-card">
+            <h4>Datos personales</h4>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.92rem;">
+              <p style="margin: 0;"><strong>Nombre:</strong> <span id="detalle-nombre">Sin paciente</span></p>
+              <p style="margin: 0;"><strong>Edad:</strong> <span id="detalle-edad">N/D</span></p>
+              <p style="margin: 0;"><strong>Peso:</strong> <span id="detalle-peso">N/D</span></p>
+              <p style="margin: 0;"><strong>Estatura:</strong> <span id="detalle-estatura">N/D</span></p>
+              <p style="margin: 0;"><strong>Alergias:</strong> <span id="detalle-alergias">Sin datos</span></p>
+            </div>
           </div>
 
-          <div class="panel">
-            <h3>Estado del tratamiento</h3>
-            <p><strong>Adherencia semanal:</strong> <span id="detalle-adherencia">0%</span></p>
-            <p><strong>Estado:</strong> <span class="badge riesgo" id="detalle-estado">Sin evaluar</span></p>
-            <p><strong>Medicamentos activos:</strong> <span id="detalle-medicamentos">0</span></p>
-            <p><strong>Tomas cumplidas:</strong> <span id="detalle-cumplidas">0</span></p>
-            <p><strong>Tomas no cumplidas:</strong> <span id="detalle-omitidas">0</span></p>
+          <div class="note-card">
+            <h4>Estado del tratamiento</h4>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.92rem;">
+              <p style="margin: 0;"><strong>Adherencia semanal:</strong> <span id="detalle-adherencia">0%</span></p>
+              <p style="margin: 0; display: flex; align-items: center; gap: 8px;">
+                <strong>Estado:</strong> <span class="badge badge-red" id="detalle-estado" style="padding: 2px 10px;">Sin evaluar</span>
+              </p>
+              <p style="margin: 0;"><strong>Medicamentos activos:</strong> <span id="detalle-medicamentos">0</span></p>
+              <p style="margin: 0;"><strong>Tomas cumplidas:</strong> <span id="detalle-cumplidas">0</span></p>
+              <p style="margin: 0;"><strong>Tomas no cumplidas:</strong> <span id="detalle-omitidas">0</span></p>
+            </div>
           </div>
         </div>
 
-        <div class="panel panel-completo">
-          <h3>Notas importantes</h3>
-          <div id="detalle-notas">
+        <div class="note-card">
+          <h4>Notas médicas importantes</h4>
+          <div id="detalle-notas" style="font-size: 0.92rem; line-height: 1.6; max-height: 200px; overflow-y: auto; padding-right: 8px;">
             <p>Las notas del médico aparecerán aquí.</p>
           </div>
         </div>
       </section>
 
       <!-- MEDICAMENTOS -->
-      <section class="pantalla" id="medicamentos">
-        <a href="#dashboard" class="volver">← Volver al Dashboard</a>
-
-        <div class="titulo-pantalla">
-          <div>
-            <h2>Medicamentos del Paciente</h2>
+      <section class="panel" id="medicamentos">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Recetario</span>
+            <h3>Medicamentos del Paciente</h3>
             <p>Consulta de medicamentos activos, dosis, frecuencia y próxima toma.</p>
           </div>
+          <a href="#dashboard" class="volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
         </div>
 
-        <div class="tabla-contenedor">
+        <div class="table-wrap">
           <table>
             <thead>
               <tr>
@@ -164,29 +203,27 @@
                 <th>Estado</th>
               </tr>
             </thead>
-
             <tbody id="tabla-medicamentos"></tbody>
           </table>
         </div>
 
-        <div class="mensaje-info">
-          El familiar puede consultar la información, pero no puede modificar medicamentos.
-          Solo el médico asignado puede realizar cambios.
+        <div class="alert-card info" style="margin-top: 20px; font-weight: 500;">
+          <i class="fa-solid fa-circle-info"></i> El familiar puede consultar la información, pero no puede modificar medicamentos. Solo el médico asignado puede realizar cambios.
         </div>
       </section>
 
       <!-- HISTORIAL -->
-      <section class="pantalla" id="historial">
-        <a href="#dashboard" class="volver">← Volver al Dashboard</a>
-
-        <div class="titulo-pantalla">
-          <div>
-            <h2>Historial de Tomas</h2>
+      <section class="panel" id="historial">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Seguimiento</span>
+            <h3>Historial de Tomas</h3>
             <p>Registro de tomas cumplidas, omitidas, retrasadas o adelantadas.</p>
           </div>
+          <a href="#dashboard" class="volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
         </div>
 
-        <div class="tabla-contenedor">
+        <div class="table-wrap">
           <table>
             <thead>
               <tr>
@@ -198,24 +235,59 @@
                 <th>Motivo</th>
               </tr>
             </thead>
-
             <tbody id="tabla-tomas"></tbody>
           </table>
         </div>
       </section>
 
       <!-- ALERTAS -->
-      <section class="pantalla" id="alertas">
-        <a href="#dashboard" class="volver">← Volver al Dashboard</a>
-
-        <div class="titulo-pantalla">
-          <div>
-            <h2>Alertas del Paciente</h2>
+      <section class="panel" id="alertas">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Notificaciones críticas</span>
+            <h3>Alertas del Paciente</h3>
             <p>Alertas automáticas relacionadas con adherencia, omisiones y próximas tomas.</p>
           </div>
+          <a href="#dashboard" class="volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
         </div>
 
         <div class="alertas-lista" id="lista-alertas"></div>
+      </section>
+
+      <!-- EXPORTAR REPORTE -->
+      <section class="panel" id="exportar">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Descarga de reportes</span>
+            <h3>Exportar Reporte del Paciente</h3>
+            <p>Descarga un reporte completo con información clínica, recetas activas, porcentaje de adherencia e historial de tomas.</p>
+          </div>
+          <a href="#dashboard" class="volver"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
+        </div>
+
+        <div class="note-card" style="max-width: 580px;">
+          <h4 style="margin-bottom: 8px;">Formato de descarga</h4>
+          <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--texto-secundario);">
+            Selecciona el formato en el que deseas recibir el reporte del paciente vinculado.
+          </p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <button class="btn-reporte btn-pdf" id="btn-familiar-pdf" type="button">
+              <span class="icono-reporte"><i class="fa-solid fa-file-pdf"></i></span>
+              <span>
+                <strong>Descargar PDF</strong>
+                <small>Reporte visual, ideal para imprimir o compartir.</small>
+              </span>
+            </button>
+            <button class="btn-reporte btn-excel" id="btn-familiar-excel" type="button">
+              <span class="icono-reporte"><i class="fa-solid fa-file-excel"></i></span>
+              <span>
+                <strong>Descargar Excel</strong>
+                <small>Hoja de cálculo con tablas detalladas y filtros.</small>
+              </span>
+            </button>
+          </div>
+          <p id="familiar-reporte-msg" class="alert-card" style="margin-top: 20px; display: none; font-size: 0.9rem; font-weight: 600;"></p>
+        </div>
       </section>
 
     </main>

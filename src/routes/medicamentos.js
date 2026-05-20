@@ -154,4 +154,19 @@ router.post(
   medicamentoController.marcarTomasLoteHospitalario,
 );
 
+// ─── Exportación de reportes ──────────────────────────────────────────────────
+router.get(
+  "/paciente/:id_paciente/reporte/pdf",
+  autenticar,
+  autorizar("medico", "familiar", "paciente"),
+  medicamentoController.exportarReportePDF,
+);
+
+router.get(
+  "/paciente/:id_paciente/reporte/excel",
+  autenticar,
+  autorizar("medico", "familiar", "paciente"),
+  medicamentoController.exportarReporteExcel,
+);
+
 module.exports = router;

@@ -6,6 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // ID del paciente vinculado, se rellena al cargar datos
+  let pacienteIdActual = null;
+
   function formatDate(dateString) {
     if (!dateString) return "Sin dato";
     return new Intl.DateTimeFormat("es-MX", {
@@ -24,6 +27,67 @@ document.addEventListener("DOMContentLoaded", () => {
       .toUpperCase();
   }
 
+  // ─── Descarga autenticada de reportes ──────────────────────────────────────
+  async function descargarReporte(tipo) {
+    const msg = document.getElementById("familiar-reporte-msg");
+
+    if (!pacienteIdActual) {
+      if (msg) {
+        msg.style.display = "block";
+        msg.style.color = "#dc2626";
+        msg.textContent = "No hay paciente vinculado para exportar el reporte.";
+      }
+      return;
+    }
+
+    const btnId = tipo === "pdf" ? "btn-familiar-pdf" : "btn-familiar-excel";
+    const btn = document.getElementById(btnId);
+    const textoOriginal = btn.innerHTML;
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="icono-reporte">\u23F3</span><span><strong>Generando reporte\u2026</strong><small>Espera un momento</small></span>`;
+    if (msg) { msg.style.display = "none"; }
+
+    try {
+      const url = `/api/medicamentos/paciente/${pacienteIdActual}/reporte/${tipo}`;
+      const resp = await MedAlertApi.apiFetch(url);
+
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.mensaje || "Error al generar el reporte.");
+      }
+
+      const blob = await resp.blob();
+      const disposition = resp.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      const filename = match ? match[1] : `reporte.${tipo === "pdf" ? "pdf" : "xlsx"}`;
+
+      const urlObj = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = urlObj;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(urlObj);
+
+      if (msg) {
+        msg.style.display = "block";
+        msg.style.color = "#16a34a";
+        msg.textContent = `\u2713 Reporte descargado: ${filename}`;
+      }
+    } catch (error) {
+      if (msg) {
+        msg.style.display = "block";
+        msg.style.color = "#dc2626";
+        msg.textContent = `Error: ${error.message}`;
+      }
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = textoOriginal;
+    }
+  }
+
   async function loadData() {
     document.getElementById("familiar-nombre").textContent =
       usuario.nombre_completo || "Familiar";
@@ -36,9 +100,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!paciente) {
       document.getElementById("mensaje-alerta").textContent =
-        "Este familiar todavía no tiene un paciente vinculado.";
+        "Este familiar todav\u00eda no tiene un paciente vinculado.";
       return;
     }
+
+    // Guardamos el ID para los botones de reporte
+    pacienteIdActual = paciente.id_paciente;
 
     const [resumenData, prescripcionesData, tomasData, notasData] = await Promise.all([
       MedAlertApi.apiJson(`/api/medicamentos/paciente/${paciente.id_paciente}/resumen`),
@@ -61,18 +128,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const alerta = metricas.porcentaje_adherencia < 70;
     document.getElementById("badge-riesgo").textContent = alerta
-      ? "Atención requerida"
+      ? "Atenci\u00f3n requerida"
       : "Estable";
     document.getElementById("mensaje-alerta").textContent = alerta
-      ? "La adherencia del paciente está por debajo del 70%. Se recomienda dar seguimiento."
+      ? "La adherencia del paciente est\u00e1 por debajo del 70%. Se recomienda dar seguimiento."
       : "La adherencia del paciente se mantiene en un rango aceptable.";
 
     document.getElementById("resumen-paciente").textContent = resumen.nombre_completo;
-    document.getElementById("resumen-edad").textContent = `${resumen.edad} años`;
+    document.getElementById("resumen-edad").textContent = `${resumen.edad} a\u00f1os`;
     document.getElementById("resumen-diagnostico").textContent =
-      resumen.historial_clinico || "Sin historial clínico";
+      resumen.historial_clinico || "Sin historial cl\u00ednico";
     document.getElementById("resumen-medico").textContent =
-      resumen.medico_nombre || "Sin médico";
+      resumen.medico_nombre || "Sin m\u00e9dico";
     document.getElementById("resumen-ultima-toma").textContent = tomasData.tomas[0]
       ? formatDate(tomasData.tomas[0].fecha_hora_real || tomasData.tomas[0].fecha_hora_programada)
       : "Sin tomas";
@@ -89,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     )}%`;
 
     document.getElementById("detalle-nombre").textContent = resumen.nombre_completo;
-    document.getElementById("detalle-edad").textContent = `${resumen.edad} años`;
+    document.getElementById("detalle-edad").textContent = `${resumen.edad} a\u00f1os`;
     document.getElementById("detalle-peso").textContent = `${resumen.peso_kg || "N/D"} kg`;
     document.getElementById("detalle-estatura").textContent = `${
       resumen.estatura_cm || "N/D"
@@ -113,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
               `<p><strong>${formatDate(nota.created_at)}:</strong> ${nota.contenido}</p>`,
           )
           .join("")
-      : "<p>No hay notas clínicas registradas todavía.</p>";
+      : "<p>No hay notas cl\u00ednicas registradas todav\u00eda.</p>";
 
     document.getElementById("tabla-medicamentos").innerHTML =
       prescripcionesData.prescripciones
@@ -123,9 +190,9 @@ document.addEventListener("DOMContentLoaded", () => {
               <td>${prescripcion.nombre_comercial}</td>
               <td>${prescripcion.dosis_instruccion}</td>
               <td>${prescripcion.patron_horario.replaceAll("_", " ")}</td>
-              <td>${prescripcion.indicaciones || "Según receta"}</td>
+              <td>${prescripcion.indicaciones || "Seg\u00fan receta"}</td>
               <td>${prescripcion.proxima_toma ? formatDate(prescripcion.proxima_toma) : "Sin pendientes"}</td>
-              <td><span class="badge ${prescripcion.proxima_toma ? "proximo" : "activo"}">${prescripcion.proxima_toma ? "Próximo" : "Activo"}</span></td>
+              <td><span class="badge ${prescripcion.proxima_toma ? "proximo" : "activo"}">${prescripcion.proxima_toma ? "Pr\u00f3ximo" : "Activo"}</span></td>
             </tr>
           `,
         )
@@ -153,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
       alertas.push({
         clase: "grave",
         titulo: "Adherencia baja",
-        texto: `La adherencia semanal del paciente bajó a ${metricas.porcentaje_adherencia}%, por debajo del mínimo recomendado del 70%.`,
+        texto: `La adherencia semanal del paciente baj\u00f3 a ${metricas.porcentaje_adherencia}%, por debajo del m\u00ednimo recomendado del 70%.`,
         fecha: "Generada hoy",
       });
     }
@@ -162,15 +229,15 @@ document.addEventListener("DOMContentLoaded", () => {
       alertas.push({
         clase: "media",
         titulo: "Toma omitida",
-        texto: `El paciente omitió ${omitida.nombre_comercial}. Motivo: ${omitida.motivo_omision || "sin especificar"}.`,
+        texto: `El paciente omiti\u00f3 ${omitida.nombre_comercial}. Motivo: ${omitida.motivo_omision || "sin especificar"}.`,
         fecha: formatDate(omitida.fecha_hora_programada),
       });
     }
     if (proxima) {
       alertas.push({
         clase: "leve",
-        titulo: "Próxima toma",
-        texto: `La próxima toma programada es ${proxima.nombre_comercial} a las ${formatDate(
+        titulo: "Pr\u00f3xima toma",
+        texto: `La pr\u00f3xima toma programada es ${proxima.nombre_comercial} a las ${formatDate(
           proxima.fecha_hora_programada,
         )}.`,
         fecha: "Pendiente",
@@ -191,6 +258,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   window.logout = () => MedAlertApi.logout();
+
+  // ─── Wiring de botones de reporte ──────────────────────────────────────────
+  const btnFamiliarPdf = document.getElementById("btn-familiar-pdf");
+  const btnFamiliarExcel = document.getElementById("btn-familiar-excel");
+  if (btnFamiliarPdf) btnFamiliarPdf.addEventListener("click", () => descargarReporte("pdf"));
+  if (btnFamiliarExcel) btnFamiliarExcel.addEventListener("click", () => descargarReporte("excel"));
+
   loadData().catch((error) => {
     document.getElementById("mensaje-alerta").textContent = error.message;
   });

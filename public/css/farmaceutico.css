@@ -1,357 +1,136 @@
-/* public/css/farmaceutico.css */
+/* farmaceutico.css — extiende medalert-shared.css */
 
-/* GENERAL */
-body {
-  margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #eef2f7, #dfe6ee);
-  color: #1d2b3a;
-  overflow-x: hidden;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-/* NAVBAR */
-.navbar {
-  background: #031b4e;
-  color: white;
-  padding: 20px 50px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
+/* ─── Volver al Perfil ───────────────────────────────────── */
+.volver {
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  color: var(--azul-principal);
+  font-weight: 700;
+  font-size: 0.88rem;
+  transition: color 0.2s;
+}
+.volver:hover {
+  color: var(--azul-tag);
 }
 
-.navbar h1 {
-  margin: 0;
-  font-size: 42px;
-  font-weight: bold;
-}
-
-.logout-btn {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.logout-btn:hover {
-  background: #dc2626;
-}
-
-/* CONTENEDOR Y TARJETA DE PERFIL */
-.container {
-  display: flex;
-  justify-content: center;
-  padding: 32px 20px;
-}
-
-.profile-card {
-  background: white;
-  width: min(100%, 1200px);
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-
-/* SECCIÓN SUPERIOR */
-.top-section {
-  display: flex;
-  gap: 32px;
-  align-items: flex-start;
-}
-
-.doctor-image img {
-  width: min(100%, 280px);
-  height: 280px;
-  object-fit: cover;
-  object-position: center top;
-  border-radius: 20px;
-  display: block;
-  background: #f5f8fd;
-}
-
-.doctor-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.doctor-info h2 {
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  margin: 0;
-  color: #08255c;
-}
-
-.doctor-info h3 {
-  color: #3b82f6;
-  font-size: clamp(1.25rem, 2.5vw, 2rem);
-  margin-top: 10px;
-}
-
-.line {
-  width: 90px;
-  height: 4px;
-  background: #3b82f6;
-  border-radius: 10px;
-  margin: 25px 0;
-}
-
-.doctor-info p {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: #3d4b5c;
-}
-
-/* MINI INFO (Cédula y Permiso) */
-.mini-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 30px;
-}
-
-.mini-box {
-  background: #f5f8fd;
-  padding: 20px;
-  border-radius: 15px;
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  flex: 1 1 240px;
-  min-width: 0;
-}
-
-.mini-box i {
-  font-size: 35px;
-  color: #08255c;
-}
-
-.mini-box span {
-  font-weight: bold;
-  font-size: clamp(1rem, 1.8vw, 1.125rem);
-  color: #374151;
-}
-
-.mini-box p {
-  margin: 5px 0 0;
-  font-size: clamp(0.95rem, 1.7vw, 1.0625rem);
-  color: #3b82f6;
-  font-weight: 600;
-}
-
-hr {
-  border: none;
-  border-top: 1px solid #e2e8f0;
-  margin: 40px 0;
-}
-
-/* SECCIÓN INFERIOR (Áreas de Trabajo) */
-.bottom-section {
-  display: flex;
-  gap: 32px;
-}
-
-.left-info,
-.right-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.left-info h4,
-.right-info h4 {
-  font-size: 1.5rem;
-  color: #08255c;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.work-box {
-  background: #f5f8fd;
-  padding: 25px;
-  border-radius: 15px;
-  min-height: 450px;
-  display: flex;
-  flex-direction: column;
-}
-
-/* BUSCADORES */
-.search-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.search-row input {
-  flex: 1;
-  padding: 12px 15px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 1rem;
-  outline: none;
-}
-
-.search-row input:focus {
-  border-color: #3b82f6;
-}
-
-.action-btn {
-  background: #08255c;
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.action-btn:hover {
-  background: #3b82f6;
-}
-
-.catalog-form {
-  display: grid;
-  gap: 14px;
-}
-
-/* TARJETAS DE RESULTADO */
+/* ─── Resultados del Catálogo/Recetas ───────────────────── */
 .results-container {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  overflow-y: auto;
-  flex: 1;
+  gap: 12px;
 }
 
 .result-card {
-  background: white;
-  border-radius: 12px;
-  padding: 15px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--borde);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(8, 37, 92, 0.05);
 }
 
 .result-card h5 {
-  margin: 0 0 5px 0;
-  font-size: 1.1rem;
-  color: #08255c;
+  font-size: 1rem;
+  color: var(--azul-oscuro);
+  margin-bottom: 6px;
+  font-weight: 700;
 }
 
 .result-card p {
-  margin: 0 0 10px 0;
-  font-size: 0.9rem;
-  color: #4b5563;
-  line-height: 1.4;
+  font-size: 0.86rem;
+  color: var(--texto-secundario);
+  line-height: 1.5;
+  margin-bottom: 12px;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
-
 .tags span {
-  background: #eef4ff;
-  color: #2563eb;
-  padding: 6px 12px;
+  background: var(--fondo-tag);
+  color: var(--azul-tag);
+  padding: 4px 10px;
   border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 0.78rem;
 }
-
 .tags span.success {
   background: #dcfce7;
   color: #15803d;
 }
 
-/* BOTÓN DISPENSAR */
+/* ─── Botones Dispensar y Acciones ──────────────────────── */
 .dispensar-btn {
   width: 100%;
-  margin-top: 15px;
-  padding: 10px;
-  background: #10b981;
-  color: white;
   border: none;
-  border-radius: 8px;
-  font-weight: bold;
+  background: var(--azul-principal);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s, transform 0.15s;
 }
-
 .dispensar-btn:hover {
-  background: #059669;
+  background: var(--azul-tag);
+  transform: translateY(-1px);
+}
+.dispensar-btn:active {
+  transform: none;
 }
 
 .dispensar-btn.danger {
   background: #fee2e2;
-  color: #991b1b;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
   margin-top: 8px;
 }
-
 .dispensar-btn.danger:hover {
   background: #fecaca;
 }
 
-/* ESTADOS VACÍOS */
+/* ─── Estados Vacíos en Formularios/Resultados ──────────── */
 .empty-msg {
   text-align: center;
-  color: #94a3b8;
-  margin-top: 40px;
-  font-size: 1.1rem;
+  padding: 32px 14px;
+  color: var(--texto-secundario);
+  background: var(--fondo-caja);
+  border-radius: 14px;
+  border: 2px dashed var(--borde);
+  font-size: 0.88rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
-
 .empty-msg i {
-  font-size: 3rem;
-  margin-bottom: 10px;
+  font-size: 2rem;
   color: #cbd5e1;
 }
 
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .top-section,
-  .bottom-section {
+@media (max-width: 720px) {
+  .profile-layout {
     flex-direction: column;
-  }
-  .top-section {
     align-items: center;
     text-align: center;
   }
-  .mini-info {
-    justify-content: center;
+  .profile-avatar-box {
+    width: 120px;
+    height: 120px;
   }
-  .doctor-image img {
-    max-width: 250px;
-    height: 250px;
-  }
-}
-
-@media (max-width: 600px) {
-  .navbar {
-    padding: 15px 20px;
-  }
-  .navbar h1 {
-    font-size: 2rem;
-  }
-  .container {
-    padding: 15px;
-  }
-  .profile-card {
-    padding: 20px;
-  }
-  .search-row {
-    flex-direction: column;
-  }
-  .info-item {
-    flex-direction: column;
-    gap: 6px;
+  .profile-details {
+    width: 100%;
   }
 }

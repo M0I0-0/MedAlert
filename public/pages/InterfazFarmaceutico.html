@@ -1,168 +1,224 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Panel Farmacéutico - Medilab</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedAlert | Panel Farmacéutico</title>
+  <meta name="description" content="Panel farmacéutico para control de catálogo, inventarios, dispensación y consulta de equivalencias." />
+  <link rel="stylesheet" href="/css/medalert-shared.css" />
+  <link rel="stylesheet" href="/css/farmaceutico.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+<body>
 
-    <link rel="stylesheet" href="/css/farmaceutico.css" />
+  <div class="dashboard-shell">
 
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-  </head>
-  <body>
-    <header class="navbar">
-      <h1>MedAlert</h1>
-      <button class="logout-btn" onclick="logout()">
-        <i class="fa-solid fa-right-from-bracket"></i> Salir
-      </button>
-    </header>
-
-    <div class="container">
-      <div class="profile-card">
-        <div class="top-section">
-          <div class="doctor-image">
-            <img
-              src="../assets/img/doctor.webp"
-              alt="Foto del Farmacéutico"
-              onerror="
-                this.src =
-                  'https://ui-avatars.com/api/?name=Farmacia&size=300&background=f5f8fd&color=08255c'
-              "
-            />
-          </div>
-
-          <div class="doctor-info">
-            <h2 id="nombre-farmaceutico">Cargando Perfil...</h2>
-            <h3>Farmacéutico Titular</h3>
-            <div class="line"></div>
-            <p>
-              Encargado de la validación y dispensación segura de prescripciones
-              médicas, así como la orientación al paciente sobre equivalencias y
-              genéricos del catálogo.
-            </p>
-
-            <div class="mini-info">
-              <div class="mini-box">
-                <i class="fa-solid fa-id-card"></i>
-                <div>
-                  <span>Cédula Profesional</span>
-                  <p id="cedula-farmaceutico">FARM-102938</p>
-                </div>
-              </div>
-
-              <div class="mini-box">
-                <i class="fa-solid fa-check-to-slot"></i>
-                <div>
-                  <span>Permiso de Dispensación</span>
-                  <p>Activo y Verificado</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <hr />
-
-        <div class="bottom-section">
-          <div class="left-info">
-            <h4><i class="fa-solid fa-boxes-stacked"></i> Catálogo de Medicamentos</h4>
-            <div class="work-box">
-              <form id="catalog-form" class="catalog-form">
-                <input type="hidden" id="catalog-id" />
-                <div class="search-row">
-                  <input id="catalog-nombre" type="text" placeholder="Nombre comercial" required />
-                  <input id="catalog-principio" type="text" placeholder="Principio activo" required />
-                </div>
-                <div class="search-row">
-                  <input id="catalog-presentacion" type="text" placeholder="Presentación, ej. Tableta 500mg" />
-                  <button class="action-btn" type="submit" id="btn-save-catalog">
-                    <i class="fa-solid fa-floppy-disk"></i> Guardar
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <div class="right-info">
-            <h4><i class="fa-solid fa-list-check"></i> Inventario Actual</h4>
-            <div class="work-box">
-              <div id="catalog-list" class="results-container">
-                <div class="empty-msg">
-                  <i class="fa-solid fa-spinner fa-spin"></i><br />
-                  Cargando catálogo...
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <hr />
-
-        <div class="bottom-section">
-          <div class="left-info">
-            <h4>
-              <i class="fa-solid fa-prescription-bottle-medical"></i> Dispensar
-              Receta
-            </h4>
-            <div class="work-box">
-              <div class="search-row">
-                <input
-                  type="number"
-                  id="input-receta"
-                  placeholder="Ingrese ID del paciente (Ej. 1)"
-                />
-                <button
-                  class="action-btn"
-                  id="btn-buscar-receta"
-                  onclick="buscarReceta()"
-                >
-                  <i class="fa-solid fa-magnifying-glass"></i> Buscar
-                </button>
-              </div>
-
-              <div id="resultado-receta" class="results-container">
-                <div class="empty-msg">
-                  <i class="fa-solid fa-clipboard-user"></i><br />
-                  Ingresa el ID de un paciente para ver sus recetas activas.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="right-info">
-            <h4><i class="fa-solid fa-vial"></i> Catálogo de Equivalencias</h4>
-            <div class="work-box">
-              <div class="search-row">
-                <input
-                  type="text"
-                  id="input-principio"
-                  placeholder="Ej. Aspirina, Metformina..."
-                />
-                <button
-                  class="action-btn"
-                  id="btn-buscar-generico"
-                  onclick="buscarGenericos()"
-                >
-                  <i class="fa-solid fa-magnifying-glass"></i> Buscar
-                </button>
-              </div>
-
-              <div id="resultado-genericos" class="results-container">
-                <div class="empty-msg">
-                  <i class="fa-solid fa-boxes-stacked"></i><br />
-                  Busca un principio activo para ver disponibilidad en farmacia.
-                </div>
-              </div>
-            </div>
-          </div>
+    <!-- ═══ SIDEBAR ═══════════════════════════════════════════ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><i class="fa-solid fa-heart-pulse"></i></div>
+        <div>
+          <small>Portal Farmacia</small>
+          <h1>MedAlert</h1>
         </div>
       </div>
-    </div>
 
-    <script src="/js/api.js"></script>
-    <script src="/js/farmaceutico.js"></script>
-  </body>
+      <div class="user-badge">
+        <div class="badge-role">Farmacéutico</div>
+        <div class="badge-avatar">F</div>
+        <div class="badge-name" id="nombre-farmaceutico">Cargando Perfil...</div>
+        <div class="badge-sub">Farmacia Central</div>
+      </div>
+
+      <nav class="nav-group">
+        <span class="nav-group-title">Navegación</span>
+        <a class="nav-link active" href="#perfil">
+          <i class="fa-solid fa-user-doctor"></i> Mi Perfil
+        </a>
+        <a class="nav-link" href="#catalogo">
+          <i class="fa-solid fa-boxes-stacked"></i> Catálogo e Inventario
+        </a>
+        <a class="nav-link" href="#dispensar">
+          <i class="fa-solid fa-prescription-bottle-medical"></i> Dispensar Receta
+        </a>
+        <a class="nav-link" href="#equivalencias">
+          <i class="fa-solid fa-vial"></i> Catálogo Equivalencias
+        </a>
+      </nav>
+
+      <button class="logout-button" id="logout-btn" onclick="logout()" type="button">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+      </button>
+    </aside>
+
+    <!-- ═══ MAIN ════════════════════════════════════════════════ -->
+    <main class="main-content">
+
+      <!-- PERFIL -->
+      <section class="panel" id="perfil">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Panel farmacéutico</span>
+            <h3>Perfil Profesional</h3>
+            <p>Información de acreditación y funciones dentro del sistema MedAlert.</p>
+          </div>
+        </div>
+
+        <div class="profile-layout" style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
+          <div class="profile-avatar-box" style="flex-shrink: 0; width: 140px; height: 140px; border-radius: 24px; overflow: hidden; border: 2px solid var(--borde); box-shadow: var(--shadow);">
+            <img src="../assets/img/doctor.webp" alt="Foto del Farmacéutico" style="width: 100%; height: 100%; object-fit: cover;"
+                 onerror="this.src = 'https://ui-avatars.com/api/?name=Farmacia&size=300&background=f5f8fd&color=08255c'" />
+          </div>
+
+          <div class="profile-details" style="flex: 1; min-width: 280px;">
+            <h4 style="font-size: 1.25rem; color: var(--azul-oscuro); margin-bottom: 4px;">Farmacéutico Titular</h4>
+            <div style="width: 60px; height: 3px; background: var(--azul-principal); margin-bottom: 12px; border-radius: 2px;"></div>
+            <p style="color: var(--texto-secundario); font-size: 0.95rem; line-height: 1.6; margin-bottom: 16px;">
+              Encargado de la validación y dispensación segura de prescripciones médicas, así como la orientación al paciente sobre equivalencias y genéricos del catálogo.
+            </p>
+
+            <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+              <div class="metric-card" style="padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+                <div class="metric-icon" style="margin: 0; width: 40px; height: 40px; font-size: 0.95rem;"><i class="fa-solid fa-id-card"></i></div>
+                <div>
+                  <p style="margin: 0; font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Cédula Profesional</p>
+                  <strong id="cedula-farmaceutico" style="font-size: 1.05rem; margin: 0;">FARM-102938</strong>
+                </div>
+              </div>
+
+              <div class="metric-card" style="padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+                <div class="metric-icon" style="margin: 0; width: 40px; height: 40px; font-size: 0.95rem;"><i class="fa-solid fa-check-to-slot"></i></div>
+                <div>
+                  <p style="margin: 0; font-size: 0.72rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Permiso Dispensación</p>
+                  <strong style="font-size: 1.05rem; margin: 0; color: var(--success);">Activo y Verificado</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CATALOGO E INVENTARIO -->
+      <section class="panel" id="catalogo">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Administración</span>
+            <h3>Catálogo de Medicamentos e Inventario</h3>
+            <p>Crea, edita o elimina medicamentos autorizados de la farmacia vinculada.</p>
+          </div>
+          <a href="#perfil" class="volver"><i class="fa-solid fa-arrow-left"></i> Volver a Perfil</a>
+        </div>
+
+        <div class="grid-2">
+          <!-- Formulario -->
+          <div class="note-card" style="height: fit-content;">
+            <h4 style="margin-bottom: 12px;"><i class="fa-solid fa-boxes-stacked"></i> Guardar en Catálogo</h4>
+            <form id="catalog-form" class="form-grid" style="grid-template-columns: 1fr;">
+              <input type="hidden" id="catalog-id" />
+              
+              <label class="field">
+                <span>Nombre comercial</span>
+                <input id="catalog-nombre" type="text" placeholder="Ej. Tempra, Buscapina..." required />
+              </label>
+
+              <label class="field">
+                <span>Principio activo</span>
+                <input id="catalog-principio" type="text" placeholder="Ej. Paracetamol, Hioscina..." required />
+              </label>
+
+              <label class="field">
+                <span>Presentación</span>
+                <input id="catalog-presentacion" type="text" placeholder="Ej. Tableta 500mg, Jarabe 120ml..." required />
+              </label>
+
+              <div class="form-actions" style="margin-top: 8px;">
+                <button class="btn btn-primary" type="submit" id="btn-save-catalog">
+                  <i class="fa-solid fa-floppy-disk"></i> Guardar Medicamento
+                </button>
+                <button class="btn btn-secondary" type="button" onclick="limpiarCatalogForm()">
+                  Limpiar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Inventario -->
+          <div class="note-card" style="display: flex; flex-direction: column;">
+            <h4 style="margin-bottom: 12px;"><i class="fa-solid fa-list-check"></i> Inventario Actual</h4>
+            <div id="catalog-list" class="results-container" style="flex: 1; max-height: 420px; overflow-y: auto; padding-right: 8px;">
+              <div class="empty-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <h4>Cargando catálogo...</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DISPENSAR RECETA -->
+      <section class="panel" id="dispensar">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Pacientes</span>
+            <h3>Dispensar Receta Médica</h3>
+            <p>Busca la receta activa de un paciente mediante su ID clínico para dispensar sus medicamentos.</p>
+          </div>
+          <a href="#perfil" class="volver"><i class="fa-solid fa-arrow-left"></i> Volver a Perfil</a>
+        </div>
+
+        <div class="note-card" style="max-width: 720px; margin: 0 auto;">
+          <h4 style="margin-bottom: 12px;"><i class="fa-solid fa-magnifying-glass"></i> Búsqueda de Receta</h4>
+          <div class="search-row" style="display: flex; gap: 12px; margin-bottom: 20px;">
+            <input type="number" id="input-receta" placeholder="Ingrese ID del paciente (Ej. 1)" style="flex: 1; border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; font: inherit; outline: none;" />
+            <button class="btn btn-primary" id="btn-buscar-receta" onclick="buscarReceta()" style="padding: 12px 20px;">
+              <i class="fa-solid fa-magnifying-glass"></i> Buscar
+            </button>
+          </div>
+
+          <div id="resultado-receta" class="results-container" style="max-height: 400px; overflow-y: auto; padding-right: 8px;">
+            <div class="empty-state">
+              <i class="fa-solid fa-clipboard-user"></i>
+              <h4>Búsqueda pendiente</h4>
+              <p>Ingresa el ID de un paciente para ver sus recetas activas.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- EQUIVALENCIAS -->
+      <section class="panel" id="equivalencias">
+        <div class="section-head">
+          <div class="section-title">
+            <span class="section-kicker">Equivalencias</span>
+            <h3>Búsqueda de Equivalencias y Genéricos</h3>
+            <p>Busca alternativas de medicamentos disponibles en farmacia basándote en su principio activo.</p>
+          </div>
+          <a href="#perfil" class="volver"><i class="fa-solid fa-arrow-left"></i> Volver a Perfil</a>
+        </div>
+
+        <div class="note-card" style="max-width: 720px; margin: 0 auto;">
+          <h4 style="margin-bottom: 12px;"><i class="fa-solid fa-vial"></i> Consulta de Principio Activo</h4>
+          <div class="search-row" style="display: flex; gap: 12px; margin-bottom: 20px;">
+            <input type="text" id="input-principio" placeholder="Ej. Paracetamol, Metformina, Aspirina..." style="flex: 1; border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; font: inherit; outline: none;" />
+            <button class="btn btn-primary" id="btn-buscar-generico" onclick="buscarGenericos()" style="padding: 12px 20px;">
+              <i class="fa-solid fa-magnifying-glass"></i> Buscar
+            </button>
+          </div>
+
+          <div id="resultado-genericos" class="results-container" style="max-height: 400px; overflow-y: auto; padding-right: 8px;">
+            <div class="empty-state">
+              <i class="fa-solid fa-boxes-stacked"></i>
+              <h4>Búsqueda pendiente</h4>
+              <p>Busca un principio activo para ver disponibilidad en farmacia.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/farmaceutico.js"></script>
+</body>
 </html>

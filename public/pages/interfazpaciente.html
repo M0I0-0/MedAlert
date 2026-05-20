@@ -1,228 +1,173 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Perfil Paciente - Medilab</title>
-
+    <title>MedAlert | Mi tratamiento</title>
+    <meta name="description" content="Panel del paciente para seguimiento de tratamientos, tomas y notificaciones." />
+    <link rel="stylesheet" href="/css/medalert-shared.css" />
     <link rel="stylesheet" href="/css/interfazpaciente.css" />
-    <!-- ICONOS -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   </head>
   <body>
-    <!-- NAVBAR -->
-    <header class="navbar">
-      <h1>MedAlert</h1>
-      <button class="logout-btn" onclick="logout()">
-        <i class="fa-solid fa-right-from-bracket"></i> Salir
-      </button>
-    </header>
+    <div class="dashboard-shell">
 
-    <!-- CONTENEDOR -->
-    <div class="container">
-      <div class="profile-card">
-        <!-- PARTE SUPERIOR (PERFIL PACIENTE) -->
-        <div class="top-section">
-          <div class="doctor-image">
-            <!-- Avatar genérico para paciente -->
-            <img
-              src="https://ui-avatars.com/api/?name=Paciente&size=300&background=dbeafe&color=2563eb"
-              alt="Foto del Paciente"
-              id="img-paciente"
-            />
-          </div>
-
-          <div class="doctor-info">
-            <h2 id="nombre-paciente">Cargando Perfil...</h2>
-            <h3>Paciente Activo</h3>
-
-            <div class="line"></div>
-
-            <p>
-              Mantén el seguimiento de tus tratamientos médicos. Asegúrate de
-              marcar tus tomas a tiempo para mantener un alto porcentaje de
-              adherencia y mejorar tu salud.
-            </p>
-
-            <div class="mini-info">
-              <div class="mini-box">
-                <i
-                  class="fa-solid fa-triangle-exclamation"
-                  style="color: #ef4444"
-                ></i>
-                <div>
-                  <span style="color: #ef4444">Alergias</span>
-                  <p id="alergias-paciente">Cargando...</p>
-                </div>
-              </div>
-
-              <div class="mini-box">
-                <i class="fa-solid fa-qrcode"></i>
-                <div>
-                  <span>Mi ID de Paciente</span>
-                  <p id="id-farmacia">Cargando...</p>
-                </div>
-              </div>
-            </div>
+      <!-- ═══ SIDEBAR ═══════════════════════════════════════════ -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark"><i class="fa-solid fa-heart-pulse"></i></div>
+          <div>
+            <small>Mi portal</small>
+            <h1>MedAlert</h1>
           </div>
         </div>
 
-        <hr />
+        <div class="user-badge">
+          <div class="badge-role">Paciente</div>
+          <div class="badge-name" id="nombre-paciente">Cargando…</div>
+          <div class="badge-sub" id="badge-sub-paciente">Paciente activo</div>
+          <img src="../assets/img/paciente.webp" alt="Avatar paciente"
+               onerror="this.style.display='none'" />
+        </div>
 
-        <!-- SECCIÓN INFERIOR: TRATAMIENTOS -->
-        <div class="bottom-section">
-          <h4><i class="fa-solid fa-pills"></i> Mi Tratamiento Actual</h4>
-          <div id="patient-message" class="empty-state" style="display: none; grid-column: 1 / -1;"></div>
+        <nav class="nav-group">
+          <span class="nav-group-title">Navegación</span>
+          <a class="nav-link active" href="#tratamiento">
+            <i class="fa-solid fa-pills"></i> Mi Tratamiento
+          </a>
+          <a class="nav-link" href="#omision">
+            <i class="fa-solid fa-comment-medical"></i> Reportar Omisión
+          </a>
+          <a class="nav-link" href="#historial">
+            <i class="fa-solid fa-clock-rotate-left"></i> Historial de Tomas
+          </a>
+          <a class="nav-link" href="#notificaciones">
+            <i class="fa-solid fa-bell"></i> Notificaciones
+          </a>
+        </nav>
 
-          <!-- CONTENEDOR DE TARJETAS DE MEDICAMENTOS -->
+        <div class="sidebar-info">
+          <div class="info-chip"><i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Alergias: <strong id="alergias-paciente">—</strong></span>
+          </div>
+          <div class="info-chip"><i class="fa-solid fa-qrcode"></i>
+            <span>ID: <strong id="id-farmacia">—</strong></span>
+          </div>
+        </div>
+
+        <button class="logout-button" id="logout-btn" type="button">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+        </button>
+      </aside>
+
+      <!-- ═══ MAIN ════════════════════════════════════════════════ -->
+      <main class="main-content">
+
+        <!-- Mensaje global -->
+        <div id="patient-message" class="alert-card info" style="display:none;"></div>
+
+        <!-- ── Mi tratamiento ──────────────────────────────────── -->
+        <section class="panel" id="tratamiento">
+          <div class="section-head">
+            <div class="section-title">
+              <span class="section-kicker">Tratamiento activo</span>
+              <h3>Mis Medicamentos</h3>
+              <p>Consulta tus recetas activas, dosis y próximas tomas.</p>
+            </div>
+          </div>
+
           <div class="cards-container" id="contenedor-medicamentos">
-            <!-- Las tarjetas se inyectarán con JavaScript, pero dejo una de ejemplo 
-                         para que veas cómo se estructura visualmente -->
-
-            <!-- EJEMPLO DE TARJETA -->
-            <div class="medicine-card" style="display: none">
-              <div class="card-header">
-                <div class="medicine-left">
-                  <div class="icon-box">
-                    <i class="fa-solid fa-capsules"></i>
-                  </div>
-                  <div>
-                    <h3>Paracetamol</h3>
-                    <span class="status">Activo</span>
-                  </div>
-                </div>
-                <i
-                  class="fa-solid fa-ellipsis-vertical dots"
-                  style="color: #94a3b8; font-size: 24px"
-                ></i>
-              </div>
-
-              <div class="info-grid">
-                <div class="info-box">
-                  <span>Dosis</span>
-                  <p>500mg</p>
-                </div>
-                <div class="info-box">
-                  <span>Frecuencia</span>
-                  <p>Cada 8 horas</p>
-                </div>
-              </div>
-
-              <div class="progress-section">
-                <div class="progress-text">
-                  <span>Adherencia al tratamiento</span>
-                  <span>75%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress" style="width: 75%"></div>
-                </div>
-              </div>
-
-              <div class="action-buttons">
-                <button class="details-btn">
-                  <i class="fa-solid fa-circle-info"></i> Detalles
-                </button>
-                <button class="mark-btn">
-                  <i class="fa-solid fa-check"></i> Marcar Toma
-                </button>
-              </div>
-            </div>
-            <!-- FIN EJEMPLO -->
-
-            <!-- ESTADO VACÍO (Si el paciente no tiene recetas) -->
-            <div
-              class="empty-state"
-              id="estado-vacio"
-              style="grid-column: 1 / -1"
-            >
-              <div class="empty-icon">
-                <i class="fa-regular fa-folder-open"></i>
-              </div>
-              <h3>No tienes medicamentos activos</h3>
-              <p>
-                Tu médico tratante aún no ha registrado ninguna prescripción en
-                tu perfil.
-              </p>
+            <!-- JS inyecta tarjetas aquí -->
+            <div class="empty-state" id="estado-vacio">
+              <i class="fa-regular fa-folder-open"></i>
+              <h4>No tienes medicamentos activos</h4>
+              <p>Tu médico aún no ha registrado ninguna prescripción en tu perfil.</p>
             </div>
           </div>
-        </div>
+        </section>
 
-        <hr />
-
-        <div class="bottom-section">
-          <h4><i class="fa-solid fa-comment-medical"></i> Reportar una toma omitida</h4>
-          <form class="omission-form" id="omission-form">
-            <div class="omission-grid">
-              <label class="omission-field">
-                <span>Toma pendiente</span>
-                <select id="omission-toma" required>
-                  <option value="">Selecciona la toma omitida</option>
-                </select>
-              </label>
-
-              <label class="omission-field">
-                <span>Motivo</span>
-                <select id="omission-motivo" required>
-                  <option value="olvido">Olvido</option>
-                  <option value="efecto_adverso">Efecto adverso</option>
-                  <option value="falta_stock">Falta de medicamento</option>
-                  <option value="decision_medica">Indicación médica</option>
-                  <option value="otro">Otro</option>
-                </select>
-              </label>
-
-              <label class="omission-field omission-wide">
-                <span>Explicación para el médico</span>
-                <textarea
-                  id="omission-observaciones"
-                  rows="4"
-                  placeholder="Describe brevemente qué ocurrió. Esta explicación aparecerá en el panel de tu médico."
-                  required
-                ></textarea>
-              </label>
+        <!-- ── Reportar omisión ────────────────────────────────── -->
+        <section class="panel" id="omision">
+          <div class="section-head">
+            <div class="section-title">
+              <span class="section-kicker">Reporte al médico</span>
+              <h3>Reportar Toma Omitida</h3>
+              <p>Informa a tu médico si no pudiste tomar algún medicamento.</p>
             </div>
+          </div>
 
-            <div class="action-buttons omission-actions">
-              <button class="mark-btn" type="submit" id="omission-submit">
-                <i class="fa-solid fa-paper-plane"></i> Enviar reporte al médico
+          <form class="form-grid" id="omission-form">
+            <label class="field">
+              <span>Toma pendiente</span>
+              <select id="omission-toma" required>
+                <option value="">Selecciona la toma omitida</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Motivo</span>
+              <select id="omission-motivo" required>
+                <option value="olvido">Olvido</option>
+                <option value="efecto_adverso">Efecto adverso</option>
+                <option value="falta_stock">Falta de medicamento</option>
+                <option value="decision_medica">Indicación médica</option>
+                <option value="otro">Otro</option>
+              </select>
+            </label>
+
+            <label class="field field-wide">
+              <span>Explicación para el médico</span>
+              <textarea id="omission-observaciones" rows="4"
+                placeholder="Describe brevemente qué ocurrió. Aparecerá en el panel de tu médico." required></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit" id="omission-submit">
+                <i class="fa-solid fa-paper-plane"></i> Enviar reporte
               </button>
             </div>
           </form>
-        </div>
+        </section>
 
-        <hr />
-
-        <div class="bottom-section">
-          <h4><i class="fa-solid fa-clock-rotate-left"></i> Últimas tomas y próximas pendientes</h4>
-          <div class="cards-container" id="contenedor-tomas">
-            <div class="empty-state" id="estado-tomas" style="grid-column: 1 / -1">
-              <div class="empty-icon">
-                <i class="fa-regular fa-calendar-check"></i>
-              </div>
-              <h3>No hay tomas registradas todavía</h3>
-              <p>Tus confirmaciones aparecerán aquí con hora real y motivo si omitiste una dosis.</p>
+        <!-- ── Historial de tomas ─────────────────────────────── -->
+        <section class="panel" id="historial">
+          <div class="section-head">
+            <div class="section-title">
+              <span class="section-kicker">Registro</span>
+              <h3>Historial de Tomas</h3>
+              <p>Últimas tomas cumplidas y pendientes.</p>
             </div>
           </div>
-        </div>
 
-        <hr />
-
-        <div class="bottom-section">
-          <h4><i class="fa-solid fa-bell"></i> Notificaciones SMS simuladas</h4>
-          <div class="cards-container" id="contenedor-notificaciones">
-            <div class="empty-state" id="estado-notificaciones" style="grid-column: 1 / -1">
-              <div class="empty-icon">
-                <i class="fa-regular fa-bell"></i>
-              </div>
-              <h3>No hay notificaciones todavía</h3>
-              <p>Los avisos programados aparecerán aquí con confirmación de lectura.</p>
+          <div id="contenedor-tomas">
+            <div class="empty-state" id="estado-tomas">
+              <i class="fa-regular fa-calendar-check"></i>
+              <h4>No hay tomas registradas todavía</h4>
+              <p>Tus confirmaciones aparecerán aquí.</p>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+
+        <!-- ── Notificaciones ─────────────────────────────────── -->
+        <section class="panel" id="notificaciones">
+          <div class="section-head">
+            <div class="section-title">
+              <span class="section-kicker">Avisos</span>
+              <h3>Notificaciones SMS</h3>
+              <p>Alertas y recordatorios enviados por el sistema.</p>
+            </div>
+          </div>
+
+          <div id="contenedor-notificaciones">
+            <div class="empty-state" id="estado-notificaciones">
+              <i class="fa-regular fa-bell"></i>
+              <h4>No hay notificaciones todavía</h4>
+              <p>Los avisos programados aparecerán aquí.</p>
+            </div>
+          </div>
+        </section>
+
+      </main>
     </div>
 
     <script src="/js/api.js"></script>

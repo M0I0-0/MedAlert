@@ -2,6 +2,8 @@ const { pool } = require("../database/connection");
 const {
   procesarNotificaciones,
 } = require("../services/notificationScheduler");
+const PDFDocument = require("pdfkit");
+const ExcelJS = require("exceljs");
 
 function normalizarPatron(patron = "") {
   return String(patron).trim().toLowerCase().replace(/\s+/g, "_");
@@ -1273,6 +1275,666 @@ async function obtenerNotasPaciente(req, res) {
   }
 }
 
+// ─── Helpers de reporte ───────────────────────────────────────────────────────
+async function obtenerDatosReporte(conn, idPaciente) {
+  const paciente = await obtenerPacienteBasico(conn, idPaciente);
+
+  const [metricasRows] = await conn.query(
+    `SELECT * FROM vista_metricas_paciente WHERE id_paciente = ? LIMIT 1`,
+    [idPaciente],
+  );
+
+  const [prescripciones] = await conn.query(
+    `
+      SELECT
+        p.id_prescripcion,
+        p.dosis_instruccion,
+        p.patron_horario,
+        p.duracion_dias,
+        p.indicaciones,
+        p.stock_estimado,
+        mc.nombre_comercial,
+        mc.principio_activo,
+        mc.presentacion,
+        COUNT(t.id_toma) AS total_tomas,
+        SUM(t.estatus = 'cumplido') AS tomas_cumplidas
+      FROM prescripcion p
+      JOIN medicamento_catalogo mc ON p.id_medicamento = mc.id_medicamento
+      LEFT JOIN toma_recordatorio t ON t.id_prescripcion = p.id_prescripcion
+      WHERE p.id_paciente = ? AND p.activa = 1
+      GROUP BY p.id_prescripcion, p.dosis_instruccion, p.patron_horario,
+        p.duracion_dias, p.indicaciones, p.stock_estimado,
+        mc.nombre_comercial, mc.principio_activo, mc.presentacion
+      ORDER BY mc.nombre_comercial ASC
+    `,
+    [idPaciente],
+  );
+
+  const [tomas] = await conn.query(
+    `
+      SELECT
+        t.fecha_hora_programada,
+        t.fecha_hora_real,
+        t.estatus,
+        t.motivo_omision,
+        t.observaciones,
+        mc.nombre_comercial
+      FROM toma_recordatorio t
+      JOIN prescripcion p ON p.id_prescripcion = t.id_prescripcion
+      JOIN medicamento_catalogo mc ON mc.id_medicamento = p.id_medicamento
+      WHERE p.id_paciente = ?
+      ORDER BY t.fecha_hora_programada DESC
+      LIMIT 30
+    `,
+    [idPaciente],
+  );
+
+  const metricas = metricasRows[0] || {};
+  return { paciente, metricas, prescripciones, tomas };
+}
+
+function fmtFecha(val) {
+  if (!val) return "Sin dato";
+  return new Intl.DateTimeFormat("es-MX", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(val));
+}
+
+// ─── Exportar reporte PDF ─────────────────────────────────────────────────────
+async function exportarReportePDF(req, res) {
+  const { id_paciente } = req.params;
+  const conn = await asegurarAccesoPaciente(req, res, id_paciente);
+  if (!conn) return;
+
+  try {
+    const { paciente, metricas, prescripciones, tomas } =
+      await obtenerDatosReporte(conn, id_paciente);
+
+    if (!paciente) {
+      return res.status(404).json({ ok: false, mensaje: "Paciente no encontrado." });
+    }
+
+    const nombreArchivo = `reporte_${(paciente.nombre_completo || "paciente")
+      .replace(/\s+/g, "_")
+      .toLowerCase()}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${nombreArchivo}"`,
+    );
+
+    const doc = new PDFDocument({
+      size: "A4",
+      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+      info: {
+        Title: `Reporte MedAlert – ${paciente.nombre_completo}`,
+        Author: "MedAlert",
+        Subject: "Reporte de evolución clínica",
+      },
+    });
+    doc.pipe(res);
+
+    // ── Paleta de colores ──
+    const AZUL_OSCURO = "#0f172a";
+    const AZUL_PRIMARIO = "#3b82f6";
+    const AZUL_CLARO = "#dbeafe";
+    const VERDE = "#16a34a";
+    const ROJO = "#dc2626";
+    const GRIS_TEXTO = "#475569";
+    const GRIS_BG = "#f8fafc";
+    const BLANCO = "#ffffff";
+
+    const W = doc.page.width - 100; // ancho útil
+
+    // ── Cabecera ──
+    doc.rect(0, 0, doc.page.width, 80).fill(AZUL_OSCURO);
+    doc
+      .fillColor(BLANCO)
+      .fontSize(22)
+      .font("Helvetica-Bold")
+      .text("MedAlert", 50, 20, { continued: true })
+      .fillColor(AZUL_PRIMARIO)
+      .text(" · Reporte de Evolución Clínica");
+    doc
+      .fillColor("#94a3b8")
+      .fontSize(10)
+      .font("Helvetica")
+      .text(`Generado el ${fmtFecha(new Date())}`, 50, 52);
+
+    doc.moveDown(3);
+
+    // ── Sección: Datos del paciente ──
+    const yDatos = doc.y;
+    doc.rect(50, yDatos, W, 16).fill(AZUL_PRIMARIO);
+    doc
+      .fillColor(BLANCO)
+      .fontSize(11)
+      .font("Helvetica-Bold")
+      .text("  Datos del Paciente", 50, yDatos + 3);
+    doc.moveDown(0.3);
+
+    doc.rect(50, doc.y, W, 140).fill(GRIS_BG).stroke("#e2e8f0");
+    const yInfoStart = doc.y + 8;
+
+    const col1 = 60;
+    const col2 = 310;
+    let yRow = yInfoStart;
+
+    function infoRow(label, value, x, y) {
+      doc.fillColor(GRIS_TEXTO).fontSize(9).font("Helvetica-Bold").text(label, x, y);
+      doc
+        .fillColor(AZUL_OSCURO)
+        .fontSize(9)
+        .font("Helvetica")
+        .text(String(value || "Sin dato"), x, y + 11);
+    }
+
+    infoRow("Nombre completo", paciente.nombre_completo, col1, yRow);
+    infoRow("Médico asignado", paciente.medico_nombre, col2, yRow);
+    yRow += 28;
+    infoRow("Edad", paciente.edad ? `${paciente.edad} años` : null, col1, yRow);
+    infoRow("Correo", paciente.correo, col2, yRow);
+    yRow += 28;
+    infoRow("Peso", paciente.peso_kg ? `${paciente.peso_kg} kg` : null, col1, yRow);
+    infoRow("Teléfono", paciente.telefono, col2, yRow);
+    yRow += 28;
+    infoRow("Estatura", paciente.estatura_cm ? `${paciente.estatura_cm} cm` : null, col1, yRow);
+    infoRow("Alergias", paciente.alergias || "Ninguna registrada", col2, yRow);
+    yRow += 28;
+    infoRow("Historial clínico", paciente.historial_clinico || "Sin historial", col1, yRow);
+
+    doc.y = yInfoStart + 148;
+    doc.moveDown(1);
+
+    // ── Sección: Métricas de adherencia ──
+    const adherencia = Number(metricas.porcentaje_adherencia || 0);
+    const colorAdh = adherencia >= 80 ? VERDE : adherencia >= 60 ? "#f59e0b" : ROJO;
+
+    const yMet = doc.y;
+    doc.rect(50, yMet, W, 16).fill(AZUL_PRIMARIO);
+    doc
+      .fillColor(BLANCO)
+      .fontSize(11)
+      .font("Helvetica-Bold")
+      .text("  Métricas de Adherencia", 50, yMet + 3);
+    doc.y = yMet + 20;
+
+    const cW = W / 5;
+    const tarjetas = [
+      { label: "Adherencia", valor: `${adherencia}%`, color: colorAdh },
+      { label: "Total tomas", valor: String(metricas.total || 0), color: AZUL_PRIMARIO },
+      { label: "Cumplidas", valor: String(metricas.cumplidos || 0), color: VERDE },
+      { label: "Omitidas", valor: String(metricas.omitidos || 0), color: ROJO },
+      { label: "Pendientes", valor: String(metricas.pendientes || 0), color: "#f59e0b" },
+    ];
+
+    const yTarj = doc.y;
+    tarjetas.forEach((t, i) => {
+      const xT = 50 + i * cW;
+      doc.rect(xT, yTarj, cW - 2, 60).fill(GRIS_BG).stroke("#e2e8f0");
+      doc
+        .fillColor(t.color)
+        .fontSize(20)
+        .font("Helvetica-Bold")
+        .text(t.valor, xT, yTarj + 10, { width: cW - 2, align: "center" });
+      doc
+        .fillColor(GRIS_TEXTO)
+        .fontSize(8)
+        .font("Helvetica")
+        .text(t.label, xT, yTarj + 40, { width: cW - 2, align: "center" });
+    });
+
+    doc.y = yTarj + 70;
+    doc.moveDown(1);
+
+    // ── Sección: Recetas activas ──
+    if (prescripciones.length > 0) {
+      const yRec = doc.y;
+      doc.rect(50, yRec, W, 16).fill(AZUL_PRIMARIO);
+      doc
+        .fillColor(BLANCO)
+        .fontSize(11)
+        .font("Helvetica-Bold")
+        .text("  Recetas Activas", 50, yRec + 3);
+      doc.y = yRec + 20;
+
+      // Cabecera tabla
+      const cols = [
+        { label: "Medicamento", w: 120 },
+        { label: "Dosis", w: 90 },
+        { label: "Frecuencia", w: 90 },
+        { label: "Días", w: 35 },
+        { label: "Stock", w: 35 },
+        { label: "Indicaciones", w: 125 },
+      ];
+
+      let xCol = 50;
+      const yTHead = doc.y;
+      doc.rect(50, yTHead, W, 14).fill(AZUL_CLARO);
+      cols.forEach((c) => {
+        doc
+          .fillColor(AZUL_OSCURO)
+          .fontSize(8)
+          .font("Helvetica-Bold")
+          .text(c.label, xCol + 2, yTHead + 3, { width: c.w - 4 });
+        xCol += c.w;
+      });
+      doc.y = yTHead + 16;
+
+      prescripciones.forEach((presc, idx) => {
+        if (doc.y > doc.page.height - 100) doc.addPage();
+        const yF = doc.y;
+        const rowH = 24;
+        doc
+          .rect(50, yF, W, rowH)
+          .fill(idx % 2 === 0 ? BLANCO : GRIS_BG)
+          .stroke("#e2e8f0");
+
+        const vals = [
+          presc.nombre_comercial,
+          presc.dosis_instruccion,
+          String(presc.patron_horario || "").replaceAll("_", " "),
+          String(presc.duracion_dias || 7),
+          String(presc.stock_estimado || 0),
+          presc.indicaciones || "Según receta",
+        ];
+        let xV = 50;
+        cols.forEach((c, ci) => {
+          doc
+            .fillColor(AZUL_OSCURO)
+            .fontSize(7.5)
+            .font("Helvetica")
+            .text(String(vals[ci] || ""), xV + 2, yF + 5, {
+              width: c.w - 4,
+              lineBreak: false,
+            });
+          xV += c.w;
+        });
+        doc.y = yF + rowH;
+      });
+
+      doc.moveDown(1);
+    }
+
+    // ── Sección: Historial reciente de tomas ──
+    if (tomas.length > 0) {
+      if (doc.y > doc.page.height - 140) doc.addPage();
+
+      const yHist = doc.y;
+      doc.rect(50, yHist, W, 16).fill(AZUL_PRIMARIO);
+      doc
+        .fillColor(BLANCO)
+        .fontSize(11)
+        .font("Helvetica-Bold")
+        .text("  Historial Reciente de Tomas (últimas 30)", 50, yHist + 3);
+      doc.y = yHist + 20;
+
+      const colsH = [
+        { label: "Medicamento", w: 120 },
+        { label: "Programada", w: 115 },
+        { label: "Real", w: 115 },
+        { label: "Resultado", w: 75 },
+        { label: "Motivo", w: 70 },
+      ];
+
+      let xColH = 50;
+      const yTHeadH = doc.y;
+      doc.rect(50, yTHeadH, W, 14).fill(AZUL_CLARO);
+      colsH.forEach((c) => {
+        doc
+          .fillColor(AZUL_OSCURO)
+          .fontSize(8)
+          .font("Helvetica-Bold")
+          .text(c.label, xColH + 2, yTHeadH + 3, { width: c.w - 4 });
+        xColH += c.w;
+      });
+      doc.y = yTHeadH + 16;
+
+      tomas.forEach((toma, idx) => {
+        if (doc.y > doc.page.height - 80) doc.addPage();
+        const yF = doc.y;
+        const rowH = 20;
+
+        const colorEstatus =
+          toma.estatus === "cumplido" ? VERDE : toma.estatus === "no_cumplido" ? ROJO : "#f59e0b";
+
+        doc
+          .rect(50, yF, W, rowH)
+          .fill(idx % 2 === 0 ? BLANCO : GRIS_BG)
+          .stroke("#e2e8f0");
+
+        const valsH = [
+          toma.nombre_comercial,
+          fmtFecha(toma.fecha_hora_programada),
+          fmtFecha(toma.fecha_hora_real),
+          String(toma.estatus || "").replaceAll("_", " "),
+          String(toma.motivo_omision || toma.observaciones || "-").replaceAll("_", " "),
+        ];
+        let xV = 50;
+        colsH.forEach((c, ci) => {
+          doc
+            .fillColor(ci === 3 ? colorEstatus : AZUL_OSCURO)
+            .fontSize(7)
+            .font(ci === 3 ? "Helvetica-Bold" : "Helvetica")
+            .text(String(valsH[ci] || ""), xV + 2, yF + 5, {
+              width: c.w - 4,
+              lineBreak: false,
+            });
+          xV += c.w;
+        });
+        doc.y = yF + rowH;
+      });
+    }
+
+    // ── Pie de página ──
+    const totalPags = doc.bufferedPageRange().count;
+    for (let i = 0; i < totalPags; i++) {
+      doc.switchToPage(i);
+      doc
+        .fillColor("#94a3b8")
+        .fontSize(8)
+        .font("Helvetica")
+        .text(
+          `MedAlert – Reporte confidencial | Página ${i + 1} de ${totalPags}`,
+          50,
+          doc.page.height - 30,
+          { align: "center", width: W },
+        );
+    }
+
+    doc.end();
+  } catch (error) {
+    if (!res.headersSent) {
+      res.status(500).json({ ok: false, mensaje: "Error generando el PDF." });
+    }
+  } finally {
+    conn.release();
+  }
+}
+
+// ─── Exportar reporte Excel ───────────────────────────────────────────────────
+async function exportarReporteExcel(req, res) {
+  const { id_paciente } = req.params;
+  const conn = await asegurarAccesoPaciente(req, res, id_paciente);
+  if (!conn) return;
+
+  try {
+    const { paciente, metricas, prescripciones, tomas } =
+      await obtenerDatosReporte(conn, id_paciente);
+
+    if (!paciente) {
+      return res.status(404).json({ ok: false, mensaje: "Paciente no encontrado." });
+    }
+
+    const nombreArchivo = `reporte_${(paciente.nombre_completo || "paciente")
+      .replace(/\s+/g, "_")
+      .toLowerCase()}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "MedAlert";
+    workbook.created = new Date();
+    workbook.properties.date1904 = false;
+
+    const ws = workbook.addWorksheet("Reporte del Paciente", {
+      pageSetup: { paperSize: 9, orientation: "portrait" },
+    });
+
+    // ── Anchos de columna ──
+    ws.columns = [
+      { key: "A", width: 28 },
+      { key: "B", width: 35 },
+      { key: "C", width: 28 },
+      { key: "D", width: 35 },
+    ];
+
+    const AZUL_OSCURO = "0F172A";
+    const AZUL_PRIMARIO = "3B82F6";
+    const AZUL_CLARO = "DBEAFE";
+    const GRIS_BG = "F8FAFC";
+    const VERDE = "16A34A";
+    const ROJO = "DC2626";
+    const AMARILLO = "F59E0B";
+
+    function cellStyle(row, col, value, bold = false, bg = null, color = "000000", fontSize = 10, align = "left") {
+      const cell = ws.getCell(row, col);
+      cell.value = value;
+      cell.font = { bold, size: fontSize, color: { argb: "FF" + color } };
+      cell.alignment = { vertical: "middle", horizontal: align, wrapText: true };
+      if (bg) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + bg } };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+      return cell;
+    }
+
+    let r = 1;
+
+    // ── Título ──
+    ws.mergeCells(r, 1, r, 4);
+    const titleCell = ws.getCell(r, 1);
+    titleCell.value = "MedAlert · Reporte de Evolución Clínica";
+    titleCell.font = { bold: true, size: 16, color: { argb: "FF" + "FFFFFF" } };
+    titleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + AZUL_OSCURO } };
+    titleCell.alignment = { vertical: "middle", horizontal: "center" };
+    ws.getRow(r).height = 36;
+    r++;
+
+    ws.mergeCells(r, 1, r, 4);
+    const subCell = ws.getCell(r, 1);
+    subCell.value = `Generado el ${fmtFecha(new Date())}`;
+    subCell.font = { size: 9, color: { argb: "FF94A3B8" } };
+    subCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + AZUL_OSCURO } };
+    subCell.alignment = { vertical: "middle", horizontal: "center" };
+    ws.getRow(r).height = 18;
+    r++;
+    r++;
+
+    // ── Datos del paciente ──
+    ws.mergeCells(r, 1, r, 4);
+    const secPac = ws.getCell(r, 1);
+    secPac.value = "DATOS DEL PACIENTE";
+    secPac.font = { bold: true, size: 11, color: { argb: "FF" + "FFFFFF" } };
+    secPac.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + AZUL_PRIMARIO } };
+    secPac.alignment = { vertical: "middle", horizontal: "left" };
+    ws.getRow(r).height = 20;
+    r++;
+
+    const camposPaciente = [
+      ["Nombre completo", paciente.nombre_completo, "Médico asignado", paciente.medico_nombre],
+      ["Edad", paciente.edad ? `${paciente.edad} años` : "N/D", "Correo", paciente.correo],
+      ["Peso", paciente.peso_kg ? `${paciente.peso_kg} kg` : "N/D", "Teléfono", paciente.telefono || "N/D"],
+      ["Estatura", paciente.estatura_cm ? `${paciente.estatura_cm} cm` : "N/D", "Alergias", paciente.alergias || "Ninguna"],
+      ["Historial clínico", paciente.historial_clinico || "Sin historial", "", ""],
+    ];
+
+    camposPaciente.forEach((fila, idx) => {
+      const bg = idx % 2 === 0 ? "FFFFFF" : GRIS_BG;
+      cellStyle(r, 1, fila[0], true, bg, "475569", 9);
+      cellStyle(r, 2, fila[1], false, bg, AZUL_OSCURO, 9);
+      cellStyle(r, 3, fila[2], true, bg, "475569", 9);
+      cellStyle(r, 4, fila[3], false, bg, AZUL_OSCURO, 9);
+      ws.getRow(r).height = 18;
+      r++;
+    });
+    r++;
+
+    // ── Métricas de adherencia ──
+    ws.mergeCells(r, 1, r, 4);
+    const secMet = ws.getCell(r, 1);
+    secMet.value = "MÉTRICAS DE ADHERENCIA";
+    secMet.font = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+    secMet.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + AZUL_PRIMARIO } };
+    secMet.alignment = { vertical: "middle", horizontal: "left" };
+    ws.getRow(r).height = 20;
+    r++;
+
+    const adherencia = Number(metricas.porcentaje_adherencia || 0);
+    const colorAdh = adherencia >= 80 ? VERDE : adherencia >= 60 ? AMARILLO : ROJO;
+
+    const metricasFila1 = [
+      ["Porcentaje de adherencia", `${adherencia}%`, colorAdh],
+      ["Total tomas programadas", String(metricas.total || 0), AZUL_PRIMARIO],
+    ];
+    const metricasFila2 = [
+      ["Tomas cumplidas", String(metricas.cumplidos || 0), VERDE],
+      ["Tomas omitidas", String(metricas.omitidos || 0), ROJO],
+    ];
+    const metricasFila3 = [
+      ["Tomas pendientes", String(metricas.pendientes || 0), AMARILLO],
+    ];
+
+    [metricasFila1, metricasFila2, metricasFila3].forEach((fila) => {
+      fila.forEach((item, i) => {
+        const colBase = 1 + i * 2;
+        cellStyle(r, colBase, item[0], true, GRIS_BG, "475569", 9);
+        cellStyle(r, colBase + 1, item[1], true, "FFFFFF", item[2], 14, "center");
+      });
+      ws.getRow(r).height = 28;
+      r++;
+    });
+    r++;
+
+    // ── Recetas activas ──
+    ws.mergeCells(r, 1, r, 4);
+    const secRec = ws.getCell(r, 1);
+    secRec.value = "RECETAS ACTIVAS";
+    secRec.font = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+    secRec.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + AZUL_PRIMARIO } };
+    secRec.alignment = { vertical: "middle", horizontal: "left" };
+    ws.getRow(r).height = 20;
+    r++;
+
+    // Cabecera tabla recetas - usamos 6 columnas, expandimos el sheet
+    ws.columns = [
+      { key: "A", width: 22 },
+      { key: "B", width: 20 },
+      { key: "C", width: 20 },
+      { key: "D", width: 10 },
+      { key: "E", width: 10 },
+      { key: "F", width: 30 },
+    ];
+
+    const headersRec = ["Medicamento", "Dosis", "Frecuencia", "Días", "Stock", "Indicaciones"];
+    headersRec.forEach((h, i) => {
+      const cell = ws.getCell(r, i + 1);
+      cell.value = h;
+      cell.font = { bold: true, size: 9, color: { argb: "FF" + AZUL_OSCURO } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + AZUL_CLARO } };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.border = {
+        top: { style: "medium", color: { argb: "FF" + AZUL_PRIMARIO } },
+        bottom: { style: "medium", color: { argb: "FF" + AZUL_PRIMARIO } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+    });
+    ws.getRow(r).height = 18;
+    r++;
+
+    if (prescripciones.length === 0) {
+      ws.mergeCells(r, 1, r, 6);
+      cellStyle(r, 1, "Sin recetas activas registradas.", false, GRIS_BG, "475569", 9, "center");
+      ws.getRow(r).height = 18;
+      r++;
+    } else {
+      prescripciones.forEach((presc, idx) => {
+        const bg = idx % 2 === 0 ? "FFFFFF" : GRIS_BG;
+        const vals = [
+          presc.nombre_comercial,
+          presc.dosis_instruccion,
+          String(presc.patron_horario || "").replaceAll("_", " "),
+          presc.duracion_dias || 7,
+          presc.stock_estimado || 0,
+          presc.indicaciones || "Según receta",
+        ];
+        vals.forEach((v, i) => {
+          cellStyle(r, i + 1, v, false, bg, AZUL_OSCURO, 9, i >= 3 ? "center" : "left");
+        });
+        ws.getRow(r).height = 18;
+        r++;
+      });
+    }
+    r++;
+
+    // ── Historial de tomas ──
+    ws.mergeCells(r, 1, r, 6);
+    const secHist = ws.getCell(r, 1);
+    secHist.value = "HISTORIAL RECIENTE DE TOMAS (últimas 30)";
+    secHist.font = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+    secHist.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + AZUL_PRIMARIO } };
+    secHist.alignment = { vertical: "middle", horizontal: "left" };
+    ws.getRow(r).height = 20;
+    r++;
+
+    const headersHist = ["Medicamento", "Fecha programada", "Fecha real", "Resultado", "Motivo", "Observaciones"];
+    headersHist.forEach((h, i) => {
+      const cell = ws.getCell(r, i + 1);
+      cell.value = h;
+      cell.font = { bold: true, size: 9, color: { argb: "FF" + AZUL_OSCURO } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + AZUL_CLARO } };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.border = {
+        top: { style: "medium", color: { argb: "FF" + AZUL_PRIMARIO } },
+        bottom: { style: "medium", color: { argb: "FF" + AZUL_PRIMARIO } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+    });
+    ws.getRow(r).height = 18;
+    r++;
+
+    if (tomas.length === 0) {
+      ws.mergeCells(r, 1, r, 6);
+      cellStyle(r, 1, "Sin historial de tomas registradas.", false, GRIS_BG, "475569", 9, "center");
+      ws.getRow(r).height = 18;
+    } else {
+      tomas.forEach((toma, idx) => {
+        const bg = idx % 2 === 0 ? "FFFFFF" : GRIS_BG;
+        const colorRes = toma.estatus === "cumplido" ? VERDE : toma.estatus === "no_cumplido" ? ROJO : AMARILLO;
+        const vals = [
+          toma.nombre_comercial,
+          fmtFecha(toma.fecha_hora_programada),
+          fmtFecha(toma.fecha_hora_real),
+          String(toma.estatus || "").replaceAll("_", " "),
+          String(toma.motivo_omision || "-").replaceAll("_", " "),
+          toma.observaciones || "-",
+        ];
+        vals.forEach((v, i) => {
+          const col = i === 3 ? colorRes : AZUL_OSCURO;
+          const bold = i === 3;
+          cellStyle(r, i + 1, v, bold, bg, col, 9);
+        });
+        ws.getRow(r).height = 18;
+        r++;
+      });
+    }
+
+    // ── Escribir y responder ──
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${nombreArchivo}"`,
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    if (!res.headersSent) {
+      res.status(500).json({ ok: false, mensaje: "Error generando el Excel." });
+    }
+  } finally {
+    conn.release();
+  }
+}
+
 module.exports = {
   actualizarPrescripcion,
   actualizarMedicamentoCatalogo,
@@ -1281,6 +1943,8 @@ module.exports = {
   desactivarPrescripcion,
   dispensarPrescripcion,
   eliminarMedicamentoCatalogo,
+  exportarReportePDF,
+  exportarReporteExcel,
   guardarNotaMedica,
   marcarToma,
   marcarTomasLoteHospitalario,

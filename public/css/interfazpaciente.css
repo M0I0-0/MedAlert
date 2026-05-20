@@ -1,448 +1,166 @@
-/* public/css/interfazpaciente.css */
+/* interfazpaciente.css — extiende medalert-shared.css */
 
-/* GENERAL */
-body {
-  margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #eef2f7, #dfe6ee);
-  color: #1d2b3a;
-  overflow-x: hidden;
+/* ─── Chips de info en sidebar ───────────────────────────── */
+.sidebar-info {
+  display: grid;
+  gap: 8px;
 }
-
-* {
-  box-sizing: border-box;
-}
-
-/* NAVBAR */
-.navbar {
-  background: #031b4e;
-  color: white;
-  padding: 20px 50px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.navbar h1 {
-  margin: 0;
-  font-size: 42px;
-  font-weight: bold;
-}
-
-.logout-btn {
-  background: #ef4444;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.logout-btn:hover {
-  background: #dc2626;
-}
-
-/* CONTENEDOR Y TARJETA DE PERFIL */
-.container {
-  display: flex;
-  justify-content: center;
-  padding: 32px 20px;
-}
-
-.profile-card {
-  background: white;
-  width: min(100%, 1200px);
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-
-/* SECCIÓN SUPERIOR (Perfil Paciente) */
-.top-section {
-  display: flex;
-  gap: 32px;
-  align-items: flex-start;
-}
-
-.doctor-image img {
-  width: min(100%, 280px);
-  height: 280px;
-  object-fit: cover;
-  object-position: center top;
-  border-radius: 20px;
-  display: block;
-  background: #f5f8fd;
-}
-
-.doctor-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.doctor-info h2 {
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  margin: 0;
-  color: #08255c;
-}
-
-.doctor-info h3 {
-  color: #3b82f6;
-  font-size: clamp(1.25rem, 2.5vw, 2rem);
-  margin-top: 10px;
-}
-
-.line {
-  width: 90px;
-  height: 4px;
-  background: #3b82f6;
-  border-radius: 10px;
-  margin: 25px 0;
-}
-
-.doctor-info p {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: #3d4b5c;
-}
-
-/* MINI INFO CLÍNICA */
-.mini-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 30px;
-}
-
-.mini-box {
-  background: #f5f8fd;
-  padding: 20px;
-  border-radius: 15px;
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  flex: 1 1 240px;
-  min-width: 0;
-}
-
-.mini-box i {
-  font-size: 35px;
-  color: #08255c;
-}
-
-.mini-box span {
-  font-weight: bold;
-  font-size: clamp(1rem, 1.8vw, 1.125rem);
-  color: #374151;
-}
-
-.mini-box p {
-  margin: 5px 0 0;
-  font-size: clamp(0.95rem, 1.7vw, 1.0625rem);
-  color: #ef4444; /* Rojo para alergias/alertas */
-  font-weight: 600;
-}
-
-hr {
-  border: none;
-  border-top: 1px solid #e2e8f0;
-  margin: 40px 0;
-}
-
-/* SECCIÓN INFERIOR: MEDICAMENTOS */
-.bottom-section h4 {
-  font-size: 1.5rem;
-  color: #08255c;
-  margin-bottom: 20px;
+.info-chip {
   display: flex;
   align-items: center;
   gap: 10px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: rgba(244,255,252,0.75);
 }
+.info-chip i { color: var(--azul-principal); width: 16px; text-align: center; }
+.info-chip strong { color: #fff; }
 
-/* CARDS DE MEDICAMENTOS (Tu diseño original) */
+/* ─── Tarjetas de medicamentos ───────────────────────────── */
 .cards-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 20px;
 }
 
 .medicine-card {
-  background: #f8fafc;
-  border-radius: 20px;
-  padding: 25px;
-  border: 1px solid #e2e8f0;
-  transition: 0.3s;
+  background: #fff;
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px solid var(--borde);
+  box-shadow: 0 8px 24px rgba(8,37,92,.05);
+  transition: transform .2s, box-shadow .2s;
 }
-
 .medicine-card:hover {
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
-  transform: translateY(-5px);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px rgba(8,37,92,.1);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 }
-
 .medicine-left {
   display: flex;
-  gap: 15px;
+  gap: 14px;
   align-items: center;
 }
-
 .icon-box {
-  width: 70px;
-  height: 70px;
-  border-radius: 18px;
-  background: #dbeafe;
-  color: #2563eb;
+  width: 60px; height: 60px;
+  border-radius: 16px;
+  background: var(--fondo-tag);
+  color: var(--azul-tag);
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 30px;
+  font-size: 26px;
+  flex-shrink: 0;
 }
-
 .medicine-left h3 {
   margin: 0;
-  font-size: 28px;
-  color: #08255c;
+  font-size: 1.1rem;
+  color: var(--azul-oscuro);
 }
-
 .status {
   display: inline-block;
-  margin-top: 5px;
+  margin-top: 4px;
   background: #dcfce7;
   color: #15803d;
-  padding: 6px 12px;
-  border-radius: 30px;
+  padding: 4px 10px;
+  border-radius: 999px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.78rem;
 }
 
-/* GRID INFO TOMAS */
+/* ─── Info grid 2 columnas ───────────────────────────────── */
 .info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
-
 .info-box {
-  background: white;
-  padding: 15px;
+  background: var(--fondo-caja);
+  padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--borde);
 }
-
 .info-box span {
-  color: #64748b;
-  font-size: 14px;
+  color: var(--texto-secundario);
+  font-size: 0.78rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
 }
-
 .info-box p {
-  margin: 5px 0 0;
-  font-size: 18px;
+  margin: 4px 0 0;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #08255c;
+  color: var(--azul-oscuro);
 }
 
-/* PROGRESS ADHERENCIA */
-.progress-section {
-  margin-top: 25px;
-}
-
+/* ─── Adherencia ─────────────────────────────────────────── */
+.progress-section { margin: 14px 0 6px; }
 .progress-text {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 16px;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: #4b5563;
+  color: var(--texto-secundario);
 }
+.progress-bar { width: 100%; height: 8px; background: #cbd5e1; border-radius: 10px; overflow: hidden; }
+.progress { height: 100%; background: var(--success); border-radius: 10px; transition: width 1s ease-in-out; }
 
-.progress-bar {
-  width: 100%;
-  height: 10px;
-  background: #cbd5e1;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.progress {
-  width: 0%; /* Se llena con JS */
-  height: 100%;
-  background: #10b981;
-  border-radius: 10px;
-  transition: width 1s ease-in-out;
-}
-
-/* BOTONES CARD */
+/* ─── Botones de acción en tarjeta ───────────────────────── */
 .action-buttons {
   display: flex;
   gap: 10px;
-  margin-top: 25px;
+  margin-top: 16px;
+  flex-wrap: wrap;
 }
-
 .details-btn {
   flex: 1;
-  padding: 15px;
-  border: none;
-  background: #031b4e;
-  color: white;
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  background: var(--fondo-caja);
+  color: var(--azul-oscuro);
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 0.88rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background .2s, transform .15s;
 }
-
-.details-btn:hover {
-  background: #0f3b8c;
-}
-
+.details-btn:hover { background: var(--fondo-tag); transform: translateY(-1px); }
+.details-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 .mark-btn {
   flex: 1;
-  padding: 15px;
+  padding: 12px 14px;
   border: none;
-  background: #2563eb;
-  color: white;
+  background: var(--azul-principal);
+  color: #fff;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 0.88rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.mark-btn:hover {
-  background: #1d4ed8;
-}
-
-.omission-form {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 25px;
-}
-
-.omission-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.omission-field {
-  display: grid;
-  gap: 8px;
-}
-
-.omission-field span {
-  color: #334155;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.omission-field select,
-.omission-field textarea {
-  width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px;
-  padding: 14px;
-  color: #08255c;
-  font: inherit;
-  font-weight: 600;
-  background: white;
-  outline: none;
-}
-
-.omission-field select:focus,
-.omission-field textarea:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-
-.omission-wide {
-  grid-column: 1 / -1;
-}
-
-.omission-actions {
-  max-width: 360px;
-}
-
-/* ESTADO VACÍO */
-.empty-state {
-  background: #f8fafc;
-  border: 2px dashed #cbd5e1;
-  border-radius: 20px;
-  padding: 50px;
-  text-align: center;
-}
-
-.empty-icon {
-  width: 90px;
-  height: 90px;
-  background: #e2e8f0;
-  border-radius: 50%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin: 0 auto 20px;
+  justify-content: center;
+  gap: 8px;
+  transition: background .2s, transform .15s;
 }
+.mark-btn:hover { background: var(--azul-tag); transform: translateY(-1px); }
+.mark-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
 
-.empty-icon i {
-  font-size: 40px;
-  color: #94a3b8;
-}
-
-.empty-state h3 {
-  margin: 0;
-  font-size: 28px;
-  color: #08255c;
-}
-
-.empty-state p {
-  margin-top: 10px;
-  font-size: 18px;
-  color: #64748b;
-}
-
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .top-section {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-  .mini-info {
-    justify-content: center;
-  }
-  .cards-container {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 600px) {
-  .navbar {
-    padding: 15px 20px;
-  }
-  .navbar h1 {
-    font-size: 2rem;
-  }
-  .container {
-    padding: 15px;
-  }
-  .profile-card {
-    padding: 20px;
-  }
-  .info-grid {
-    grid-template-columns: 1fr;
-  }
-  .action-buttons {
-    flex-direction: column;
-  }
-  .omission-grid {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 720px) {
+  .cards-container { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+  .action-buttons { flex-direction: column; }
 }
